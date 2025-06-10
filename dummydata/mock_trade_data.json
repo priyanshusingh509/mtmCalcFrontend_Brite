@@ -1,0 +1,482 @@
+[
+  {
+    "tradeNo":200007042,
+    "symbol":"ITC",
+    "name":"ITC LTD",
+    "quantity":10,
+    "rate":417.15,
+    "time":"6\/4\/2025 9:07"
+  },
+  {
+    "tradeNo":200015438,
+    "symbol":"JPPOWER",
+    "name":"JAIPRAKASH POWER VEN. LTD",
+    "quantity":150,
+    "rate":15.45,
+    "time":"6\/4\/2025 9:07"
+  },
+  {
+    "tradeNo":20364,
+    "symbol":"BELRISE",
+    "name":"BELRISE INDUSTRIES LTD",
+    "quantity":130,
+    "rate":92.2,
+    "time":"6\/4\/2025 9:07"
+  },
+  {
+    "tradeNo":600025887,
+    "symbol":"TATATECH",
+    "name":"TATA TECHNOLOGIES LIMITED",
+    "quantity":5,
+    "rate":759.0,
+    "time":"6\/4\/2025 9:07"
+  },
+  {
+    "tradeNo":600029266,
+    "symbol":"SAGILITY",
+    "name":"SAGILITY INDIA LIMITED",
+    "quantity":100,
+    "rate":38.5,
+    "time":"6\/4\/2025 9:07"
+  },
+  {
+    "tradeNo":200031053,
+    "symbol":"ETERNAL",
+    "name":"ETERNAL LIMITED",
+    "quantity":455,
+    "rate":237.19,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200031066,
+    "symbol":"ETERNAL",
+    "name":"ETERNAL LIMITED",
+    "quantity":325,
+    "rate":237.19,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200031266,
+    "symbol":"ETERNAL",
+    "name":"ETERNAL LIMITED",
+    "quantity":1,
+    "rate":237.19,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":23662,
+    "symbol":"ABFRL",
+    "name":"ADITYA BIRLA FASHION & RT",
+    "quantity":2600,
+    "rate":80.63,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200031880,
+    "symbol":"IDEA",
+    "name":"VODAFONE IDEA LIMITED",
+    "quantity":18545,
+    "rate":6.77,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200031881,
+    "symbol":"IDEA",
+    "name":"VODAFONE IDEA LIMITED",
+    "quantity":21455,
+    "rate":6.77,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":24851,
+    "symbol":"ABFRL",
+    "name":"ADITYA BIRLA FASHION & RT",
+    "quantity":2600,
+    "rate":80.43,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":24909,
+    "symbol":"ABFRL",
+    "name":"ADITYA BIRLA FASHION & RT",
+    "quantity":2600,
+    "rate":80.93,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":24956,
+    "symbol":"ABFRL",
+    "name":"ADITYA BIRLA FASHION & RT",
+    "quantity":2600,
+    "rate":80.88,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":25098,
+    "symbol":"CANBK",
+    "name":"CANARA BANK",
+    "quantity":1,
+    "rate":116.22,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":25348,
+    "symbol":"ABFRL",
+    "name":"ADITYA BIRLA FASHION & RT",
+    "quantity":2600,
+    "rate":80.73,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":25350,
+    "symbol":"ABFRL",
+    "name":"ADITYA BIRLA FASHION & RT",
+    "quantity":2600,
+    "rate":80.68,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":25352,
+    "symbol":"ABFRL",
+    "name":"ADITYA BIRLA FASHION & RT",
+    "quantity":2600,
+    "rate":80.64,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":400021332,
+    "symbol":"NMDC",
+    "name":"NMDC LTD.",
+    "quantity":9381,
+    "rate":69.95,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":400021333,
+    "symbol":"NMDC",
+    "name":"NMDC LTD.",
+    "quantity":4119,
+    "rate":69.95,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":29840,
+    "symbol":"CANBK",
+    "name":"CANARA BANK",
+    "quantity":6749,
+    "rate":116.22,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200037328,
+    "symbol":"JPPOWER",
+    "name":"JAIPRAKASH POWER VEN. LTD",
+    "quantity":3,
+    "rate":15.41,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200037329,
+    "symbol":"JPPOWER",
+    "name":"JAIPRAKASH POWER VEN. LTD",
+    "quantity":20,
+    "rate":15.41,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200037330,
+    "symbol":"JPPOWER",
+    "name":"JAIPRAKASH POWER VEN. LTD",
+    "quantity":2,
+    "rate":15.41,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600038647,
+    "symbol":"TATATECH",
+    "name":"TATA TECHNOLOGIES LIMITED",
+    "quantity":15,
+    "rate":760.9,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600038648,
+    "symbol":"TATATECH",
+    "name":"TATA TECHNOLOGIES LIMITED",
+    "quantity":518,
+    "rate":760.9,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600038650,
+    "symbol":"TATATECH",
+    "name":"TATA TECHNOLOGIES LIMITED",
+    "quantity":102,
+    "rate":760.9,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600038651,
+    "symbol":"TATATECH",
+    "name":"TATA TECHNOLOGIES LIMITED",
+    "quantity":65,
+    "rate":760.75,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":31937,
+    "symbol":"ABFRL",
+    "name":"ADITYA BIRLA FASHION & RT",
+    "quantity":2600,
+    "rate":80.56,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600040450,
+    "symbol":"SBIN",
+    "name":"STATE BANK OF INDIA",
+    "quantity":750,
+    "rate":813.75,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200044915,
+    "symbol":"ETERNAL",
+    "name":"ETERNAL LIMITED",
+    "quantity":80,
+    "rate":238.6,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200045173,
+    "symbol":"ETERNAL",
+    "name":"ETERNAL LIMITED",
+    "quantity":1139,
+    "rate":238.62,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":47376,
+    "symbol":"CPSEETF",
+    "name":"CPSE ETF",
+    "quantity":49,
+    "rate":91.25,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":47377,
+    "symbol":"CPSEETF",
+    "name":"CPSE ETF",
+    "quantity":7,
+    "rate":91.25,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":47378,
+    "symbol":"CPSEETF",
+    "name":"CPSE ETF",
+    "quantity":2,
+    "rate":91.24,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600060387,
+    "symbol":"WELSPUNLIV",
+    "name":"WELSPUN LIVING LIMITED",
+    "quantity":118,
+    "rate":131.16,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600060390,
+    "symbol":"WELSPUNLIV",
+    "name":"WELSPUN LIVING LIMITED",
+    "quantity":6,
+    "rate":131.16,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600060393,
+    "symbol":"WELSPUNLIV",
+    "name":"WELSPUN LIVING LIMITED",
+    "quantity":34,
+    "rate":131.18,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600060395,
+    "symbol":"WELSPUNLIV",
+    "name":"WELSPUN LIVING LIMITED",
+    "quantity":69,
+    "rate":131.21,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200056456,
+    "symbol":"JISLJALEQS",
+    "name":"JAIN IRRIGATION SYSTEMS",
+    "quantity":25,
+    "rate":60.76,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":400040380,
+    "symbol":"OLAELEC",
+    "name":"OLA ELECTRIC MOBILITY LTD",
+    "quantity":160,
+    "rate":49.91,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":52958,
+    "symbol":"BAJAJHFL",
+    "name":"BAJAJ HOUSING FINANCE LTD",
+    "quantity":100,
+    "rate":122.87,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600066396,
+    "symbol":"THOMASCOOK",
+    "name":"THOMAS COOK (INDIA) LTD",
+    "quantity":43,
+    "rate":172.3,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":53519,
+    "symbol":"APTUS",
+    "name":"APTUS VALUE HSG FIN I LTD",
+    "quantity":105,
+    "rate":310.0,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":53520,
+    "symbol":"APTUS",
+    "name":"APTUS VALUE HSG FIN I LTD",
+    "quantity":278,
+    "rate":310.0,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":400041603,
+    "symbol":"MADRASFERT",
+    "name":"MADRAS FERTILISERS LTD",
+    "quantity":166,
+    "rate":96.7,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":400041611,
+    "symbol":"MADRASFERT",
+    "name":"MADRAS FERTILISERS LTD",
+    "quantity":47,
+    "rate":96.71,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600068434,
+    "symbol":"SAGILITY",
+    "name":"SAGILITY INDIA LIMITED",
+    "quantity":50,
+    "rate":38.7,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600068483,
+    "symbol":"SAGILITY",
+    "name":"SAGILITY INDIA LIMITED",
+    "quantity":50,
+    "rate":38.7,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600068686,
+    "symbol":"SAGILITY",
+    "name":"SAGILITY INDIA LIMITED",
+    "quantity":50,
+    "rate":38.7,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600068811,
+    "symbol":"SAGILITY",
+    "name":"SAGILITY INDIA LIMITED",
+    "quantity":50,
+    "rate":38.7,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":55555,
+    "symbol":"BANKINDIA",
+    "name":"BANK OF INDIA",
+    "quantity":7,
+    "rate":125.37,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":55556,
+    "symbol":"BANKINDIA",
+    "name":"BANK OF INDIA",
+    "quantity":131,
+    "rate":125.37,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":600069928,
+    "symbol":"RTNINDIA",
+    "name":"RATTANINDIA ENT LIMITED",
+    "quantity":79,
+    "rate":47.47,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200067133,
+    "symbol":"EMIL",
+    "name":"ELECTRONICS MART IND LTD",
+    "quantity":71,
+    "rate":122.8,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200067240,
+    "symbol":"JISLJALEQS",
+    "name":"JAIN IRRIGATION SYSTEMS",
+    "quantity":81,
+    "rate":60.76,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200067251,
+    "symbol":"JISLJALEQS",
+    "name":"JAIN IRRIGATION SYSTEMS",
+    "quantity":155,
+    "rate":60.77,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":58448,
+    "symbol":"APTUS",
+    "name":"APTUS VALUE HSG FIN I LTD",
+    "quantity":247,
+    "rate":310.0,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":58632,
+    "symbol":"APTUS",
+    "name":"APTUS VALUE HSG FIN I LTD",
+    "quantity":1,
+    "rate":310.0,
+    "time":"6\/4\/2025 9:15"
+  },
+  {
+    "tradeNo":200068181,
+    "symbol":"INFIBEAM",
+    "name":"INFIBEAM AVENUES LIMITED",
+    "quantity":247,
+    "rate":21.23,
+    "time":"6\/4\/2025 9:15"
+  }
+]
