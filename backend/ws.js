@@ -1,5 +1,5 @@
 const WebSocket = require('ws');
-const wss = new WebSocket('ws://192.168.1.44:8080');
+const wss = new WebSocket('ws://192.168.4.199:8080');
 
 wss.onopen = () => {
     console.log('Connected to WebSocket server');
