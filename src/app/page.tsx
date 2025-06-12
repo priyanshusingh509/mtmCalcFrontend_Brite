@@ -33,36 +33,37 @@ const LOCAL_STORAGE_CHUNK_START_PAGE_KEY = 'ag_grid_current_chunk_start_page';
 // ==============================
 // Types
 // ==============================
-interface TradeRow {
-  'Membr id': number;
-  'trdr id': number;
-  'scrp code': number;
-  'scrp id': string;
-  'rate': number;
-  'qty': number;
-  'trd status': number;
-  'Cm code': number;
-  'Time': string;
-  'Date': string;
-  'Clnt id': string;
-  'Ordr id': number;
-  'Trns typ/Ordr typ': string;
-  'B/S': string;
-  'Trade ID': number;
-  'Clnt typ': string;
-  'ISIN': string;
-  'scrp group': string;
-  'Sett No': string;
-  'Ord Time': string;
-  'Ao/Po flag': boolean;
-  'Location id': number;
-  'Trd modi. time/time': string;
-  'Sessn Id or trdr Id': number;
-  'CP Code': string;
-  'CP code Confrn': string;
-  'Old Cust Prtcpnt': string;
-  'Old Cust code': string;
+export interface TradeRow {
+  membr_id: number;
+  trdr_id: number;
+  scrp_code: number;
+  scrp_id: string;
+  rate: number;
+  qty: number;
+  trd_status: number;
+  cm_code: number;
+  time: string;
+  date: string;
+  clnt_id: string;
+  ordr_id: number;
+  trns_type: string;
+  bs_flag: string;
+  trade_id: number;
+  clnt_type: string;
+  isin: string;
+  scrp_group: string;
+  sett_no: string;
+  ord_time: string;
+  ao_po_flag: boolean;
+  location_id: number;
+  trd_mod_time: string;
+  session_id: number;
+  cp_code: string;
+  cp_code_confrn: string;
+  old_cust_participant: string;
+  old_cust_code: string;
 }
+
 
 // ==============================
 // Component
@@ -82,50 +83,51 @@ const TradeGrid = () => {
   // ==============================
   const columnDefs: ColDef<TradeRow>[] = [
   {
-      headerName: 'Index',
-      valueGetter: (params: ValueGetterParams) => {
+    headerName: 'Index',
+    valueGetter: (params: ValueGetterParams) => {
       const rowIndex = params.node?.rowIndex;
-      return typeof rowIndex === 'number' ? (pageIndex * pageSize) + rowIndex+1 : '';
-      },
-      width: 90,
-      minWidth: 50,
-      maxWidth: 100,
-      sortable: false,
-      filter: false,
-      pinned: 'left',
-      cellClass: 'text-center',
-      suppressNavigable: true,
-      resizable: false,
+      return typeof rowIndex === 'number' ? (pageIndex * pageSize) + rowIndex + 1 : '';
     },
-    { headerName: 'Member ID', field: 'Membr id' },
-    { headerName: 'Trader ID', field: 'trdr id' },
-    { headerName: 'Script Code', field: 'scrp code' },
-    { headerName: 'Script ID', field: 'scrp id' },
-    { headerName: 'Rate', field: 'rate' },
-    { headerName: 'Quantity', field: 'qty' },
-    { headerName: 'Trade Status', field: 'trd status' },
-    { headerName: 'CM Code', field: 'Cm code' },
-    { headerName: 'Time', field: 'Time' },
-    { headerName: 'Date', field: 'Date' },
-    { headerName: 'Client ID', field: 'Clnt id' },
-    { headerName: 'Order ID', field: 'Ordr id' },
-    { headerName: 'Transaction Type / Order Type', field: 'Trns typ/Ordr typ' },
-    { headerName: 'Buy/Sell', field: 'B/S' },
-    { headerName: 'Trade ID', field: 'Trade ID' },
-    { headerName: 'Client Type', field: 'Clnt typ' },
-    { headerName: 'ISIN', field: 'ISIN' },
-    { headerName: 'Script Group', field: 'scrp group' },
-    { headerName: 'Settlement No.', field: 'Sett No' },
-    { headerName: 'Order Time', field: 'Ord Time' },
-    { headerName: 'AO/PO Flag', field: 'Ao/Po flag' },
-    { headerName: 'Location ID', field: 'Location id' },
-    { headerName: 'Trade Modified Time', field: 'Trd modi. time/time' },
-    { headerName: 'Session ID or Trader ID', field: 'Sessn Id or trdr Id' },
-    { headerName: 'CP Code', field: 'CP Code' },
-    { headerName: 'CP Code Confirmation', field: 'CP code Confrn' },
-    { headerName: 'Old Custodian Participant', field: 'Old Cust Prtcpnt' },
-    { headerName: 'Old Custodian Code', field: 'Old Cust code' },
-  ];
+    width: 90,
+    minWidth: 50,
+    maxWidth: 100,
+    sortable: false,
+    filter: false,
+    pinned: 'left',
+    cellClass: 'text-center',
+    suppressNavigable: true,
+    resizable: false,
+  },
+  { headerName: 'Member ID', field: 'membr_id' },
+  { headerName: 'Trader ID', field: 'trdr_id' },
+  { headerName: 'Script Code', field: 'scrp_code' },
+  { headerName: 'Script ID', field: 'scrp_id' },
+  { headerName: 'Rate', field: 'rate' },
+  { headerName: 'Quantity', field: 'qty' },
+  { headerName: 'Trade Status', field: 'trd_status' },
+  { headerName: 'CM Code', field: 'cm_code' },
+  { headerName: 'Time', field: 'time' },
+  { headerName: 'Date', field: 'date' },
+  { headerName: 'Client ID', field: 'clnt_id' },
+  { headerName: 'Order ID', field: 'ordr_id' },
+  { headerName: 'Transaction Type / Order Type', field: 'trns_type' },
+  { headerName: 'Buy/Sell', field: 'bs_flag' },
+  { headerName: 'Trade ID', field: 'trade_id' },
+  { headerName: 'Client Type', field: 'clnt_type' },
+  { headerName: 'ISIN', field: 'isin' },
+  { headerName: 'Script Group', field: 'scrp_group' },
+  { headerName: 'Settlement No.', field: 'sett_no' },
+  { headerName: 'Order Time', field: 'ord_time' },
+  { headerName: 'AO/PO Flag', field: 'ao_po_flag' },
+  { headerName: 'Location ID', field: 'location_id' },
+  { headerName: 'Trade Modified Time', field: 'trd_mod_time' },
+  { headerName: 'Session ID or Trader ID', field: 'session_id' },
+  { headerName: 'CP Code', field: 'cp_code' },
+  { headerName: 'CP Code Confirmation', field: 'cp_code_confrn' },
+  { headerName: 'Old Custodian Participant', field: 'old_cust_participant' },
+  { headerName: 'Old Custodian Code', field: 'old_cust_code' },
+];
+
 
   const defaultColDef: ColDef = {
     flex: 1,
@@ -140,7 +142,6 @@ const TradeGrid = () => {
   // ==============================
   const fetchChunk = (chunkStartPage: number) => {
     const start = chunkStartPage * pageSize;
-    console.log("start ", start);
     // tempCache will temporarily hold the 3 pages as they stream in
     const tempCache: { [key: number]: TradeRow[] } = {
       [chunkStartPage]: [],
@@ -156,7 +157,6 @@ const TradeGrid = () => {
     })
       .node('![*]', (trade: TradeRow) => {
         const page = chunkStartPage + Math.floor(counter / pageSize); 
-        console.log(page , " page : chunkstartpage ", chunkStartPage);
         // Ensure the page array exists in tempCache (redundant given initialization but good practice)
         if (!tempCache[page]) {
           tempCache[page] = [];
@@ -164,12 +164,14 @@ const TradeGrid = () => {
         tempCache[page].push(trade);
         allChunkData.push(trade); // Add to the array for full chunk storage
 
-        // Live update the grid with the first record/page for responsiveness
-        if (counter === 0 && page === pageIndex) {
-          setRowData([trade]);
-        } else if (counter === pageSize - 1 && page === pageIndex) {
-          setRowData([...tempCache[pageIndex]]);
+        // Live update the grid with the current page's data as it's being streamed
+        // console.log(page,pageIndex);
+        if (page === pageIndex+1  || page ===  parseInt(inputPage, 10)) {
+          // Clone and update to trigger React state
+          setRowData([...tempCache[page]]);
         }
+
+        
 
         counter++;
         return oboe.drop;
@@ -210,9 +212,9 @@ const TradeGrid = () => {
       console.warn("Attempted to go to a negative page index.");
       return;
     }
-
+    
+    
     setPageIndex(index); // Always update pageIndex immediately for UI feedback
-
     const requestedChunkStartPage = Math.floor(index / 3) * 3; // Calculate the start page of the chunk containing the requested page
 
     try {

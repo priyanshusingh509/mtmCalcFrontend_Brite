@@ -5,10 +5,17 @@ const cors = require("cors");
 const fs = require("fs");
 const csv = require("csv-parser");
 const Redis = require("redis");
+const { createClient } = require('@clickhouse/client');
 
 const app = express();
 const port = 3000;
 const redisClient = Redis.createClient();
+const clickhouse = createClient({
+  url: 'http://192.168.1.44:8123', // or your remote ClickHouse host
+  username: 'default',
+  password: '',
+  database: "testDb"
+});
 
 // Middleware
 app.use(cors());
@@ -20,23 +27,24 @@ redisClient.connect();
 // ===========================
 // CSV Loader Helper Function
 // ===========================
-async function loadFromCSV(start, limit) {
-  const results = [];
-  let lineCount = 0;
+async function loadFromClickhouse(start, limit) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const resultSet = await clickhouse.query({
+        query: `SELECT * FROM bseTradeData LIMIT ${limit} OFFSET ${start}`,
+        format: 'JSONEachRow',
+      });
 
-  return new Promise((resolve, reject) => {
-    fs.createReadStream("../RealData/EQ_ITR_6758_20250604.csv")
-      .pipe(csv())
-      .on("data", (row) => {
-        if (lineCount >= start && lineCount < start + limit) {
-          results.push(row);
-        }
-        lineCount++;
-      })
-      .on("end", () => resolve(results))
-      .on("error", reject);
+      const rows = await resultSet.json(); // Await the JSON conversion
+      // console.log('✅ Query result:', rows);
+      resolve(rows); // Resolve with the actual rows
+    } catch (error) {
+      console.error('❌ ClickHouse query failed:', error);
+      reject(error); // Properly reject with error
+    }
   });
 }
+
 
 // ===========================
 // Preload Fixed Range in Redis
@@ -50,7 +58,7 @@ async function preloadInitialRecords() {
     return;
   }
 
-  const fixedData = await loadFromCSV(0, 300);
+  const fixedData = await loadFromClickhouse(0, 300);
   await redisClient.set(key, JSON.stringify(fixedData));
   console.log("✅ Preloaded 0–299 records into Redis");
 }
@@ -88,7 +96,7 @@ app.get("/fetchmock", async (req, res) => {
         } else {
           // If data is not in Redis for the fixed key, load from CSV and store it (without TTL)
           console.log("❌ Redis missing 0–299 (fixed key), loading from CSV...");
-          redisPart = await loadFromCSV(0, 300);
+          redisPart = await loadFromClickhouse(0, 300);
           await redisClient.set(currentRedisKey, JSON.stringify(redisPart)); // Use set (no TTL) for fixed data
           console.log("✅ Cached 0–299 (fixed key) in Redis");
         }
@@ -104,7 +112,7 @@ app.get("/fetchmock", async (req, res) => {
         } else {
           // If data is not in Redis for the dynamic key, load from CSV and store with TTL
           console.log(`❌ Redis miss for ${currentRedisKey}, loading from CSV...`);
-          redisPart = await loadFromCSV(start, 300);
+          redisPart = await loadFromClickhouse(start, 300);
         }
       }
 
@@ -117,7 +125,7 @@ app.get("/fetchmock", async (req, res) => {
       // --- Handling the next 600 records (Part 2: Direct CSV Stream) ---
       const csvStart = start + 300; // Calculate the start index for the CSV portion
       console.log(`⏳ Loading CSV part ${csvStart}–${csvStart + 599}...`);
-      const csvPart = await loadFromCSV(csvStart, 600); // Load 600 records directly from CSV
+      const csvPart = await loadFromClickhouse(csvStart, 600); // Load 600 records directly from CSV
 
       // Write the next 600 records (from CSV) to the response stream
       for (const row of csvPart) {
@@ -136,7 +144,7 @@ app.get("/fetchmock", async (req, res) => {
 
       if (!nextExists) {
         console.log(`📦 Preloading ${nextStart}–${nextStart + 299} into Redis with TTL...`);
-        const nextChunk = await loadFromCSV(nextStart, 300);
+        const nextChunk = await loadFromClickhouse(nextStart, 300);
         await redisClient.setEx(nextKey, 300, JSON.stringify(nextChunk));
         console.log("✅ Cached next 300 with 5min TTL");
       } else {
@@ -151,7 +159,7 @@ app.get("/fetchmock", async (req, res) => {
 
         if (!prevExists) {
           console.log(`📦 Preloading ${prevStart}–${prevStart + 299} into Redis with TTL...`);
-          const prevChunk = await loadFromCSV(prevStart, 300);
+          const prevChunk = await loadFromClickhouse(prevStart, 300);
           await redisClient.setEx(prevKey, 300, JSON.stringify(prevChunk));
           console.log("✅ Cached previous 300 with 5min TTL");
         } else {
@@ -169,7 +177,7 @@ app.get("/fetchmock", async (req, res) => {
     // it falls back to a general CSV load. You can customize this behavior
     // based on your application's requirements.
     console.log(`Handling general request for start: ${start}, limit: ${limit}`);
-    const data = await loadFromCSV(start, limit);
+    const data = await loadFromClickhouse(start, limit);
     res.json(data); // Send the data as a standard JSON response
   } catch (error) {
     console.error("❌ Error:", error);
