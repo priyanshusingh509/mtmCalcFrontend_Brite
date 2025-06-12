@@ -63,144 +63,117 @@ app.get("/fetchmock", async (req, res) => {
     const start = parseInt(req.query.start) || 0;
     const limit = parseInt(req.query.limit) || 100;
 
-    const fixedKey = "csv:fixed:0-299";
+    // This block handles requests where 'limit' is 900 and 'start' is a multiple of 300.
+    // It combines Redis caching for the first 300 records and direct CSV streaming for the next 600.
+    // It also preloads the subsequent 300 records into Redis.
 
-    // ========================
-    // Case 1: Exact match for 0–299
-    // ========================
-    if (start === 0 && limit === 300) {
-      const cached = await redisClient.get(fixedKey);
+    if (limit === 900 && start % 300 === 0) {
+      res.setHeader("Content-Type", "application/json");
+      res.write("["); // Start JSON array for streaming response
 
-      if (cached) {
-        console.log("✅ Served from Redis (fixed 0–299)");
-        return res.json(JSON.parse(cached));
+      let firstChunkInResponse = true; // Flag to manage comma separation in JSON array
+      let redisPart = []; // Array to hold data fetched from Redis
+      let currentRedisKey; // Variable to store the Redis key for the current 300-record chunk
+
+      // --- Handling the first 300 records (Part 1: Redis Cache) ---
+      // Special case: if start is 0, use the predefined fixed key 'csv:fixed:0-299'
+      if (start === 0) {
+        currentRedisKey = "csv:fixed:0-299";
+        const redisData = await redisClient.get(currentRedisKey);
+
+        if (redisData) {
+          // If data is found in Redis for the fixed key
+          console.log("✅ Part 1: Served 0–299 from Redis (fixed key)");
+          redisPart = JSON.parse(redisData);
+        } else {
+          // If data is not in Redis for the fixed key, load from CSV and store it (without TTL)
+          console.log("❌ Redis missing 0–299 (fixed key), loading from CSV...");
+          redisPart = await loadFromCSV(0, 300);
+          await redisClient.set(currentRedisKey, JSON.stringify(redisPart)); // Use set (no TTL) for fixed data
+          console.log("✅ Cached 0–299 (fixed key) in Redis");
+        }
+      } else {
+        // General case: for 'start' values that are multiples of 300 (but not 0), use a dynamic key
+        currentRedisKey = `csv:dynamic:${start}-${start + 299}`;
+        const redisData = await redisClient.get(currentRedisKey);
+
+        if (redisData) {
+          // If data is found in Redis for the dynamic key
+          console.log(`✅ Redis hit for ${currentRedisKey}`);
+          redisPart = JSON.parse(redisData);
+        } else {
+          // If data is not in Redis for the dynamic key, load from CSV and store with TTL
+          console.log(`❌ Redis miss for ${currentRedisKey}, loading from CSV...`);
+          redisPart = await loadFromCSV(start, 300);
+        }
       }
 
-      console.log("❌ Redis missing 0–299, loading from CSV...");
-      const data = await loadFromCSV(0, 300);
-      await redisClient.set(fixedKey, JSON.stringify(data));
-      return res.json(data);
+      // Write the first 300 records (from Redis/CSV) to the response stream
+      for (const row of redisPart) {
+        res.write((firstChunkInResponse ? "" : ",") + JSON.stringify(row));
+        firstChunkInResponse = false;
+      }
+
+      // --- Handling the next 600 records (Part 2: Direct CSV Stream) ---
+      const csvStart = start + 300; // Calculate the start index for the CSV portion
+      console.log(`⏳ Loading CSV part ${csvStart}–${csvStart + 599}...`);
+      const csvPart = await loadFromCSV(csvStart, 600); // Load 600 records directly from CSV
+
+      // Write the next 600 records (from CSV) to the response stream
+      for (const row of csvPart) {
+        res.write("," + JSON.stringify(row)); // Prepend with comma as it's not the first chunk
+      }
+
+      res.write("]"); // End JSON array
+      res.end(); // End the response
+
+      console.log(`✅ Sent ${start}–${start + 899} (${redisPart.length + csvPart.length} records)`);
+
+      // --- Post-send: Preload the *next* 300 records into Redis with TTL ---
+      const nextStart = start + 900;
+      const nextKey = `csv:dynamic:${nextStart}-${nextStart + 299}`;
+      const nextExists = await redisClient.exists(nextKey);
+
+      if (!nextExists) {
+        console.log(`📦 Preloading ${nextStart}–${nextStart + 299} into Redis with TTL...`);
+        const nextChunk = await loadFromCSV(nextStart, 300);
+        await redisClient.setEx(nextKey, 300, JSON.stringify(nextChunk));
+        console.log("✅ Cached next 300 with 5min TTL");
+      } else {
+        console.log("♻️  Next chunk already in Redis");
+      }
+
+      // --- Post-send: Preload the *previous* 300 records into Redis with TTL ---
+      const prevStart = start - 300;
+      if (prevStart >= 0) {
+        const prevKey = `csv:dynamic:${prevStart}-${prevStart + 299}`;
+        const prevExists = await redisClient.exists(prevKey);
+
+        if (!prevExists) {
+          console.log(`📦 Preloading ${prevStart}–${prevStart + 299} into Redis with TTL...`);
+          const prevChunk = await loadFromCSV(prevStart, 300);
+          await redisClient.setEx(prevKey, 300, JSON.stringify(prevChunk));
+          console.log("✅ Cached previous 300 with 5min TTL");
+        } else {
+          console.log("♻️  Previous chunk already in Redis");
+        }
+      }
+
+      return; // Exit the function after handling this specific request type
     }
 
     // ========================
-    // Case 2: Hybrid response 0–899 (Redis + CSV stream)
+    // Fallback for any other 'start' and 'limit' combinations not covered above
     // ========================
-    if (start === 0 && limit === 900) {
-  res.setHeader("Content-Type", "application/json");
-  res.write("[");
-
-  let firstChunk = true;
-
-  // ----- Part 1: Redis (0–299) -----
-  let part1 = [];
-  const redisData = await redisClient.get(fixedKey);
-
-  if (redisData) {
-    console.log("✅ Part 1: Served 0–299 from Redis");
-    part1 = JSON.parse(redisData);
-  } else {
-    console.log("❌ Redis missing 0–299, loading from CSV...");
-    part1 = await loadFromCSV(0, 300);
-    await redisClient.set(fixedKey, JSON.stringify(part1));
-  }
-
-  for (const row of part1) {
-    res.write((firstChunk ? "" : ",") + JSON.stringify(row));
-    firstChunk = false;
-  }
-
-  // ----- Part 2: CSV (300–899) -----
-  console.log("⏳ Part 2: Loading 300–899 from CSV...");
-  const part2 = await loadFromCSV(300, 600);
-
-  for (const row of part2) {
-    res.write("," + JSON.stringify(row));
-  }
-
-  res.write("]");
-  res.end();
-
-  console.log(`✅ Sent 0–899 (${part1.length + part2.length} records)`);
-
-  // ----- Post-send: Preload 900–1199 into Redis with TTL -----
-  const nextKey = "csv:dynamic:900-1199";
-  const exists = await redisClient.exists(nextKey);
-
-  if (!exists) {
-    console.log("📦 Preloading next 300 (900–1199) into Redis with TTL...");
-    const nextChunk = await loadFromCSV(900, 300);
-    await redisClient.setEx(nextKey, 300, JSON.stringify(nextChunk)); // TTL: 5 minutes
-    console.log("✅ Cached 900–1199 with 5min TTL");
-  } else {
-    console.log("♻️  Next 300 (900–1199) already cached");
-  }
-
-  return;
-}
-
-    // ========================
-    // Case 3: Fallback for any other range
-    // ========================
-if (limit === 900 && start % 300 === 0 && start !== 0) {
-  res.setHeader("Content-Type", "application/json");
-  res.write("[");
-
-  let firstChunk = true;
-
-  // ----- Part 1: Redis (start–start+299) -----
-  const redisKey = `csv:dynamic:${start}-${start + 299}`;
-  let redisPart = [];
-
-  const redisData = await redisClient.get(redisKey);
-
-  if (redisData) {
-    console.log(`✅ Redis hit for ${redisKey}`);
-    redisPart = JSON.parse(redisData);
-  } else {
-    console.log(`❌ Redis miss for ${redisKey}, loading from CSV...`);
-    redisPart = await loadFromCSV(start, 300);
-    await redisClient.setEx(redisKey, 300, JSON.stringify(redisPart));
-  }
-
-  for (const row of redisPart) {
-    res.write((firstChunk ? "" : ",") + JSON.stringify(row));
-    firstChunk = false;
-  }
-
-  // ----- Part 2: CSV (start+300–start+899) -----
-  const csvStart = start + 300;
-  console.log(`⏳ Loading CSV part ${csvStart}–${csvStart + 599}...`);
-  const csvPart = await loadFromCSV(csvStart, 600);
-
-  for (const row of csvPart) {
-    res.write("," + JSON.stringify(row));
-  }
-
-  res.write("]");
-  res.end();
-
-  console.log(`✅ Sent ${start}–${start + 899} (${redisPart.length + csvPart.length} records)`);
-
-  // ----- Preload next 300 rows (start+900–start+1199) with TTL -----
-  const nextStart = start + 900;
-  const nextKey = `csv:dynamic:${nextStart}-${nextStart + 299}`;
-  const nextExists = await redisClient.exists(nextKey);
-
-  if (!nextExists) {
-    console.log(`📦 Preloading ${nextStart}–${nextStart + 299} into Redis with TTL...`);
-    const nextChunk = await loadFromCSV(nextStart, 300);
-    await redisClient.setEx(nextKey, 300, JSON.stringify(nextChunk));
-    console.log("✅ Cached next 300 with TTL (5 mins)");
-  } else {
-    console.log("♻️  Next chunk already in Redis");
-  }
-
-  return;
-}
-
+    // If the request doesn't match the combined Redis/CSV streaming pattern,
+    // it falls back to a general CSV load. You can customize this behavior
+    // based on your application's requirements.
+    console.log(`Handling general request for start: ${start}, limit: ${limit}`);
+    const data = await loadFromCSV(start, limit);
+    res.json(data); // Send the data as a standard JSON response
   } catch (error) {
     console.error("❌ Error:", error);
-    res.status(500).send("Server error");
+    res.status(500).send("Server error"); // Send a 500 error response in case of any exceptions
   }
 });
 
