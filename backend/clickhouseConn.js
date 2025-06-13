@@ -7,7 +7,7 @@ const clickhouse = createClient({
   url: 'http://192.168.1.44:8123', // or your remote ClickHouse host
   username: 'default',
   password: '',
-  database: "test_trade_file"
+  database: "testDb"
 });
 
 // Run a SELECT query
@@ -15,7 +15,7 @@ async function runQuery() {
   console.time("query time")
   try {
     const resultSet = await clickhouse.query({
-      query: 'SELECT count() FROM bse_cm_test ',
+      query: 'SELECT * FROM bseTradeData LIMIT 300 OFFSET 0',
       format: 'JSONEachRow', // or 'JSONEachRow', 'CSV', etc.
     });
 

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, ValueGetterParams } from 'ag-grid-community';
-const oboe = require('oboe');
+import oboe from 'oboe';
 
 import {
   ModuleRegistry,

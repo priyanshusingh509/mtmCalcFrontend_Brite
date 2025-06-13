@@ -30,6 +30,10 @@ redisClient.connect();
 async function loadFromClickhouse(start, limit) {
   return new Promise(async (resolve, reject) => {
     try {
+      if(start < 0){
+        resolve({});
+        return;
+      }
       const resultSet = await clickhouse.query({
         query: `SELECT * FROM bseTradeData LIMIT ${limit} OFFSET ${start}`,
         format: 'JSONEachRow',
@@ -50,7 +54,7 @@ async function loadFromClickhouse(start, limit) {
 // Preload Fixed Range in Redis
 // ===========================
 async function preloadInitialRecords() {
-  const key = "csv:fixed:0-299";
+  const key = "clickhouse:0-299";
   const exists = await redisClient.exists(key);
 
   if (exists) {
@@ -66,124 +70,139 @@ async function preloadInitialRecords() {
 // ===========================
 // API Route
 // ===========================
-app.get("/fetchmock", async (req, res) => {
-  try {
+app.get("/goto", async (req, res) => {
+  try{
     const start = parseInt(req.query.start) || 0;
-    const limit = parseInt(req.query.limit) || 100;
+    const limit = parseInt(req.query.limit) || 300;
+    let recordCount = 0;
 
-    // This block handles requests where 'limit' is 900 and 'start' is a multiple of 300.
-    // It combines Redis caching for the first 300 records and direct CSV streaming for the next 600.
-    // It also preloads the subsequent 300 records into Redis.
-
-    if (limit === 900 && start % 300 === 0) {
-      res.setHeader("Content-Type", "application/json");
-      res.write("["); // Start JSON array for streaming response
-
-      let firstChunkInResponse = true; // Flag to manage comma separation in JSON array
-      let redisPart = []; // Array to hold data fetched from Redis
-      let currentRedisKey; // Variable to store the Redis key for the current 300-record chunk
-
-      // --- Handling the first 300 records (Part 1: Redis Cache) ---
-      // Special case: if start is 0, use the predefined fixed key 'csv:fixed:0-299'
-      if (start === 0) {
-        currentRedisKey = "csv:fixed:0-299";
-        const redisData = await redisClient.get(currentRedisKey);
-
-        if (redisData) {
-          // If data is found in Redis for the fixed key
-          console.log("✅ Part 1: Served 0–299 from Redis (fixed key)");
-          redisPart = JSON.parse(redisData);
-        } else {
-          // If data is not in Redis for the fixed key, load from CSV and store it (without TTL)
-          console.log("❌ Redis missing 0–299 (fixed key), loading from CSV...");
-          redisPart = await loadFromClickhouse(0, 300);
-          await redisClient.set(currentRedisKey, JSON.stringify(redisPart)); // Use set (no TTL) for fixed data
-          console.log("✅ Cached 0–299 (fixed key) in Redis");
-        }
-      } else {
-        // General case: for 'start' values that are multiples of 300 (but not 0), use a dynamic key
-        currentRedisKey = `csv:dynamic:${start}-${start + 299}`;
-        const redisData = await redisClient.get(currentRedisKey);
-
-        if (redisData) {
-          // If data is found in Redis for the dynamic key
-          console.log(`✅ Redis hit for ${currentRedisKey}`);
-          redisPart = JSON.parse(redisData);
-        } else {
-          // If data is not in Redis for the dynamic key, load from CSV and store with TTL
-          console.log(`❌ Redis miss for ${currentRedisKey}, loading from CSV...`);
-          redisPart = await loadFromClickhouse(start, 300);
-        }
-      }
-
-      // Write the first 300 records (from Redis/CSV) to the response stream
-      for (const row of redisPart) {
+    const currentRedisKey = `clickhouse:${start}-${start+limit-1}`;
+    const redisD = await redisClient.get(currentRedisKey); 
+    const redisData = await JSON.parse(redisD); 
+    
+    
+    res.setHeader("Content-Type", "application/json");
+    res.write("["); // Start JSON array for streaming response
+    let firstChunkInResponse = true;
+    if(redisData){
+      console.log("data found in redis");
+      for (const row of redisData) {
         res.write((firstChunkInResponse ? "" : ",") + JSON.stringify(row));
+        recordCount++;
         firstChunkInResponse = false;
       }
-
-      // --- Handling the next 600 records (Part 2: Direct CSV Stream) ---
-      const csvStart = start + 300; // Calculate the start index for the CSV portion
-      console.log(`⏳ Loading CSV part ${csvStart}–${csvStart + 599}...`);
-      const csvPart = await loadFromClickhouse(csvStart, 600); // Load 600 records directly from CSV
-
-      // Write the next 600 records (from CSV) to the response stream
-      for (const row of csvPart) {
-        res.write("," + JSON.stringify(row)); // Prepend with comma as it's not the first chunk
+    }else{
+      console.log(`❌ Redis missing ${start}-${start+limit-1} , loading from Clickhouse...`);
+      const FromClickhouse = await loadFromClickhouse(start,limit);
+      for (const row of FromClickhouse) {
+        res.write((firstChunkInResponse ? "" : ",") + JSON.stringify(row));
+        recordCount++;
+        firstChunkInResponse = false;
       }
+    }
+    //first 300 records are sent successfully
+    //now send next 300 and previous 300 records from clickhouse only
 
-      res.write("]"); // End JSON array
-      res.end(); // End the response
 
-      console.log(`✅ Sent ${start}–${start + 899} (${redisPart.length + csvPart.length} records)`);
-
-      // --- Post-send: Preload the *next* 300 records into Redis with TTL ---
-      const nextStart = start + 900;
-      const nextKey = `csv:dynamic:${nextStart}-${nextStart + 299}`;
-      const nextExists = await redisClient.exists(nextKey);
-
-      if (!nextExists) {
-        console.log(`📦 Preloading ${nextStart}–${nextStart + 299} into Redis with TTL...`);
-        const nextChunk = await loadFromClickhouse(nextStart, 300);
-        await redisClient.setEx(nextKey, 300, JSON.stringify(nextChunk));
-        console.log("✅ Cached next 300 with 5min TTL");
-      } else {
-        console.log("♻️  Next chunk already in Redis");
+    //next 300:
+    const FromClickhouseNext = await loadFromClickhouse(start+300, limit);
+    if(!(FromClickhouseNext.length === undefined)){
+      for(const row of FromClickhouseNext){
+        res.write(","+JSON.stringify(row));
+        recordCount++
       }
-
-      // --- Post-send: Preload the *previous* 300 records into Redis with TTL ---
-      const prevStart = start - 300;
-      if (prevStart >= 0) {
-        const prevKey = `csv:dynamic:${prevStart}-${prevStart + 299}`;
-        const prevExists = await redisClient.exists(prevKey);
-
-        if (!prevExists) {
-          console.log(`📦 Preloading ${prevStart}–${prevStart + 299} into Redis with TTL...`);
-          const prevChunk = await loadFromClickhouse(prevStart, 300);
-          await redisClient.setEx(prevKey, 300, JSON.stringify(prevChunk));
-          console.log("✅ Cached previous 300 with 5min TTL");
-        } else {
-          console.log("♻️  Previous chunk already in Redis");
-        }
-      }
-
-      return; // Exit the function after handling this specific request type
     }
 
-    // ========================
-    // Fallback for any other 'start' and 'limit' combinations not covered above
-    // ========================
-    // If the request doesn't match the combined Redis/CSV streaming pattern,
-    // it falls back to a general CSV load. You can customize this behavior
-    // based on your application's requirements.
-    console.log(`Handling general request for start: ${start}, limit: ${limit}`);
-    const data = await loadFromClickhouse(start, limit);
-    res.json(data); // Send the data as a standard JSON response
-  } catch (error) {
-    console.error("❌ Error:", error);
-    res.status(500).send("Server error"); // Send a 500 error response in case of any exceptions
+    //prev 300:
+    const FromClickhousePrev = await loadFromClickhouse(start-300,limit);
+    if(!(FromClickhousePrev.length === undefined)){
+      for(const row of FromClickhousePrev){
+        res.write(","+JSON.stringify(row));
+        recordCount++;
+      }
+    }
+    res.write("]");
+    res.end();
+    console.log(recordCount);
+
+    //data caching
+    //we cache the next 300 records and the prev 300 records for easy fetching
+    const CacheNext = await loadFromClickhouse(start+600,limit);
+    const CacheNextRKey = `clickhouse:${start+600}-${start+600+limit-1}`;
+    console.log("Next",CacheNextRKey);
+    const ttlNext = await redisClient.ttl(CacheNextRKey);  
+    if(!(ttlNext == -1) ){
+      // console.log(`ran over Next ${CacheNextRKey}`)
+      if(!(CacheNext === undefined)){
+        await redisClient.setEx(CacheNextRKey, 300, JSON.stringify(CacheNext));
+      }
+    }else{
+      await redisClient.set(CacheNextRKey,JSON.stringify(CacheNext));
+    }
+    
+    const CachePrev = await loadFromClickhouse(start-600,limit);
+    const CachePrevRKey = `clickhouse:${start-600}-${start-600+limit-1}`;
+    const ttlPrev = await redisClient.ttl(CachePrevRKey);  
+    // console.log(CachePrevRKey);
+
+    if(!(ttlPrev == -1) ){
+      // console.log(`ran over Prev ${CachePrevRKey}`)
+      if(!(CachePrev.length === undefined)){
+        console.log("cacheprev ",CachePrev);
+        console.log(CachePrev.length);
+        await redisClient.setEx(CachePrevRKey, 300, JSON.stringify(CachePrev));
+      }
+    }else{
+      await redisClient.set(CachePrevRKey,JSON.stringify(CachePrev));
+    }
+    
+    return;
+  } catch(error){
+    console.error("❌ Error: goto ", error);
+    res.status(500).send("Server error");
+
   }
 });
+
+app.get("/consecutivesend", async(req,res) => {
+  try{
+    const start = parseInt(req.query.start) || 0;
+    const limit = parseInt(req.query.limit) || 300;
+
+    const currentRedisKey = `clickhouse:${start}-${start+limit-1}`;
+    const redisD = await redisClient.get(currentRedisKey); 
+    const redisData = await JSON.parse(redisD); 
+    //data must always be in redis if this route is called under 5 min
+    if(redisData){
+      console.log("data found in redis");
+      res.json(redisData);
+    }else{
+      console.log("not found in redis");
+      const FromClickhouse = await loadFromClickhouse(start,limit);
+      res.json(FromClickhouse);
+    }
+    
+    //catching data accordingly
+    //next:300
+    const FromClickhouseNextRKey = `clickhouse:${start+300}-${start+300+limit-1}`;
+    const FromClickhouseNext = await loadFromClickhouse(start+300, limit);
+    if(!(FromClickhouseNext.length === undefined)){
+      await redisClient.setEx(FromClickhouseNextRKey,300,JSON.stringify(FromClickhouseNext));
+      console.log("saved Next ");
+    }
+    
+    //prev:300
+    const FromClickhousePrevRKey = `clickhouse:${start-900}-${start-900+limit-1}`;
+    const FromClickhousePrev = await loadFromClickhouse(start-900,limit);
+    if(!(FromClickhousePrev.length === undefined)){
+      await redisClient.setEx(FromClickhousePrevRKey,300,JSON.stringify(FromClickhousePrev));
+      console.log("saved Prev");
+    }
+  } catch(error){
+    console.error("❌ Error: consecutivesend ", error);
+  }
+})
+
 
 // ===========================
 // Redis Events & App Launch
