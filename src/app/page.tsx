@@ -70,7 +70,7 @@ export interface TradeRow {
 // ==============================
 const TradeGrid = () => {
   const [rowData, setRowData] = useState<TradeRow[]>([]);
-  const [pageIndex, setPageIndex] = useState(0);
+  const pageIndex= useRef<number>(0);
   // No longer using useState for `cache`, it's now managed in localStorage
   const [inputPage, setInputPage] = useState('');
   const gridRef = useRef<AgGridReact<TradeRow>>(null);
@@ -82,22 +82,6 @@ const TradeGrid = () => {
   // Column Definitions
   // ==============================
   const columnDefs: ColDef<TradeRow>[] = [
-  {
-    headerName: 'Index',
-    valueGetter: (params: ValueGetterParams) => {
-      const rowIndex = params.node?.rowIndex;
-      return typeof rowIndex === 'number' ? (pageIndex * pageSize) + rowIndex + 1 : '';
-    },
-    width: 90,
-    minWidth: 50,
-    maxWidth: 100,
-    sortable: false,
-    filter: false,
-    pinned: 'left',
-    cellClass: 'text-center',
-    suppressNavigable: true,
-    resizable: false,
-  },
   { headerName: 'Member ID', field: 'membr_id' },
   { headerName: 'Trader ID', field: 'trdr_id' },
   { headerName: 'Script Code', field: 'scrp_code' },
@@ -150,28 +134,31 @@ const TradeGrid = () => {
     };
     let counter = 0;
     const allChunkData: TradeRow[] = []; // To accumulate all 900 records for localStorage
-
+    
+    console.time("redis fetch count");
     oboe({
-      url: `http://localhost:3000/fetchmock?start=${start}&limit=${chunkSize}`,
+      url: `http://192.168.4.200:3000/fetchmock?start=${start}&limit=${chunkSize}`,
       method: 'GET',
     })
-      .node('![*]', (trade: TradeRow) => {
-        const page = chunkStartPage + Math.floor(counter / pageSize); 
-        // Ensure the page array exists in tempCache (redundant given initialization but good practice)
-        if (!tempCache[page]) {
-          tempCache[page] = [];
+    .node('![*]', (trade: TradeRow) => {
+      const page = chunkStartPage + Math.floor(counter / pageSize); 
+      console.log(page , " page : chunkstartpage ", chunkStartPage);
+      // Ensure the page array exists in tempCache (redundant given initialization but good practice)
+      if (!tempCache[page]) {
+        tempCache[page] = [];
+      }
+      tempCache[page].push(trade);
+      allChunkData.push(trade); // Add to the array for full chunk storage
+      
+      // Live update the grid with the first record/page for responsiveness
+      if (counter === 0 && page === pageIndex.current) {
+        setRowData([trade]);
+        console.log("ran1");
+      } else if (counter === pageSize - 1 && page === pageIndex.current) {
+        setRowData([...tempCache[pageIndex.current]]);
+        console.log("ran2");
+        console.timeEnd("redis fetch count");
         }
-        tempCache[page].push(trade);
-        allChunkData.push(trade); // Add to the array for full chunk storage
-
-        // Live update the grid with the current page's data as it's being streamed
-        // console.log(page,pageIndex);
-        if (page === pageIndex+1  || page ===  parseInt(inputPage, 10)) {
-          // Clone and update to trigger React state
-          setRowData([...tempCache[page]]);
-        }
-
-        
 
         counter++;
         return oboe.drop;
@@ -194,8 +181,8 @@ const TradeGrid = () => {
         // After the stream is done, ensure the rowData for the currently desired page is set.
         // This is important if `goToPage` was called and `fetchChunk` initiated,
         // and the data wasn't fully rendered by the time the stream finished.
-        if (tempCache[pageIndex]) {
-          setRowData(tempCache[pageIndex]);
+        if (tempCache[pageIndex.current]) {
+          setRowData(tempCache[pageIndex.current]);
         }
       })
       .fail((error: any) => {
@@ -207,53 +194,50 @@ const TradeGrid = () => {
   // ==============================
   // Handle Page Switch
   // ==============================
-  const goToPage = (index: number) => {
-    if (index < 0) {
-      console.warn("Attempted to go to a negative page index.");
-      return;
-    }
+const goToPage = (index: number) => {
+  if (index < 0) {
+    console.warn("Attempted to go to a negative page index.");
+    return;
+  }
+
+  pageIndex.current = index; // ✅ Correct assignment here
+
+  const requestedChunkStartPage = Math.floor(index / 3) * 3;
+
+  try {
+    console.time("frontend data fetch");
+    const storedChunkData = localStorage.getItem(LOCAL_STORAGE_CHUNK_DATA_KEY);
+    const storedChunkStartPageStr = localStorage.getItem(LOCAL_STORAGE_CHUNK_START_PAGE_KEY);
+    const storedChunkStartPage = storedChunkStartPageStr ? parseInt(storedChunkStartPageStr, 10) : -1;
     
-    
-    setPageIndex(index); // Always update pageIndex immediately for UI feedback
-    const requestedChunkStartPage = Math.floor(index / 3) * 3; // Calculate the start page of the chunk containing the requested page
-
-    try {
-      // Try to read the currently cached chunk and its metadata from localStorage
-      const storedChunkData = localStorage.getItem(LOCAL_STORAGE_CHUNK_DATA_KEY);
-      const storedChunkStartPageStr = localStorage.getItem(LOCAL_STORAGE_CHUNK_START_PAGE_KEY);
-      const storedChunkStartPage = storedChunkStartPageStr ? parseInt(storedChunkStartPageStr, 10) : -1;
-
-      // Check if the requested page's chunk is the one currently stored in localStorage
-      if (storedChunkData && storedChunkStartPage === requestedChunkStartPage) {
-        console.log(`✅ Chunk starting at page ${storedChunkStartPage + 1} found in localStorage.`);
-        const fullChunk: TradeRow[] = JSON.parse(storedChunkData);
-
-        // Calculate the slice for the specific page within the 900-record chunk
-        const pageOffsetInChunk = index - requestedChunkStartPage; // 0, 1, or 2
-        const startIndex = pageOffsetInChunk * pageSize;
-        const endIndex = startIndex + pageSize;
-        const pageData = fullChunk.slice(startIndex, endIndex);
-
-        setRowData(pageData); // Update grid with data from localStorage
-      } else {
-        // If the chunk is not in localStorage, or it's a different chunk, fetch it
-        console.log(`⏳ Chunk for page ${index + 1} not in localStorage. Fetching chunk starting at page ${requestedChunkStartPage + 1}...`);
-        fetchChunk(requestedChunkStartPage);
-      }
-    } catch (error) {
-      console.error("❌ Error accessing localStorage or parsing data:", error);
-      alert("Error reading cached data. Refetching from server.");
-      // Fallback to fetching if there's any localStorage issue
+    if (storedChunkData && storedChunkStartPage === requestedChunkStartPage) {
+      console.log(`✅ Chunk starting at page ${storedChunkStartPage + 1} found in localStorage.`);
+      const fullChunk: TradeRow[] = JSON.parse(storedChunkData);
+      
+      const pageOffsetInChunk = index - requestedChunkStartPage;
+      const startIndex = pageOffsetInChunk * pageSize;
+      const endIndex = startIndex + pageSize;
+      const pageData = fullChunk.slice(startIndex, endIndex);
+      
+      setRowData(pageData);
+    } else {
+      console.log(`⏳ Chunk for page ${index + 1} not in localStorage. Fetching chunk starting at page ${requestedChunkStartPage + 1}...`);
       fetchChunk(requestedChunkStartPage);
     }
-  };
+    console.timeEnd("frontend data fetch");
+  } catch (error) {
+    console.error("❌ Error accessing localStorage or parsing data:", error);
+    alert("Error reading cached data. Refetching from server.");
+    fetchChunk(requestedChunkStartPage);
+  }
+};
 
   // ==============================
   // Pagination Handlers
   // ==============================
-  const handleNext = () => goToPage(pageIndex + 1);
+  const handleNext = () => goToPage(pageIndex.current + 1);
   const handlePrev = () => {
-    if (pageIndex > 0) goToPage(pageIndex - 1);
+    if (pageIndex.current > 0) goToPage(pageIndex.current - 1);
   };
 
   const handleInputPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -291,7 +275,7 @@ const TradeGrid = () => {
         const fullChunk: TradeRow[] = JSON.parse(storedChunkData);
         // Display the first page of the cached chunk
         setRowData(fullChunk.slice(0, pageSize));
-        setPageIndex(0);
+        pageIndex.current = 0;
       } else {
         // If no valid chunk is in localStorage for page 0, fetch it
         console.log("⏳ Initial chunk (pages 0-2) not in localStorage or invalid. Fetching...");
@@ -311,12 +295,12 @@ const TradeGrid = () => {
   <div className="flex justify-center items-center p-4 gap-2">
     <button
       onClick={handlePrev}
-      disabled={pageIndex === 0}
+      disabled={pageIndex.current === 0}
       className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       ⬅️ Previous
     </button>
-    <span className="px-4 py-2 text-lg font-semibold">Page {pageIndex + 1}</span>
+    <span className="px-4 py-2 text-lg font-semibold">Page {pageIndex.current + 1}</span>
     <button
       onClick={handleNext}
       className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"

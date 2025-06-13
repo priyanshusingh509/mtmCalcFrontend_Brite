@@ -192,7 +192,7 @@ redisClient.on("ready", async () => {
   console.log("🔗 Redis connected");
   await preloadInitialRecords();
   app.listen(port, () => {
-    console.log(`🚀 Server running at http://localhost:${port}`);
+    console.log(`🚀 Server running at http://192.168.4.200:${port}`);
   });
 });
 
