@@ -4,9 +4,9 @@ const { createClient } = require('@clickhouse/client');
 
 // Create the ClickHouse client
 const clickhouse = createClient({
-  url: 'http://192.168.1.44:8123', // or your remote ClickHouse host
+  url: 'http://192.168.4.198:8123', // or your remote ClickHouse host
   username: 'default',
-  password: '',
+  password: 'admin',
   database: "testDb"
 });
 
@@ -15,7 +15,7 @@ async function runQuery() {
   console.time("query time")
   try {
     const resultSet = await clickhouse.query({
-      query: 'SELECT * FROM bseTradeData LIMIT 300 OFFSET 0',
+      query: 'SELECT count() FROM bseTradeData2',
       format: 'JSONEachRow', // or 'JSONEachRow', 'CSV', etc.
     });
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef, ValueGetterParams } from 'ag-grid-community';
+import { ColDef } from 'ag-grid-community';
 import oboe from 'oboe';
 
 import {
@@ -12,7 +12,7 @@ import {
   DateFilterModule,
   CustomFilterModule,
   ClientSideRowModelModule,
-  CellStyleModule, 
+  CellStyleModule
 } from 'ag-grid-community';
 
 ModuleRegistry.registerModules([
@@ -24,16 +24,7 @@ ModuleRegistry.registerModules([
   CellStyleModule
 ]);
 
-// ==============================
-// Constants for LocalStorage Keys
-// ==============================
-const LOCAL_STORAGE_CHUNK_DATA_KEY = 'ag_grid_current_chunk_data';
-const LOCAL_STORAGE_CHUNK_START_PAGE_KEY = 'ag_grid_current_chunk_start_page';
-
-// ==============================
-// Types
-// ==============================
-export interface TradeRow {
+interface TradeRow {
   membr_id: number;
   trdr_id: number;
   scrp_code: number;
@@ -64,24 +55,26 @@ export interface TradeRow {
   old_cust_code: string;
 }
 
+const PAGE_SIZE = 300;
 
-// ==============================
-// Component
-// ==============================
 const TradeGrid = () => {
   const [rowData, setRowData] = useState<TradeRow[]>([]);
-  const pageIndex= useRef<number>(0);
-  // No longer using useState for `cache`, it's now managed in localStorage
   const [inputPage, setInputPage] = useState('');
-  const gridRef = useRef<AgGridReact<TradeRow>>(null);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const pageIndex = useRef(0);
+  const gridRef = useRef<any>(null);
 
-  const pageSize = 300;
-  const chunkSize = 900; // This is (3 * pageSize)
-
-  // ==============================
-  // Column Definitions
-  // ==============================
-  const columnDefs: ColDef<TradeRow>[] = [
+const columnDefs: ColDef[] = [
+  {
+    headerName: 'Index',
+    valueGetter: (params) => {
+      const rowIndex = params.node?.rowIndex ?? 0;
+      return pageIndex.current * PAGE_SIZE + rowIndex;
+    },
+    width: 100,
+    cellClass: 'font-bold text-center'
+  },
   { headerName: 'Member ID', field: 'membr_id' },
   { headerName: 'Trader ID', field: 'trdr_id' },
   { headerName: 'Script Code', field: 'scrp_code' },
@@ -109,149 +102,132 @@ const TradeGrid = () => {
   { headerName: 'CP Code', field: 'cp_code' },
   { headerName: 'CP Code Confirmation', field: 'cp_code_confrn' },
   { headerName: 'Old Custodian Participant', field: 'old_cust_participant' },
-  { headerName: 'Old Custodian Code', field: 'old_cust_code' },
+  { headerName: 'Old Custodian Code', field: 'old_cust_code' }
 ];
 
 
+
   const defaultColDef: ColDef = {
-    flex: 1,
-    minWidth: 120,
     resizable: true,
-    sortable: true,
     filter: true,
+    sortable: true
   };
 
-  // ==============================
-  // Fetch Chunk of 900 (3 pages) and store in localStorage
-  // ==============================
-  const fetchChunk = (chunkStartPage: number) => {
-    const start = chunkStartPage * pageSize;
-    // tempCache will temporarily hold the 3 pages as they stream in
-    const tempCache: { [key: number]: TradeRow[] } = {
-      [chunkStartPage]: [],
-      [chunkStartPage + 1]: [],
-      [chunkStartPage + 2]: [],
-    };
-    let counter = 0;
-    const allChunkData: TradeRow[] = []; // To accumulate all 900 records for localStorage
-    
-    console.time("redis fetch count");
-    oboe({
-      url: `http://192.168.4.200:3000/fetchmock?start=${start}&limit=${chunkSize}`,
-      method: 'GET',
-    })
-    .node('![*]', (trade: TradeRow) => {
-      const page = chunkStartPage + Math.floor(counter / pageSize); 
-      console.log(page , " page : chunkstartpage ", chunkStartPage);
-      // Ensure the page array exists in tempCache (redundant given initialization but good practice)
-      if (!tempCache[page]) {
-        tempCache[page] = [];
+  const keepOnlyThreePages = () => {
+    const curr = pageIndex.current;
+    const valid = [`page-${curr - 1}`, `page-${curr}`, `page-${curr + 1}`];
+    Object.keys(localStorage).forEach(key => {
+      if (!valid.includes(key)) {
+        localStorage.removeItem(key);
       }
-      tempCache[page].push(trade);
-      allChunkData.push(trade); // Add to the array for full chunk storage
-      
-      // Live update the grid with the first record/page for responsiveness
-      if (counter === 0 && page === pageIndex.current) {
-        setRowData([trade]);
-        console.log("ran1");
-      } else if (counter === pageSize - 1 && page === pageIndex.current) {
-        setRowData([...tempCache[pageIndex.current]]);
-        console.log("ran2");
-        console.timeEnd("redis fetch count");
-        }
-
-        counter++;
-        return oboe.drop;
-      })
-      .done(() => {
-        console.log(`✅ Stream done. Fetched chunk starting at page ${chunkStartPage + 1}`);
-
-        // Store the entire 900-record chunk and its start page in localStorage
-        try {
-          localStorage.setItem(LOCAL_STORAGE_CHUNK_DATA_KEY, JSON.stringify(allChunkData));
-          localStorage.setItem(LOCAL_STORAGE_CHUNK_START_PAGE_KEY, chunkStartPage.toString());
-          console.log(`📦 Cached chunk ${chunkStartPage} in localStorage. ${LOCAL_STORAGE_CHUNK_DATA_KEY}`);
-
-        } catch (error) {
-          console.error("❌ Failed to store chunk in localStorage:", error);
-          alert("Warning: Local storage limit reached or inaccessible. Data might not be cached.");
-        }
-
-
-        // After the stream is done, ensure the rowData for the currently desired page is set.
-        // This is important if `goToPage` was called and `fetchChunk` initiated,
-        // and the data wasn't fully rendered by the time the stream finished.
-        if (tempCache[pageIndex.current]) {
-          setRowData(tempCache[pageIndex.current]);
-        }
-      })
-      .fail((error: any) => {
-        console.error("❌ Oboe stream failed:", error);
-        alert("Error fetching data. Please check your network connection and try again.");
-      });
+    });
   };
 
-  // ==============================
-  // Handle Page Switch
-  // ==============================
-const goToPage = (index: number) => {
-  if (index < 0) {
-    console.warn("Attempted to go to a negative page index.");
-    return;
-  }
+const fetchPageViaGoto = (start: number) => {
+  let currentChunk: TradeRow[] = [];
+  let nextChunk: TradeRow[] = [];
+  let prevChunk: TradeRow[] = [];
 
-  pageIndex.current = index; // ✅ Correct assignment here
+  let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
 
-  const requestedChunkStartPage = Math.floor(index / 3) * 3;
 
-  try {
-    console.time("frontend data fetch");
-    const storedChunkData = localStorage.getItem(LOCAL_STORAGE_CHUNK_DATA_KEY);
-    const storedChunkStartPageStr = localStorage.getItem(LOCAL_STORAGE_CHUNK_START_PAGE_KEY);
-    const storedChunkStartPage = storedChunkStartPageStr ? parseInt(storedChunkStartPageStr, 10) : -1;
-    
-    if (storedChunkData && storedChunkStartPage === requestedChunkStartPage) {
-      console.log(`✅ Chunk starting at page ${storedChunkStartPage + 1} found in localStorage.`);
-      const fullChunk: TradeRow[] = JSON.parse(storedChunkData);
-      
-      const pageOffsetInChunk = index - requestedChunkStartPage;
-      const startIndex = pageOffsetInChunk * pageSize;
-      const endIndex = startIndex + pageSize;
-      const pageData = fullChunk.slice(startIndex, endIndex);
-      
-      setRowData(pageData);
-    } else {
-      console.log(`⏳ Chunk for page ${index + 1} not in localStorage. Fetching chunk starting at page ${requestedChunkStartPage + 1}...`);
-      fetchChunk(requestedChunkStartPage);
-    }
-    console.timeEnd("frontend data fetch");
-  } catch (error) {
-    console.error("❌ Error accessing localStorage or parsing data:", error);
-    alert("Error reading cached data. Refetching from server.");
-    fetchChunk(requestedChunkStartPage);
-  }
+  oboe(`http://192.168.4.200:3000/goto?start=${start}&limit=${PAGE_SIZE}`)
+    .node('![*]', (node: any) => {
+      if (JSON.stringify(node) === '"stawp"') {
+        stage = 'next';
+        return oboe.drop;
+      }
+
+      if (node?.data === null) {
+        if (stage === 'next') stage = 'prev';
+        else if (stage === 'prev') stage = 'done';
+        return oboe.drop;
+      }
+
+      switch (stage) {
+        case 'current':
+          currentChunk.push(node);
+          break;
+        case 'next':
+          nextChunk.push(node);
+          break;
+        case 'prev':
+          prevChunk.push(node);
+          break;
+      }
+    })
+    .done(() => {
+      const curr = pageIndex.current;
+
+      // Set row data from current page
+      setRowData(currentChunk);
+      localStorage.setItem(`page-${curr}`, JSON.stringify(currentChunk));
+      console.log('curr', currentChunk);
+
+      if (nextChunk.length > 0) {
+        localStorage.setItem(`page-${curr + 1}`, JSON.stringify(nextChunk));
+        console.log('next', nextChunk);
+      }
+
+      if (curr > 0 && prevChunk.length > 0) {
+        localStorage.setItem(`page-${curr - 1}`, JSON.stringify(prevChunk));
+        console.log('prev', prevChunk);
+      }
+
+      keepOnlyThreePages();
+    })
+    .fail((err) => {
+      console.error('Oboe failed:', err);
+    });
 };
 
-  // ==============================
-  // Pagination Handlers
-  // ==============================
-  const handleNext = () => goToPage(pageIndex.current + 1);
+
+
+
   const handlePrev = () => {
-    if (pageIndex.current > 0) goToPage(pageIndex.current - 1);
+    if (pageIndex.current === 0) return;
+
+    pageIndex.current -= 1;
+    const curr = pageIndex.current;
+    const prev = curr - 1;  
+
+    const currentCached = localStorage.getItem(`page-${curr}`);
+    if (currentCached) {
+      setRowData(JSON.parse(currentCached));
+    }
+
+    keepOnlyThreePages();
+    fetchConsecutive(prev, false);
+
+    // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
+    // }
+    // if (!localStorage.getItem(`page-${next}`)) {
+    //   fetchConsecutive(curr+1, true);
+    // }
+  };
+
+  const handleNext = () => {
+    pageIndex.current += 1;
+    const curr = pageIndex.current;
+    const next = curr + 1;
+
+    const currentCached = localStorage.getItem(`page-${curr}`);
+    if (currentCached) {
+      setRowData(JSON.parse(currentCached));
+    }
+
+    keepOnlyThreePages();
+
+    fetchConsecutive(next, true);
+    // if (!localStorage.getItem(`page-${next}`)) {
+    // }
+    // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
+    //   fetchConsecutive(curr+1, false);
+    // }
   };
 
   const handleInputPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputPage(e.target.value);
-  };
-
-  const handleGoToInputPage = () => {
-    const pageNum = parseInt(inputPage, 10);
-    if (!isNaN(pageNum) && pageNum > 0) {
-      goToPage(pageNum - 1); // Convert 1-based user input to 0-based pageIndex
-      setInputPage(''); // Clear the input after navigating
-    } else {
-      alert('Please enter a valid positive page number.');
-    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -260,86 +236,92 @@ const goToPage = (index: number) => {
     }
   };
 
-  // ==============================
-  // Initial Load Effect
-  // ==============================
-  useEffect(() => {
-    // On initial load, try to retrieve the first chunk (page 0) from localStorage
-    try {
-      const storedChunkData = localStorage.getItem(LOCAL_STORAGE_CHUNK_DATA_KEY);
-      const storedChunkStartPageStr = localStorage.getItem(LOCAL_STORAGE_CHUNK_START_PAGE_KEY);
-      const storedChunkStartPage = storedChunkStartPageStr ? parseInt(storedChunkStartPageStr, 10) : -1;
+  const handleGoToInputPage = () => {
+    const page = parseInt(inputPage);
+    if (isNaN(page) || page < 1) return;
+    pageIndex.current = page - 1;
+    localStorage.clear(); // reset everything
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
+  };
 
-      if (storedChunkData && storedChunkStartPage === 0) {
-        console.log("✅ Initial chunk (pages 0-2) found in localStorage.");
-        const fullChunk: TradeRow[] = JSON.parse(storedChunkData);
-        // Display the first page of the cached chunk
-        setRowData(fullChunk.slice(0, pageSize));
-        pageIndex.current = 0;
-      } else {
-        // If no valid chunk is in localStorage for page 0, fetch it
-        console.log("⏳ Initial chunk (pages 0-2) not in localStorage or invalid. Fetching...");
-        fetchChunk(0);
-      }
-    } catch (error) {
-      console.error("❌ Error during initial localStorage load:", error);
-      alert("Error loading cached data. Fetching new data from server.");
-      // Fallback to fetching if there's any localStorage issue during initial load
-      fetchChunk(0);
-    }
-  }, []); // Empty dependency array ensures this runs only once on mount
+  const fetchConsecutive = (page: number, forward: boolean) => {
+    const start = page * PAGE_SIZE;
+    fetch(`http://192.168.4.200:3000/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}`)
+      .then((res) => res.json())
+      .then((data: TradeRow[]) => {
+        const targetPage = page;
+        localStorage.setItem(`page-${targetPage}`, JSON.stringify(data));
+      })
+      .catch((err) => {
+        console.error('Error prefetching:', err);
+      });
+      console.log("this ran")
+  };
+
+  useEffect(() => {
+    fetch('http://192.168.4.200:3000/totalrecords')
+    .then(res => res.json())
+    .then(({ total }) => {
+      setTotalRecords(total);
+      setTotalPages(Math.ceil(total / PAGE_SIZE));
+    });
+
+    pageIndex.current = 0;
+    fetchPageViaGoto(0);    
+  }, []);
 
   return (
     <div className="flex flex-col h-screen w-full">
-  {/* Pagination Controls */}
-  <div className="flex justify-center items-center p-4 gap-2">
-    <button
-      onClick={handlePrev}
-      disabled={pageIndex.current === 0}
-      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      ⬅️ Previous
-    </button>
-    <span className="px-4 py-2 text-lg font-semibold">Page {pageIndex.current + 1}</span>
-    <button
-      onClick={handleNext}
-      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-    >
-      Next ➡️
-    </button>
+      {/* Pagination Controls */}
+      <div className="flex justify-center items-center p-4 gap-2">
+        <button
+          onClick={handlePrev}
+          disabled={pageIndex.current === 0}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          ⬅️ Previous
+        </button>
+        <span className="px-4 py-2 text-lg font-semibold">
+          Page {pageIndex.current + 1}
+        </span>
+        <button
+          onClick={handleNext}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Next ➡️
+        </button>
 
-    {/* Page selection input */}
-    <input
-      type="number"
-      min="1"
-      value={inputPage}
-      onChange={handleInputPageChange}
-      onKeyPress={handleKeyPress}
-      placeholder="Go to page"
-      className="ml-4 p-2 border border-gray-300 rounded w-32 text-center"
-    />
-    <button
-      onClick={handleGoToInputPage}
-      className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-    >
-      Go
-    </button>
-  </div>
+        <input
+          type="number"
+          min="1"
+          value={inputPage}
+          onChange={handleInputPageChange}
+          onKeyPress={handleKeyPress}
+          placeholder="Go to page"
+          className="ml-4 p-2 border border-gray-300 rounded w-32 text-center"
+        />
+        <button
+          onClick={handleGoToInputPage}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+        >
+          Go
+        </button>
+      </div>
 
-  {/* AG Grid filling available vertical space */}
-  <div className="flex-1 overflow-hidden">
-    <div className="ag-theme-alpine h-full w-full">
-      <AgGridReact<TradeRow>
-        ref={gridRef}
-        rowData={rowData}
-        columnDefs={columnDefs}
-        defaultColDef={defaultColDef}
-        domLayout="normal" // Important: not autoHeight
-      />
+      {/* AG Grid */}
+      <div className="flex-1 overflow-hidden">
+        <div className="ag-theme-alpine h-full w-full">
+          <AgGridReact<TradeRow>
+            ref={gridRef}
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            domLayout="normal"
+          />
+        </div>
+      </div>
+      
     </div>
-  </div>
-</div>
-
   );
 };
 
