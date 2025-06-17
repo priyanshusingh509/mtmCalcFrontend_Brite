@@ -27,7 +27,7 @@ export const useTradeData = () => {
     let prevChunk: TradeRow[] = [];
     let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
 
-    oboe(`http://192.168.4.200:3000/goto?start=${start}&limit=${PAGE_SIZE}`)
+    oboe(`http://192.168.4.198:3000/goto?start=${start}&limit=${PAGE_SIZE}`)
       .node('![*]', (node: any) => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
@@ -73,7 +73,7 @@ export const useTradeData = () => {
   const fetchConsecutive = (page: number, forward: boolean) => {
     const start = page * PAGE_SIZE;
     fetch(
-      `http://192.168.4.200:3000/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}`
+      `http://192.168.4.198:3000/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}`
     )
       .then((res) => res.json())
       .then((data: TradeRow[]) => {
