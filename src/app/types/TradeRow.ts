@@ -1,0 +1,30 @@
+export interface TradeRow {
+  membr_id: number;
+  trdr_id: number;
+  scrp_code: number;
+  scrp_id: string;
+  rate: number;
+  qty: number;
+  trd_status: number;
+  cm_code: number;
+  time: string;
+  date: string;
+  clnt_id: string;
+  ordr_id: number;
+  trns_type: string;
+  bs_flag: string;
+  trade_id: number;
+  clnt_type: string;
+  isin: string;
+  scrp_group: string;
+  sett_no: string;
+  ord_time: string;
+  ao_po_flag: boolean;
+  location_id: number;
+  trd_mod_time: string;
+  session_id: number;
+  cp_code: string;
+  cp_code_confrn: string;
+  old_cust_participant: string;
+  old_cust_code: string;
+}

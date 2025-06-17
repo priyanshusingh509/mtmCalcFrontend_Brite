@@ -31,7 +31,7 @@ redisClient.connect();
 async function getClickhouseTotalRecordCount(Tablename){
   try {
     const resultSet = await clickhouse.query({
-      query: 'SELECT count() FROM bseTradeData2',
+      query: 'SELECT count() FROM bseTradeData',
       format: 'JSONEachRow', // or 'JSONEachRow', 'CSV', etc.
     });
 
@@ -222,7 +222,7 @@ app.get("/consecutivesend", async(req,res) => {
     const recordsP = action ? start-900 : start+900;
     const FromClickhousePrevRKey = `clickhouse:${recordsP}-${recordsP+limit-1}`;
     const FromClickhousePrev = await loadFromClickhouse(recordsP,limit);
-    if(!(FromClickhousePrev.length === undefined)){
+    if(!(FromClickhousePrev.length === undefined) && !(FromClickhousePrevRKey === `clickhouse:0-299`)){
       await redisClient.setEx(FromClickhousePrevRKey,300,JSON.stringify(FromClickhousePrev));
       console.log("saved Prev");
     }
@@ -235,6 +235,7 @@ app.get("/consecutivesend", async(req,res) => {
 app.get('/totalrecords', async (req, res) => {
   const Tablename = req.query.Tablename;
   const totalRecords = await getClickhouseTotalRecordCount(Tablename); // implement this
+  console.log({total : totalRecords})
   res.json({ total: totalRecords });
 });
 
