@@ -1,16 +1,15 @@
-'use client';
-
 import { useState } from 'react';
 import oboe from 'oboe';
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
-// 👇 Central shared ref
-const pageIndex = { current: 0 };
+import dotenv from 'dotenv';
+dotenv.config();
 
+const pageIndex = { current: 0 };
 export const useTradeData = () => {
   const [rowData, setRowData] = useState<TradeRow[]>([]);
-
+  
   const keepOnlyThreePages = () => {
     const curr = pageIndex.current;
     const valid = [`page-${curr - 1}`, `page-${curr}`, `page-${curr + 1}`];
@@ -18,7 +17,7 @@ export const useTradeData = () => {
       if (!valid.includes(key)) {
         localStorage.removeItem(key);
       }
-    });
+    });          
   };
 
   const fetchPageViaGoto = (start: number) => {
@@ -27,7 +26,7 @@ export const useTradeData = () => {
     const prevChunk: TradeRow[] = [];
     let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
 
-    oboe(`http://192.168.4.198:3000/goto?start=${start}&limit=${PAGE_SIZE}`)
+    oboe(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}`)
       .node('![*]', (node) => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
@@ -73,7 +72,7 @@ export const useTradeData = () => {
   const fetchConsecutive = (page: number, forward: boolean) => {
     const start = page * PAGE_SIZE;
     fetch(
-      `http://192.168.4.198:3000/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}`
+      `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}`
     )
       .then((res) => res.json())
       .then((data: TradeRow[]) => {

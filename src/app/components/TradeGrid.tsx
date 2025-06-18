@@ -161,7 +161,8 @@ const TradeGrid = () => {
   };
 
   useEffect(() => {
-    fetch('http://192.168.4.198:3000/totalrecords')
+    const tablename = "bse"
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords?Tablename=${tablename}`)
     .then(res => res.json())
     .then(({ total }) => {
       // setTotalRecords(total);
