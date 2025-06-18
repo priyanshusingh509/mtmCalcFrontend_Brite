@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef } from 'ag-grid-community';
-import oboe from 'oboe';
+// import oboe from 'oboe';
 
 
 import { useTradeData } from '../hooks/UseTradeData';
@@ -34,9 +34,9 @@ import { PAGE_SIZE } from '../utils/constants';
 
 const TradeGrid = () => {
   const [inputPage, setInputPage] = useState('');
-  const [totalRecords, setTotalRecords] = useState(0);
+  // const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const gridRef = useRef<any>(null);
+  const gridRef = useRef(null);
   const {
     rowData,
     setRowData,
@@ -164,13 +164,13 @@ const TradeGrid = () => {
     fetch('http://192.168.4.198:3000/totalrecords')
     .then(res => res.json())
     .then(({ total }) => {
-      setTotalRecords(total);
+      // setTotalRecords(total);
       setTotalPages(Math.ceil(total / PAGE_SIZE));
       console.log(Math.ceil(total / PAGE_SIZE));
     });
 
-    pageIndex.current = 0;
-    fetchPageViaGoto(0);    
+    // pageIndex.current = 0;
+    fetchPageViaGoto(pageIndex.current);    
     // console.log("this ran")
   }, []);
 

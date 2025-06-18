@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import oboe from 'oboe';
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
@@ -22,13 +22,13 @@ export const useTradeData = () => {
   };
 
   const fetchPageViaGoto = (start: number) => {
-    let currentChunk: TradeRow[] = [];
-    let nextChunk: TradeRow[] = [];
-    let prevChunk: TradeRow[] = [];
+    const currentChunk: TradeRow[] = [];
+    const nextChunk: TradeRow[] = [];
+    const prevChunk: TradeRow[] = [];
     let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
 
     oboe(`http://192.168.4.198:3000/goto?start=${start}&limit=${PAGE_SIZE}`)
-      .node('![*]', (node: any) => {
+      .node('![*]', (node) => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
           return oboe.drop;
