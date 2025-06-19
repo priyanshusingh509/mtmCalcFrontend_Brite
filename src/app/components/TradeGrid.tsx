@@ -31,10 +31,10 @@ ModuleRegistry.registerModules([
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
-const handleSort = (event: any)=>{
+const handleSort = ()=>{
   // console.log(event);
-  console.log(event.columns[0].userProvidedColDef.field);
-  console.log(event.columns[0].sort)
+  // console.log(event.columns[0].userProvidedColDef.field);
+  // console.log(event.columns[0].sort)
 }
 
 const TradeGrid = () => {

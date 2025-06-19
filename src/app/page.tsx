@@ -31,12 +31,14 @@ export default function TradePage() {
     localStorage.setItem('username', formData.username);
     router.push("/bseCashMarket");
   } catch (error) {
-    alert("Internal Server Error");
+    alert(`Internal Server Error ${error}`);
   }
 };
 
-  const handleChange = (e: any) =>{
-    setFormData({...formData, [e.target.name]: e.target.value})
+  const handleChange = (e: React.FormEvent<HTMLFormElement>) =>{
+    const target = e.target as HTMLInputElement;
+  const { name, value } = target;
+  setFormData(prev => ({ ...prev, [name]: value }));
   }
   return (
     <div className="bg-blue-600 h-[100vh] text-white flex justify-evenly items-center">
