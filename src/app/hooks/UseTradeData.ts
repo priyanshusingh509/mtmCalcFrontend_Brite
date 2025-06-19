@@ -12,7 +12,7 @@ export const useTradeData = () => {
   
   const keepOnlyThreePages = () => {
     const curr = pageIndex.current;
-    const valid = [`page-${curr - 1}`, `page-${curr}`, `page-${curr + 1}`];
+    const valid = [`page-${curr - 1}`, `page-${curr}`, `page-${curr + 1}`,"username"];
     Object.keys(localStorage).forEach((key) => {
       if (!valid.includes(key)) {
         localStorage.removeItem(key);
@@ -63,6 +63,7 @@ export const useTradeData = () => {
           localStorage.setItem(`page-${curr - 1}`, JSON.stringify(prevChunk));
         }
         keepOnlyThreePages();
+        
       })
       .fail((err) => {
         console.error('Oboe failed:', err);

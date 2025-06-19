@@ -29,8 +29,27 @@ const headerFields = [
 export default function Header(){
     const router = useRouter();
     function handleLogout(){
-        
-        router.push("/");
+        const refrestToken = document.cookie.split(";").find(row => row.startsWith('refreshToken='))?.split('=')[1]; 
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/user/logout`, {
+            method: 'POST',
+            credentials: 'include', // include cookies like refreshToken
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refrestToken })
+        })
+        .then((res) => {
+            if (res.status === 204) {
+                console.log('✅ Logged out');
+                router.push('/'); // Navigate to home page or login
+            } else {
+                console.error('❌ Logout failed');
+            }
+        })
+        .catch((err) => {
+            console.error('❌ Logout error:', err);
+        });
+        localStorage.removeItem('username');
     }
     return <div className="bg-blue-600 text-white grid grid-cols-6 justify-between items-center">
         <div className="grid- flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">

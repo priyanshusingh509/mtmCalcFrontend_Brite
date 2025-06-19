@@ -31,7 +31,7 @@ ModuleRegistry.registerModules([
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
-const handleSort = (event)=>{
+const handleSort = (event: any)=>{
   // console.log(event);
   console.log(event.columns[0].userProvidedColDef.field);
   console.log(event.columns[0].sort)
@@ -161,7 +161,7 @@ const TradeGrid = () => {
       return;
     } 
     pageIndex.current = page - 1;
-    localStorage.clear(); // reset everything
+    // localStorage.clear();   // reset everything
     fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
   };
 

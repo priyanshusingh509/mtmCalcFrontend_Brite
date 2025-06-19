@@ -7,8 +7,7 @@ import { useState } from "react";
 export default function TradePage() {
   const router = useRouter();
   const [formData, setFormData] = useState({username: "", password: ""})
-const handleSubmit = async () => {;
-
+  const handleSubmit = async () => {;
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/user/login`, {
       method: 'POST',
@@ -21,14 +20,16 @@ const handleSubmit = async () => {;
 
     const data = await response.json();
 
+    
     if (!response.ok) {
       alert("Invalid Credentials");
       return;
     }
-
+    
     // Redirect if successful
+    console.log(data);
+    localStorage.setItem('username', formData.username);
     router.push("/bseCashMarket");
-
   } catch (error) {
     alert("Internal Server Error");
   }
