@@ -6,7 +6,7 @@ export default function bseCashMarketPage(){
     return(
       <div>
         <Header/>
-        <div className="flex flex-col h-screen w-full">
+        <div className="flex h-[80vh] flex-col w-full">
           <TradeGrid />
         </div>
       </div>

@@ -28,7 +28,6 @@ export default function TradePage() {
     
     // Redirect if successful
     console.log(data);
-    localStorage.setItem('username', formData.username);
     router.push("/bseCashMarket");
   } catch (error) {
     alert(`Internal Server Error ${error}`);

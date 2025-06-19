@@ -49,7 +49,7 @@ export default function Header(){
         .catch((err) => {
             console.error('❌ Logout error:', err);
         });
-        localStorage.removeItem('username');
+        localStorage.clear()
     }
     return <div className="bg-blue-600 text-white grid grid-cols-6 justify-between items-center">
         <div className="grid- flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
