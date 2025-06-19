@@ -1,27 +1,48 @@
-
+'use client';
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 
-// import dotenv from 'dotenv';
-// dotenv.config();
+
 export default function TradePage() {
   const router = useRouter();
   const [formData, setFormData] = useState({username: "", password: ""})
-  const handleSubmit = () =>{
-    
-    router.push("/bseCashMarket")
-    
+const handleSubmit = async () => {;
+
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/user/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include', // for cookie support
+      body: JSON.stringify(formData)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert("Invalid Credentials");
+      return;
+    }
+
+    // Redirect if successful
+    router.push("/bseCashMarket");
+
+  } catch (error) {
+    alert("Internal Server Error");
   }
+};
+
   const handleChange = (e: any) =>{
     setFormData({...formData, [e.target.name]: e.target.value})
   }
   return (
     <div className="bg-blue-600 h-[100vh] text-white flex justify-evenly items-center">
      <div className="text-8xl font-bold flex flex-col items-center justify-center gap-5"><img src={"./logo.png"} width={"200px"}/> Algoquant</div>
-     <div className="w-1 h-80 bg-white"></div>
+     <div className="w-1 h-90 bg-white rounded-2xl"></div>
      <div className="bg-gray-50 w-100 h-120 rounded-3xl shadow-2xl text-black flex flex-col items-center">
-       <form className="w-full h-full" 
+       <form className="w-full h-full flex flex-col justify-evenly " 
         onSubmit={(e)=>{
           e.preventDefault();
           handleSubmit();
@@ -29,7 +50,7 @@ export default function TradePage() {
         }
         onChange={handleChange}>
         <div className="flex justify-center text-4xl font-semibold m-4 ">Login</div>
-        <div className="h-[calc(60%)] flex flex-col justify-center">
+        <div className=" flex flex-col justify-center">
           <div className="flex justify-center">
             <input name="username" placeholder="Username" className="border-1 rounded-md m-2 p-2 w-[calc(50%)]"/>
           </div>

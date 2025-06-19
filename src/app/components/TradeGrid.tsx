@@ -31,6 +31,11 @@ ModuleRegistry.registerModules([
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
+const handleSort = (event)=>{
+  // console.log(event);
+  console.log(event.columns[0].userProvidedColDef.field);
+  console.log(event.columns[0].sort)
+}
 
 const TradeGrid = () => {
   const [inputPage, setInputPage] = useState('');
@@ -222,6 +227,7 @@ const TradeGrid = () => {
           <AgGridReact<TradeRow>
             ref={gridRef}
             rowData={rowData}
+            onSortChanged={handleSort}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
             domLayout="normal"
