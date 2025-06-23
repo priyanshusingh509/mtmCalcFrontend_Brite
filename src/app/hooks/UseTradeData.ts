@@ -84,12 +84,37 @@ export const useTradeData = () => {
       });
   };
 
+  const fetchRecordsByField = async (field: string, value: string | number): Promise<TradeRow[]> => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getby?field=${field}&value=${value}`);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    
+    const data: TradeRow[] = await res.json();
+    console.log("Fetched data:", data);
+    return data;
+  } catch (error) {
+    console.error("Error fetching records by field:", error);
+    return []; // Return empty array on failure to prevent downstream errors
+  }
+};
+
+
+ async function fetchTotalRecords() {
+  const tablename = "bse";
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords?Tablename=${tablename}`);
+  const { total } = await response.json();
+  return Math.ceil(total / PAGE_SIZE);
+  };
+
+
   return {
     rowData,
     setRowData,
     fetchPageViaGoto,
     fetchConsecutive,
     keepOnlyThreePages,
-    pageIndex // 👈 now export this
+    pageIndex, // 👈 now export this
+    fetchTotalRecords,
+    fetchRecordsByField
   };
 };

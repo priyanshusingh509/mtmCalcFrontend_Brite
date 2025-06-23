@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef } from 'ag-grid-community';
-// import oboe from 'oboe';
+import type { CellClickedEvent, SortChangedEvent } from 'ag-grid-community';
+import RecordModal from './RecordModal';
 
 
 import { useTradeData } from '../hooks/UseTradeData';
@@ -31,13 +32,12 @@ ModuleRegistry.registerModules([
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
-const handleSort = ()=>{
-  // console.log(event);
-  // console.log(event.columns[0].userProvidedColDef.field);
-  // console.log(event.columns[0].sort)
-}
+
 
 const TradeGrid = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalField, setModalField] = useState('');
+  const [modalValue, setModalValue] = useState('');
   const [inputPage, setInputPage] = useState('');
   // const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -49,6 +49,8 @@ const TradeGrid = () => {
     fetchConsecutive,
     keepOnlyThreePages,
     pageIndex, // 👈 bring it from the hook directly
+    fetchTotalRecords,
+    fetchRecordsByField
   } = useTradeData();
 
   const columnDefs: ColDef[] = [
@@ -158,6 +160,7 @@ const TradeGrid = () => {
     const page = parseInt(inputPage);
     if (isNaN(page) || page < 1 || page>totalPages){
       alert("page does not exist");
+
       return;
     } 
     pageIndex.current = page - 1;
@@ -165,19 +168,40 @@ const TradeGrid = () => {
     fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
   };
 
-  useEffect(() => {
-    const tablename = "bse"
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords?Tablename=${tablename}`)
-    .then(res => res.json())
-    .then(({ total }) => {
-      // setTotalRecords(total);
-      setTotalPages(Math.ceil(total / PAGE_SIZE));
-      console.log(Math.ceil(total / PAGE_SIZE));
-    });
+  const handleRefreshPage = () => {
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
+    const loadinitialpage = async () => {
+      const pagenumber = await fetchTotalRecords();
+      setTotalPages(pagenumber);
+    }
+    loadinitialpage();
+  }
+  
+  // const handleSort = (event:SortChangedEvent<TradeRow>) => {
+  //   console.log(event.columns[0].colId);
+  //   console.log(event.columns[0].sort);
 
-    // pageIndex.current = 0;
-    fetchPageViaGoto(pageIndex.current);    
-    // console.log("this ran")
+  // }
+
+
+  const handleCellClick = (event: CellClickedEvent<TradeRow>) => {
+    const clickedField = event.colDef.field;
+    const clickedValue = event.value;
+    if (clickedField === 'trdr_id' && clickedValue) {
+      setModalField(clickedField);
+      setModalValue(clickedValue);
+      setIsModalOpen(true);
+    }
+  };
+
+
+  useEffect(() => {
+    const loadinitialpage = async () => {
+      const pagenumber = await fetchTotalRecords();
+      setTotalPages(pagenumber);
+      fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
+    }
+    loadinitialpage();
   }, []);
 
   // console.log("this should work ",totalPages);
@@ -219,6 +243,12 @@ const TradeGrid = () => {
         >
           Go
         </button>
+        <button
+        className="px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600"
+        onClick={handleRefreshPage}
+        >
+          Refresh
+        </button>
       </div>
 
       {/* AG Grid */}
@@ -227,13 +257,22 @@ const TradeGrid = () => {
           <AgGridReact<TradeRow>
             ref={gridRef}
             rowData={rowData}
-            onSortChanged={handleSort}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
             domLayout="normal"
+            onCellClicked={handleCellClick}
+            // onSortChanged={}
           />
         </div>
+        <RecordModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          field={modalField}
+          value={modalValue}
+        />
+
       </div>
+      
       
     </div>
   );
