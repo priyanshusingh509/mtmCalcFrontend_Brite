@@ -4,29 +4,30 @@ import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
 import dotenv from 'dotenv';
+import { IndexType } from '../components/TradeGrid';
 dotenv.config();
 
-const pageIndex = { current: 0 };
+
 export const useTradeData = () => {
   const [rowData, setRowData] = useState<TradeRow[]>([]);
   
-  const keepOnlyThreePages = () => {
+  const keepOnlyThreePages = (pageIndex: IndexType) => {
     const curr = pageIndex.current;
     const valid = [`page-${curr - 1}`, `page-${curr}`, `page-${curr + 1}`,"username"];
     Object.keys(localStorage).forEach((key) => {
       if (!valid.includes(key)) {
         localStorage.removeItem(key);
       }
-    });          
+    });
   };
 
-  const fetchPageViaGoto = (start: number) => {
+  const fetchPageViaGoto = (start: number, tableName: string, pageIndex: IndexType) => {
     const currentChunk: TradeRow[] = [];
     const nextChunk: TradeRow[] = [];
     const prevChunk: TradeRow[] = [];
     let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
 
-    oboe(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}`)
+    oboe(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}&tableName=${tableName}`)
       .node('![*]', (node) => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
@@ -62,7 +63,7 @@ export const useTradeData = () => {
         if (curr > 0 && prevChunk.length > 0) {
           localStorage.setItem(`page-${curr - 1}`, JSON.stringify(prevChunk));
         }
-        keepOnlyThreePages();
+        keepOnlyThreePages(pageIndex);
         
       })
       .fail((err) => {
@@ -70,10 +71,10 @@ export const useTradeData = () => {
       });
   };
 
-  const fetchConsecutive = (page: number, forward: boolean) => {
+  const fetchConsecutive = (page: number, forward: boolean, tableName: string) => {
     const start = page * PAGE_SIZE;
     fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}`
+      `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}&tableName=${tableName}`
     )
       .then((res) => res.json())
       .then((data: TradeRow[]) => {
@@ -84,9 +85,9 @@ export const useTradeData = () => {
       });
   };
 
-  const fetchRecordsByField = async (field: string, value: string | number): Promise<TradeRow[]> => {
+  const fetchRecordsByField = async (field: string, value: string | number, tableName: string): Promise<TradeRow[]> => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getby?field=${field}&value=${value}`);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getby?field=${field}&value=${value}&tableName=${tableName}`);
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     
     const data: TradeRow[] = await res.json();
@@ -99,9 +100,9 @@ export const useTradeData = () => {
 };
 
 
- async function fetchTotalRecords() {
-  const tablename = "bse";
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords?Tablename=${tablename}`);
+ async function fetchTotalRecords(tableName: string) {
+  console.log(tableName);
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords?tableName=${tableName}`);
   const { total } = await response.json();
   return Math.ceil(total / PAGE_SIZE);
   };
@@ -113,7 +114,6 @@ export const useTradeData = () => {
     fetchPageViaGoto,
     fetchConsecutive,
     keepOnlyThreePages,
-    pageIndex, // 👈 now export this
     fetchTotalRecords,
     fetchRecordsByField
   };

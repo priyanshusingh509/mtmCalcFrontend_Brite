@@ -16,9 +16,11 @@ type Props = {
   onClose: () => void;
   field: string;
   value: string | number;
+  fileColDef: ColDef[];
+  tableName: string;
 };
 
-export default function RecordModal({ isOpen, onClose, field, value }: Props) {
+export default function RecordModal({ isOpen, onClose, field, value, fileColDef, tableName }: Props) {
   const [rowData, setRowData] = useState<TradeRow[]>([]);
   const {
   fetchRecordsByField
@@ -33,36 +35,9 @@ export default function RecordModal({ isOpen, onClose, field, value }: Props) {
       maxWidth: 100,
       cellClass: 'font-bold text-center'
     },
-    { headerName: 'Member ID', field: 'membr_id'},
-    { headerName: 'Trader ID', field: 'trdr_id' },
-    { headerName: 'Script Code', field: 'scrp_code' },
-    { headerName: 'Script ID', field: 'scrp_id' },
-    { headerName: 'Rate', field: 'rate' },
-    { headerName: 'Quantity', field: 'qty' },
-    { headerName: 'Trade Status', field: 'trd_status' },
-    { headerName: 'CM Code', field: 'cm_code' },
-    { headerName: 'Time', field: 'time' },
-    { headerName: 'Date', field: 'date' },
-    { headerName: 'Client ID', field: 'clnt_id' },
-    { headerName: 'Order ID', field: 'ordr_id' },
-    { headerName: 'Transaction Type / Order Type', field: 'trns_type' },
-    { headerName: 'Buy/Sell', field: 'bs_flag' },
-    { headerName: 'Trade ID', field: 'trade_id' },
-    { headerName: 'Client Type', field: 'clnt_type' },
-    { headerName: 'ISIN', field: 'isin' },
-    { headerName: 'Script Group', field: 'scrp_group' },
-    { headerName: 'Settlement No.', field: 'sett_no' },
-    { headerName: 'Order Time', field: 'ord_time' },
-    { headerName: 'AO/PO Flag', field: 'ao_po_flag' },
-    { headerName: 'Location ID', field: 'location_id' },
-    { headerName: 'Trade Modified Time', field: 'trd_mod_time' },
-    { headerName: 'Session ID or Trader ID', field: 'session_id' },
-    { headerName: 'CP Code', field: 'cp_code' },
-    { headerName: 'CP Code Confirmation', field: 'cp_code_confrn' },
-    { headerName: 'Old Custodian Participant', field: 'old_cust_participant' },
-    { headerName: 'Old Custodian Code', field: 'old_cust_code' }
+    ...fileColDef
   ];
-    const gridRef = useRef<any | null>(null);
+    const gridRef = useRef<null>(null);
 
   const defaultColDef: ColDef = {
     sortable: true,
@@ -75,7 +50,7 @@ export default function RecordModal({ isOpen, onClose, field, value }: Props) {
     const fetchData = async () => {
       try {
         if (isOpen && field && value) {
-          const Data = await fetchRecordsByField(field,value);
+          const Data = await fetchRecordsByField(field,value, tableName);
           setRowData(Data);
         }
       }catch(error){

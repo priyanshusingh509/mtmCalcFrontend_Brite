@@ -32,9 +32,19 @@ ModuleRegistry.registerModules([
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
+export interface IndexType{
+  current: number;
+}
+
+type TradeGridProps = {
+  fileColDef: ColDef[];
+  tableName: string;
+  pageIndex: IndexType;
+};
 
 
-const TradeGrid = () => {
+
+const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalField, setModalField] = useState('');
   const [modalValue, setModalValue] = useState('');
@@ -48,7 +58,7 @@ const TradeGrid = () => {
     fetchPageViaGoto,
     fetchConsecutive,
     keepOnlyThreePages,
-    pageIndex, // 👈 bring it from the hook directly
+    // pageIndex, // 👈 bring it from the hook directly
     fetchTotalRecords,
     fetchRecordsByField
   } = useTradeData();
@@ -63,34 +73,7 @@ const TradeGrid = () => {
     headerClass: "font-bold text-center",
     cellClass: 'font-bold text-center'
   },
-  { headerName: 'Member ID', field: 'membr_id' },
-  { headerName: 'Trader ID', field: 'trdr_id' },
-  { headerName: 'Script Code', field: 'scrp_code' },
-  { headerName: 'Script ID', field: 'scrp_id' },
-  { headerName: 'Rate', field: 'rate' },
-  { headerName: 'Quantity', field: 'qty' },
-  { headerName: 'Trade Status', field: 'trd_status' },
-  { headerName: 'CM Code', field: 'cm_code' },
-  { headerName: 'Time', field: 'time' },
-  { headerName: 'Date', field: 'date' },
-  { headerName: 'Client ID', field: 'clnt_id' },
-  { headerName: 'Order ID', field: 'ordr_id' },
-  { headerName: 'Transaction Type / Order Type', field: 'trns_type' },
-  { headerName: 'Buy/Sell', field: 'bs_flag' },
-  { headerName: 'Trade ID', field: 'trade_id' },
-  { headerName: 'Client Type', field: 'clnt_type' },
-  { headerName: 'ISIN', field: 'isin' },
-  { headerName: 'Script Group', field: 'scrp_group' },
-  { headerName: 'Settlement No.', field: 'sett_no' },
-  { headerName: 'Order Time', field: 'ord_time' },
-  { headerName: 'AO/PO Flag', field: 'ao_po_flag' },
-  { headerName: 'Location ID', field: 'location_id' },
-  { headerName: 'Trade Modified Time', field: 'trd_mod_time' },
-  { headerName: 'Session ID or Trader ID', field: 'session_id' },
-  { headerName: 'CP Code', field: 'cp_code' },
-  { headerName: 'CP Code Confirmation', field: 'cp_code_confrn' },
-  { headerName: 'Old Custodian Participant', field: 'old_cust_participant' },
-  { headerName: 'Old Custodian Code', field: 'old_cust_code' }
+  ...fileColDef
 ];
 
   const defaultColDef: ColDef = {
@@ -113,8 +96,8 @@ const TradeGrid = () => {
       setRowData(JSON.parse(currentCached));
     }
 
-    keepOnlyThreePages();
-    fetchConsecutive(prev, false);
+    keepOnlyThreePages(pageIndex);
+    fetchConsecutive(prev, false, tableName);
     setTimeout(()=>{
       setPreviousBtn("");
     }, 70)
@@ -136,9 +119,9 @@ const TradeGrid = () => {
       setRowData(JSON.parse(currentCached));
     }
 
-    keepOnlyThreePages();
+    keepOnlyThreePages(pageIndex);
 
-    fetchConsecutive(next, true);
+    fetchConsecutive(next, true, tableName);
     // if (!localStorage.getItem(`page-${next}`)) {
     // }
     // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
@@ -169,7 +152,7 @@ const TradeGrid = () => {
     } 
     pageIndex.current = page - 1;
     // localStorage.clear();   // reset everything
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex);
     setTimeout(()=>{
       setGoBtn("");
     }, 150);
@@ -177,9 +160,9 @@ const TradeGrid = () => {
 
   const handleRefreshPage = () => {
     setRefreshBtn("cursor-wait shadow-2xl");
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex);
     const loadinitialpage = async () => {
-      const pagenumber = await fetchTotalRecords();
+      const pagenumber = await fetchTotalRecords(tableName);
       setTotalPages(pagenumber);
     }
     loadinitialpage();
@@ -214,9 +197,9 @@ const TradeGrid = () => {
 
   useEffect(() => {
     const loadinitialpage = async () => {
-      const pagenumber = await fetchTotalRecords();
+      const pagenumber = await fetchTotalRecords(tableName);
       setTotalPages(pagenumber);
-      fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
+      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex);
       setLastUpdated(new Date());
     }
     loadinitialpage();
@@ -289,6 +272,8 @@ const TradeGrid = () => {
           onClose={() => setIsModalOpen(false)}
           field={modalField}
           value={modalValue}
+          fileColDef={fileColDef}
+          tableName={tableName}
         />
 
       </div>

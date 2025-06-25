@@ -4,12 +4,12 @@ import { useTradeData } from "../hooks/UseTradeData";
 
 const headerFields = [
     {
-        name: "BSE CM",
+        name: "BSE EQ",
         href: "/bseCashMarket"
     },
     {
-        name: "Option 2",
-        href: "/option2"
+        name: "BSE EQD",
+        href: "/bseEQD"
     },
     {
         name: "Option 3",
@@ -28,7 +28,7 @@ const headerFields = [
 
 
 export default function Header(){
-    const { pageIndex } = useTradeData();
+    // const { pageIndex } = useTradeData();
     const router = useRouter();
     function handleLogout(){
         const refrestToken = document.cookie.split(";").find(row => row.startsWith('refreshToken='))?.split('=')[1]; 
@@ -52,7 +52,7 @@ export default function Header(){
             console.error('❌ Logout error:', err);
         });
         localStorage.clear()
-        pageIndex.current = 0;
+        // pageIndex.current = 0;
     }
     return <div className="bg-blue-600 text-white grid grid-cols-6 justify-between items-center">
         <div className="grid- flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
