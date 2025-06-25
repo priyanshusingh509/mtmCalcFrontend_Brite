@@ -26,7 +26,7 @@ export const useTradeData = () => {
     const nextChunk: TradeRow[] = [];
     const prevChunk: TradeRow[] = [];
     let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
-    const fetchURL = (field === '') ? `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}`:`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}&tableName=${tableName}&field=${field}&order=${order}`;
+    const fetchURL = (field === '') ? `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}&tableName=${tableName}`:`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}&tableName=${tableName}&field=${field}&order=${order}`;
     console.log("fetchURL: ",fetchURL);
     console.log(field,order); 
     oboe(fetchURL)
