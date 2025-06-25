@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef } from 'ag-grid-community';
-import type { CellDoubleClickedEvent } from 'ag-grid-community';
+import type { CellDoubleClickedEvent, SortChangedEvent } from 'ag-grid-community';
 import RecordModal from './RecordModal';
 
 
@@ -17,7 +17,8 @@ import {
   DateFilterModule,
   CustomFilterModule,
   ClientSideRowModelModule,
-  CellStyleModule
+  CellStyleModule,
+  ColumnApiModule
 } from 'ag-grid-community';
 
 ModuleRegistry.registerModules([
@@ -26,7 +27,8 @@ ModuleRegistry.registerModules([
   DateFilterModule,
   CustomFilterModule,
   ClientSideRowModelModule,
-  CellStyleModule
+  CellStyleModule,
+  ColumnApiModule 
 ]);
 
 import { TradeRow } from '../types/TradeRow';
@@ -51,6 +53,10 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
   const [inputPage, setInputPage] = useState('');
   // const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [sortField, setSortField] = useState<string>(''); // default: empty string
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | ''>(''); // default: empty string
+
+
   const gridRef = useRef(null);
   const {
     rowData,
@@ -97,7 +103,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     }
 
     keepOnlyThreePages(pageIndex);
-    fetchConsecutive(prev, false, tableName);
+    fetchConsecutive(prev, false, tableName, sortField, sortOrder);
     setTimeout(()=>{
       setPreviousBtn("");
     }, 70)
@@ -121,7 +127,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
 
     keepOnlyThreePages(pageIndex);
 
-    fetchConsecutive(next, true, tableName);
+    fetchConsecutive(next, true, tableName, sortField, sortOrder);
     // if (!localStorage.getItem(`page-${next}`)) {
     // }
     // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
@@ -152,7 +158,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     } 
     pageIndex.current = page - 1;
     // localStorage.clear();   // reset everything
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField, sortOrder);
     setTimeout(()=>{
       setGoBtn("");
     }, 150);
@@ -160,7 +166,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
 
   const handleRefreshPage = () => {
     setRefreshBtn("cursor-wait shadow-2xl");
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField, sortOrder);
     const loadinitialpage = async () => {
       const pagenumber = await fetchTotalRecords(tableName);
       setTotalPages(pagenumber);
@@ -173,11 +179,22 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     },70)
   }
   
-  // const handleSort = (event:SortChangedEvent<TradeRow>) => {
-  //   console.log(event.columns[0].colId);
-  //   console.log(event.columns[0].sort);
+  const handleSort = (event: SortChangedEvent<TradeRow>) => {
+    const columnState = event.api.getColumnState();
+    const sortedColumn = columnState.find(col => col.sort !== null);
 
-  // }
+    if (sortedColumn) {
+      setSortField(sortedColumn.colId || '');
+      setSortOrder(sortedColumn.sort as 'asc' | 'desc');
+      // Optional: immediately refetch data
+      // fetchPageViaGoto(pageIndex.current * PAGE_SIZE, sortedColumn.colId, sortedColumn.sort);
+    } else {
+      setSortField('');
+      setSortOrder('');
+    }
+  };
+
+
 
 
   const handleCellDoubleClick = (event: CellDoubleClickedEvent<TradeRow>) => {
@@ -199,7 +216,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     const loadinitialpage = async () => {
       const pagenumber = await fetchTotalRecords(tableName);
       setTotalPages(pagenumber);
-      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex);
+      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField, sortOrder);
       setLastUpdated(new Date());
     }
     loadinitialpage();
@@ -264,7 +281,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
             defaultColDef={defaultColDef}
             domLayout="normal"
             onCellDoubleClicked={handleCellDoubleClick}
-            // onSortChanged={}
+            onSortChanged={handleSort}
           />
         </div>
         <RecordModal

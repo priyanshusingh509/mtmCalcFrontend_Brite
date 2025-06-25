@@ -21,13 +21,15 @@ export const useTradeData = () => {
     });
   };
 
-  const fetchPageViaGoto = (start: number, tableName: string, pageIndex: IndexType) => {
+  const fetchPageViaGoto = (start: number, tableName: string, pageIndex: IndexType, field:string, order:string) => {
     const currentChunk: TradeRow[] = [];
     const nextChunk: TradeRow[] = [];
     const prevChunk: TradeRow[] = [];
     let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
-
-    oboe(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}&tableName=${tableName}`)
+    const fetchURL = (field === '') ? `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}`:`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}&tableName=${tableName}&field=${field}&order=${order}`;
+    console.log("fetchURL: ",fetchURL);
+    console.log(field,order); 
+    oboe(fetchURL)
       .node('![*]', (node) => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
@@ -71,10 +73,11 @@ export const useTradeData = () => {
       });
   };
 
-  const fetchConsecutive = (page: number, forward: boolean, tableName: string) => {
+  const fetchConsecutive = (page: number, forward: boolean, tableName: string, field : string, order: string) => {
     const start = page * PAGE_SIZE;
+    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}&tableName=${tableName}&field=${field}&order=${order}`
     fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}&tableName=${tableName}`
+      fetchURL
     )
       .then((res) => res.json())
       .then((data: TradeRow[]) => {
