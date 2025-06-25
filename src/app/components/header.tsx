@@ -4,8 +4,8 @@ import { useTradeData } from "../hooks/UseTradeData";
 
 const headerFields = [
     {
-        name: "Option 1",
-        href: "/option1"
+        name: "BSE CM",
+        href: "/bseCashMarket"
     },
     {
         name: "Option 2",

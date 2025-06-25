@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef, SortChangedEvent } from 'ag-grid-community';
-import type { CellClickedEvent} from 'ag-grid-community';
+import { ColDef } from 'ag-grid-community';
+import type { CellDoubleClickedEvent } from 'ag-grid-community';
 import RecordModal from './RecordModal';
 
 import { useTradeData } from '../hooks/UseTradeData';
@@ -59,11 +59,11 @@ const TradeGrid = () => {
   const columnDefs: ColDef[] = [
   {
     headerName: 'Index',
-    valueGetter: (params) => {
-      const rowIndex = params.node?.rowIndex ?? 0;
-      return pageIndex.current * PAGE_SIZE + rowIndex + 1;
-    },
+    valueGetter: params => (pageIndex.current*PAGE_SIZE) + (params?.node?.rowIndex ?? 0) + 1,
+    sortable: false,
+    filter: false,
     width: 100,
+    headerClass: "font-bold text-center",
     cellClass: 'font-bold text-center'
   },
   { headerName: 'Member ID', field: 'membr_id' },
@@ -96,19 +96,16 @@ const TradeGrid = () => {
   { headerName: 'Old Custodian Code', field: 'old_cust_code' }
 ];
 
-
-
   const defaultColDef: ColDef = {
     resizable: true,
     filter:true,
     floatingFilter: true,
-    sortable: true
+    sortable: true,
+    width: 180
   };
 
-
-
-
   const handlePrev = () => {
+    setPreviousBtn("cursor-wait shadow-2xl");
     if (pageIndex.current === 0) return;
 
     pageIndex.current -= 1;
@@ -122,7 +119,9 @@ const TradeGrid = () => {
 
     keepOnlyThreePages();
     fetchConsecutive(prev, false);
-
+    setTimeout(()=>{
+      setPreviousBtn("");
+    }, 70)
     // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
     // }
     // if (!localStorage.getItem(`page-${next}`)) {
@@ -131,6 +130,7 @@ const TradeGrid = () => {
   };
 
   const handleNext = () => {
+    setNextBtn("cursor-wait shadow-2xl");
     pageIndex.current += 1;
     const curr = pageIndex.current;
     const next = curr + 1;
@@ -148,6 +148,9 @@ const TradeGrid = () => {
     // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
     //   fetchConsecutive(curr+1, false);
     // }
+    setTimeout(()=>{
+      setNextBtn("");
+    }, 70);
   };
 
   const handleInputPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,6 +164,7 @@ const TradeGrid = () => {
   };
 
   const handleGoToInputPage = () => {
+    setGoBtn("cursor-wait shadow-2xl");
     const page = parseInt(inputPage);
     if (isNaN(page) || page < 1 || page>totalPages){
       alert("page does not exist");
@@ -170,15 +174,24 @@ const TradeGrid = () => {
     pageIndex.current = page - 1;
     // localStorage.clear();   // reset everything
     fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
+    setTimeout(()=>{
+      setGoBtn("");
+    }, 150);
   };
 
   const handleRefreshPage = () => {
+    setRefreshBtn("cursor-wait shadow-2xl");
     fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
     const loadinitialpage = async () => {
       const pagenumber = await fetchTotalRecords();
       setTotalPages(pagenumber);
     }
     loadinitialpage();
+    // setRefreshBtn("");
+    setTimeout(()=>{
+      setRefreshBtn("");
+      setLastUpdated(new Date());
+    },70)
   }
   
   const handleSort = (event : SortChangedEvent<TradeRow>) => {
@@ -192,36 +205,43 @@ const TradeGrid = () => {
 
 
 
-  const handleCellClick = (event: CellClickedEvent<TradeRow>) => {
+  const handleCellDoubleClick = (event: CellDoubleClickedEvent<TradeRow>) => {
     const clickedField = event.colDef.field;
     const clickedValue = event.value;
-    if (clickedField === 'trdr_id' && clickedValue) {
+    if (clickedValue && clickedField) {
       setModalField(clickedField);
       setModalValue(clickedValue);
       setIsModalOpen(true);
     }
   };
-
+  const [goBtn, setGoBtn] = useState("");
+  const [nextBtn, setNextBtn] = useState("");
+  const [previousBtn, setPreviousBtn] = useState("");
+  const [refreshBtn, setRefreshBtn] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>();
 
   useEffect(() => {
     const loadinitialpage = async () => {
       const pagenumber = await fetchTotalRecords();
       setTotalPages(pagenumber);
       fetchPageViaGoto(pageIndex.current * PAGE_SIZE);
+      setLastUpdated(new Date());
     }
     loadinitialpage();
   }, []);
 
+
   // console.log("this should work ",totalPages);
 
   return (
-    <div className="flex flex-col h-screen w-full">
+    <div className="flex flex-col h-[90vh] w-full">
       {/* Pagination Controls */}
       <div className="flex justify-center items-center p-4 gap-2">
+        <div className='font-semibold'>Last Updated: {lastUpdated?.toLocaleTimeString()}</div>
         <button
           onClick={handlePrev}
           disabled={pageIndex.current === 0}
-          className="px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${previousBtn}`}
         >
           Previous
         </button>
@@ -231,7 +251,7 @@ const TradeGrid = () => {
         <button
           onClick={handleNext}
           disabled={pageIndex.current === (totalPages - 1)}
-          className="px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
         >
           Next
         </button>
@@ -247,12 +267,12 @@ const TradeGrid = () => {
         />
         <button
           onClick={handleGoToInputPage}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          className={`px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 active:scale-95 transition transform duration-100 ${goBtn}`}
         >
           Go
         </button>
         <button
-        className="px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600"
+        className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100 ${refreshBtn}`}
         onClick={handleRefreshPage}
         >
           Refresh
@@ -260,7 +280,7 @@ const TradeGrid = () => {
       </div>
 
       {/* AG Grid */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex h-full">
         <div className="ag-theme-alpine h-full w-full">
           <AgGridReact<TradeRow>
             ref={gridRef}
@@ -268,8 +288,8 @@ const TradeGrid = () => {
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
             domLayout="normal"
-            onCellClicked={handleCellClick}
-            onSortChanged={handleSort}
+            onCellDoubleClicked={handleCellDoubleClick}
+            // onSortChanged={}
           />
         </div>
         <RecordModal
