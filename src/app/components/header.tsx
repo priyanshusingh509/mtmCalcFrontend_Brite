@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTradeData } from "../hooks/UseTradeData";
 
 const headerFields = [
     {

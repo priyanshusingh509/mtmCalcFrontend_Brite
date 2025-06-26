@@ -1,5 +1,6 @@
-'use client';
+'use client'; 
 import Header from '../components/header';
+import ProtectedRoute from '../components/ProtectedRoute';
 import TradeGrid from '../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
@@ -39,10 +40,12 @@ const pageIndex = { current: 0 };
 export default function bseCashMarketPage(){
     return(
       <div>
+        <ProtectedRoute>
         <Header/>
         <div className="flex h-full flex-col w-full">
           <TradeGrid fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex}/>
         </div>
+        </ProtectedRoute>
       </div>
     )
 }

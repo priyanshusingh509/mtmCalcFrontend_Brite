@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import oboe from 'oboe';
+// import clarinet from 'clarinet';
+
+// import { patchOboeHeaders } from '../utils/patchOboe';
+// patchOboeHeaders();
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
 import dotenv from 'dotenv';
 import { IndexType } from '../components/TradeGrid';
+import axios from 'axios';
 dotenv.config();
 
 
@@ -21,7 +26,8 @@ export const useTradeData = () => {
     });
   };
 
-  const fetchPageViaGoto = (start: number, tableName: string, pageIndex: IndexType, field:string, order:string) => {
+
+ const fetchPageViaGoto = (start: number, tableName: string, pageIndex: IndexType, field:string, order:string) => {
     const currentChunk: TradeRow[] = [];
     const nextChunk: TradeRow[] = [];
     const prevChunk: TradeRow[] = [];
@@ -36,17 +42,22 @@ export const useTradeData = () => {
       order
     }
     console.log(field,order); 
+    console.time("oboe stream for page 1")
+    console.time("oboe stream for all the pages includes page 1 as well");
     oboe({
       url: fetchURL,
       method: 'POST',
       body: JSON.stringify(body),
        headers: {
-       'Content-Type': 'application/json',
-  },
-    })
+         'Content-Type': 'application/json',
+        },
+      })
       .node('![*]', (node) => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
+          setRowData(currentChunk);
+          console.timeEnd("oboe stream for page 1");
+          console.log("updated page 1 by setRowData()")
           return oboe.drop;
         }
 
@@ -69,9 +80,9 @@ export const useTradeData = () => {
         }
       })
       .done(() => {
+        console.timeEnd("oboe stream for all the pages includes page 1 as well");
         const curr = pageIndex.current;
 
-        setRowData(currentChunk);
         localStorage.setItem(`page-${curr}`, JSON.stringify(currentChunk));
         if (nextChunk.length > 0) {
           localStorage.setItem(`page-${curr + 1}`, JSON.stringify(nextChunk));
@@ -86,6 +97,8 @@ export const useTradeData = () => {
         console.error('Oboe failed:', err);
       });
   };
+
+
 
   const fetchConsecutive = (page: number, forward: boolean, tableName: string, field : string, order: string) => {
     const start = page * PAGE_SIZE;

@@ -1,10 +1,10 @@
 'use client';
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-
+import { useAuth } from "./context/AuthContext";
 
 export default function TradePage() {
+  const { setIsAuthenticated } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({username: "", password: ""})
   const handleSubmit = async () => {;
@@ -17,7 +17,11 @@ export default function TradePage() {
       credentials: 'include', // for cookie support
       body: JSON.stringify(formData)
     });
-
+    
+    if (response.ok) {
+      setIsAuthenticated(true);
+      router.push('/bseCashMarket');
+    }
     const data = await response.json();
 
     
