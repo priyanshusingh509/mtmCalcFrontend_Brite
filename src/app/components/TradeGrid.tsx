@@ -168,14 +168,14 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     setRefreshBtn("cursor-wait shadow-2xl");
     fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField, sortOrder);
     const loadinitialpage = async () => {
-      const pagenumber = await fetchTotalRecords(tableName);
-      setTotalPages(pagenumber);
+      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName);
+      setTotalPages(total);
+      setLastUpdated(lastUpdatedTime);
     }
     loadinitialpage();
     // setRefreshBtn("");
     setTimeout(()=>{
       setRefreshBtn("");
-      setLastUpdated(new Date());
     },70)
   }
   
@@ -210,14 +210,14 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
   const [nextBtn, setNextBtn] = useState("");
   const [previousBtn, setPreviousBtn] = useState("");
   const [refreshBtn, setRefreshBtn] = useState("");
-  const [lastUpdated, setLastUpdated] = useState<Date | null>();
+  const [lastUpdated, setLastUpdated] = useState<string | null>();
 
   useEffect(() => {
     const loadinitialpage = async () => {
-      const pagenumber = await fetchTotalRecords(tableName);
-      setTotalPages(pagenumber);
+      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName);
+      setTotalPages(total);
       fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField, sortOrder);
-      setLastUpdated(new Date());
+      setLastUpdated(lastUpdatedTime);
     }
     loadinitialpage();
   }, []);
@@ -229,7 +229,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     <div className="flex flex-col h-[90vh] w-full">
       {/* Pagination Controls */}
       <div className="flex justify-center items-center p-4 gap-2">
-        <div className='font-semibold'>Last Updated: {lastUpdated?.toLocaleTimeString()}</div>
+        <div className='font-semibold'>Last Updated: {lastUpdated}</div>
         <button
           onClick={handlePrev}
           disabled={pageIndex.current === 0}

@@ -26,10 +26,24 @@ export const useTradeData = () => {
     const nextChunk: TradeRow[] = [];
     const prevChunk: TradeRow[] = [];
     let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
-    const fetchURL = (field === '') ? `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}&tableName=${tableName}`:`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto?start=${start}&limit=${PAGE_SIZE}&tableName=${tableName}&field=${field}&order=${order}`;
+    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto`;
     console.log("fetchURL: ",fetchURL);
+    const body: {start: number, limit: number, tableName: string, field?:string, order?:string} = {
+      start,
+      limit: PAGE_SIZE,
+      tableName,
+      field,
+      order
+    }
     console.log(field,order); 
-    oboe(fetchURL)
+    oboe({
+      url: fetchURL,
+      method: 'POST',
+      body: JSON.stringify(body),
+       headers: {
+       'Content-Type': 'application/json',
+  },
+    })
       .node('![*]', (node) => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
@@ -75,9 +89,23 @@ export const useTradeData = () => {
 
   const fetchConsecutive = (page: number, forward: boolean, tableName: string, field : string, order: string) => {
     const start = page * PAGE_SIZE;
-    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend?start=${start}&limit=${PAGE_SIZE}&action=${forward}&tableName=${tableName}&field=${field}&order=${order}`
+    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend`
+    const body: {start: number, limit: number, action: boolean, tableName: string, field?: string, order?: string} = {
+      start,
+      limit: PAGE_SIZE,
+      action: forward,
+      tableName,
+      field,
+      order
+    }
     fetch(
-      fetchURL
+      fetchURL, {
+        method: 'POST',
+        body: JSON.stringify(body),
+         headers: {
+    'Content-Type': 'application/json',
+  },
+      }
     )
       .then((res) => res.json())
       .then((data: TradeRow[]) => {
@@ -90,7 +118,19 @@ export const useTradeData = () => {
 
   const fetchRecordsByField = async (field: string, value: string | number, tableName: string): Promise<TradeRow[]> => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getby?field=${field}&value=${value}&tableName=${tableName}`);
+    const fetchUrl = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getby`;
+    const body = {
+      field,
+      value,
+      tableName
+    }
+    const res = await fetch(fetchUrl, {
+      method: 'POST',
+      body: JSON.stringify(body),
+       headers: {
+    'Content-Type': 'application/json',
+  },
+    });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     
     const data: TradeRow[] = await res.json();
@@ -105,9 +145,23 @@ export const useTradeData = () => {
 
  async function fetchTotalRecords(tableName: string) {
   console.log(tableName);
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords?tableName=${tableName}`);
-  const { total } = await response.json();
-  return Math.ceil(total / PAGE_SIZE);
+  const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords`;
+  const body = {
+    tableName
+  }
+  const response = await fetch(fetchURL, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: {
+    'Content-Type': 'application/json',
+  },
+  });
+  const { total, lastUpdatedTime } = await response.json();
+  console.log(body);
+  return {
+    total: Math.ceil(total / PAGE_SIZE),
+    lastUpdatedTime
+  };
   };
 
 
