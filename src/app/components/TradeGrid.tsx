@@ -53,8 +53,8 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
   const [inputPage, setInputPage] = useState('');
   // const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [sortField, setSortField] = useState<string>(''); // default: empty string
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | ''>(''); // default: empty string
+  const sortField= useRef<string>(''); // default: empty string
+  const sortOrder= useRef<'asc' | 'desc' | ''>(''); // default: empty string
 
 
   const gridRef = useRef(null);
@@ -103,7 +103,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     }
 
     keepOnlyThreePages(pageIndex);
-    fetchConsecutive(prev, false, tableName, sortField, sortOrder);
+    fetchConsecutive(prev, false, tableName, sortField.current, sortOrder.current);
     setTimeout(()=>{
       setPreviousBtn("");
     }, 70)
@@ -127,7 +127,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
 
     keepOnlyThreePages(pageIndex);
 
-    fetchConsecutive(next, true, tableName, sortField, sortOrder);
+    fetchConsecutive(next, true, tableName, sortField.current, sortOrder.current);
     // if (!localStorage.getItem(`page-${next}`)) {
     // }
     // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
@@ -158,7 +158,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     } 
     pageIndex.current = page - 1;
     // localStorage.clear();   // reset everything
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField, sortOrder);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current);
     setTimeout(()=>{
       setGoBtn("");
     }, 150);
@@ -166,7 +166,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
 
   const handleRefreshPage = () => {
     setRefreshBtn("cursor-wait shadow-2xl");
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField, sortOrder);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current);
     const loadinitialpage = async () => {
       const {total, lastUpdatedTime} = await fetchTotalRecords(tableName);
       setTotalPages(total);
@@ -184,14 +184,19 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     const sortedColumn = columnState.find(col => col.sort !== null);
 
     if (sortedColumn) {
-      setSortField(sortedColumn.colId || '');
-      setSortOrder(sortedColumn.sort as 'asc' | 'desc');
+      // setSortField(sortedColumn.colId || '');
+      sortField.current = sortedColumn.colId || '';
+      // setSortOrder(sortedColumn.sort as 'asc' | 'desc');
+      sortOrder.current = sortedColumn.sort as 'asc' | 'desc';
       // Optional: immediately refetch data
       // fetchPageViaGoto(pageIndex.current * PAGE_SIZE, sortedColumn.colId, sortedColumn.sort);
     } else {
-      setSortField('');
-      setSortOrder('');
+      // setSortField('');
+      sortField.current = '';
+      // setSortOrder('');
+      sortOrder.current = '';
     }
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current);
   };
 
 
@@ -216,7 +221,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     const loadinitialpage = async () => {
       const {total, lastUpdatedTime} = await fetchTotalRecords(tableName);
       setTotalPages(total);
-      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField, sortOrder);
+      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current);
       setLastUpdated(lastUpdatedTime);
     }
     loadinitialpage();
