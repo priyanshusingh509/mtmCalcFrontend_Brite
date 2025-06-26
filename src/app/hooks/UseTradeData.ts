@@ -106,8 +106,8 @@ export const useTradeData = () => {
  async function fetchTotalRecords(tableName: string) {
   console.log(tableName);
   const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords?tableName=${tableName}`);
-  const { total } = await response.json();
-  return Math.ceil(total / PAGE_SIZE);
+  const { total, lastUpdatedTime } = await response.json();
+  return {total: Math.ceil(total / PAGE_SIZE), lastUpdatedTime};
   };
 
 
