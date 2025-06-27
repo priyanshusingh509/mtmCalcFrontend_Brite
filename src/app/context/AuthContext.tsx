@@ -38,10 +38,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           method: 'POST',
           credentials: 'include',
         });
-
+        
         if (refreshRes.ok) {
+          console.log("this ran1")
           setIsAuthenticated(true);
         } else {
+          console.log("this ran2");
           setIsAuthenticated(false);
           router.push('/');
         }

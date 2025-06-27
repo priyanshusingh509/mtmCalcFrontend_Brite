@@ -6,7 +6,6 @@ import { ColDef } from 'ag-grid-community';
 import type { CellDoubleClickedEvent, SortChangedEvent } from 'ag-grid-community';
 import RecordModal from './RecordModal';
 
-
 import { useTradeData } from '../hooks/UseTradeData';
 
 
@@ -77,7 +76,8 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     filter: false,
     width: 100,
     headerClass: "font-bold text-center",
-    cellClass: 'font-bold text-center'
+    cellClass: 'font-bold text-center',
+    
   },
   ...fileColDef
 ];
@@ -247,7 +247,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
         </span>
         <button
           onClick={handleNext}
-          disabled={pageIndex.current === (totalPages - 1)}
+          disabled={pageIndex.current >= (totalPages - 1) }
           className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
         >
           Next
@@ -287,6 +287,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
             domLayout="normal"
             onCellDoubleClicked={handleCellDoubleClick}
             onSortChanged={handleSort}
+            
           />
         </div>
         <RecordModal
