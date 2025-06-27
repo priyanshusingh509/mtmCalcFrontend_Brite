@@ -26,20 +26,20 @@ export const useTradeData = () => {
     });
   };
 
-
- const fetchPageViaGoto = (start: number, tableName: string, pageIndex: IndexType, field:string, order:string) => {
+  const fetchPageViaGoto = (start: number, tableName: string, pageIndex: IndexType, field:string, order:string, filter?: "trader" | "symbol") => {
     const currentChunk: TradeRow[] = [];
     const nextChunk: TradeRow[] = [];
     const prevChunk: TradeRow[] = [];
     let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
     const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto`;
     console.log("fetchURL: ",fetchURL);
-    const body: {start: number, limit: number, tableName: string, field?:string, order?:string} = {
+    const body= {
       start,
       limit: PAGE_SIZE,
       tableName,
       field,
-      order
+      order,
+      filter
     }
     console.log(field,order); 
     console.time("oboe stream for page 1")
@@ -100,16 +100,17 @@ export const useTradeData = () => {
 
 
 
-  const fetchConsecutive = (page: number, forward: boolean, tableName: string, field : string, order: string) => {
+  const fetchConsecutive = (page: number, forward: boolean, tableName: string, field : string, order: string, filter?: "trader" | "symbol") => {
     const start = page * PAGE_SIZE;
     const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend`
-    const body: {start: number, limit: number, action: boolean, tableName: string, field?: string, order?: string} = {
+    const body = {
       start,
       limit: PAGE_SIZE,
       action: forward,
       tableName,
       field,
-      order
+      order,
+      filter
     }
     fetch(
       fetchURL, {
@@ -156,11 +157,12 @@ export const useTradeData = () => {
 };
 
 
- async function fetchTotalRecords(tableName: string) {
+ async function fetchTotalRecords(tableName: string, filter?: "trader" | "symbol") {
   console.log(tableName);
   const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords`;
   const body = {
-    tableName
+    tableName,
+    filter
   }
   const response = await fetch(fetchURL, {
     method: 'POST',
