@@ -9,7 +9,6 @@ import { PAGE_SIZE } from '../utils/constants';
 
 import dotenv from 'dotenv';
 import { IndexType } from '../components/TradeGrid';
-import axios from 'axios';
 dotenv.config();
 
   
