@@ -12,12 +12,12 @@ const headerFields = [
         href: "/bseEQD"
     },
     {
-        name: "Option 3",
-        href: "/option3"
+        name: "Trader Summary",
+        href: "/traderSummary"
     },
     {
-        name: "Option 4",
-        href: "/option4"
+        name: "Symbol Summary",
+        href: "/symbolSummary"
     },
     {
         name: "Option 5",

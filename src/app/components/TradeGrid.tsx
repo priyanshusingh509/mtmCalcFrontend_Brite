@@ -42,11 +42,10 @@ type TradeGridProps = {
   fileColDef: ColDef[];
   tableName: string;
   pageIndex: IndexType;
+  filter?: "trader" | "symbol";
 };
 
-
-
-const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
+const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalField, setModalField] = useState('');
   const [modalValue, setModalValue] = useState('');
@@ -103,7 +102,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     }
 
     keepOnlyThreePages(pageIndex);
-    fetchConsecutive(prev, false, tableName, sortField.current, sortOrder.current);
+    fetchConsecutive(prev, false, tableName, sortField.current, sortOrder.current, filter);
     setTimeout(()=>{
       setPreviousBtn("");
     }, 70)
@@ -127,7 +126,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
 
     keepOnlyThreePages(pageIndex);
 
-    fetchConsecutive(next, true, tableName, sortField.current, sortOrder.current);
+    fetchConsecutive(next, true, tableName, sortField.current, sortOrder.current, filter);
     // if (!localStorage.getItem(`page-${next}`)) {
     // }
     // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
@@ -158,7 +157,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
     } 
     pageIndex.current = page - 1;
     // localStorage.clear();   // reset everything
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current, filter);
     setTimeout(()=>{
       setGoBtn("");
     }, 150);
@@ -166,9 +165,9 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
 
   const handleRefreshPage = () => {
     setRefreshBtn("cursor-wait shadow-2xl");
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current, filter);
     const loadinitialpage = async () => {
-      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName);
+      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, filter);
       setTotalPages(total);
       setLastUpdated(lastUpdatedTime);
     }
@@ -196,10 +195,16 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
       // setSortOrder('');
       sortOrder.current = '';
     }
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current, filter);
   };
 
-
+function timeToSeconds(t: string | undefined | null) {
+    if (t) {
+      const [h, m, s = 0] = t.split(':').map(Number);
+    return h * 3600 + m * 60 + s;
+    }
+    return 1e+17;
+}
 
 
   const handleCellDoubleClick = (event: CellDoubleClickedEvent<TradeRow>) => {
@@ -217,11 +222,22 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
   const [refreshBtn, setRefreshBtn] = useState("");
   const [lastUpdated, setLastUpdated] = useState<string | null>();
 
+
+  const NoDataComponent = () =>{
+    if (timeToSeconds(lastUpdated) < timeToSeconds("9:30:00")) {
+      return <div>
+        Market Data Updates at 9:30
+
+      </div>
+    }
+    return <div>Error: No data from Backend</div>
+  }
+
   useEffect(() => {
     const loadinitialpage = async () => {
-      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName);
+      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, filter);
       setTotalPages(total);
-      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current);
+      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current, filter);
       setLastUpdated(lastUpdatedTime);
     }
     loadinitialpage();
@@ -247,7 +263,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
         </span>
         <button
           onClick={handleNext}
-          disabled={pageIndex.current === (totalPages - 1)}
+          disabled={pageIndex.current >= (totalPages - 1)}
           className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
         >
           Next
@@ -287,6 +303,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex }: TradeGridProps) => {
             domLayout="normal"
             onCellDoubleClicked={handleCellDoubleClick}
             onSortChanged={handleSort}
+            noRowsOverlayComponent={NoDataComponent}
           />
         </div>
         <RecordModal
