@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import oboe from 'oboe';
 // import clarinet from 'clarinet';
 
@@ -15,7 +15,6 @@ dotenv.config();
 
 export const useTradeData = () => {
   const [rowData, setRowData] = useState<TradeRow[]>([]);
-  
   const keepOnlyThreePages = (pageIndex: IndexType) => {
     const curr = pageIndex.current;
     const valid = [`page-${curr - 1}`, `page-${curr}`, `page-${curr + 1}`,"username"];
@@ -172,12 +171,39 @@ export const useTradeData = () => {
   },
   });
   const { total, lastUpdatedTime } = await response.json();
-  console.log(body);
+  console.log(total, lastUpdatedTime);
   return {
     total: Math.ceil(total / PAGE_SIZE),
     lastUpdatedTime
   };
   };
+
+async function fetchFilteredData(tableName: string, search: string, col: string, filter?: "trader" | "symbol") {
+  try {
+    const fetchUrl = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getFilteredData`;
+    const body = {
+      tableName,
+      filter,
+      search,
+      col
+    }
+    console.log(body)
+    const res = await fetch(fetchUrl, {
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data: TradeRow[] = await res.json();
+    // console.log(data);
+    // setTimeout(()=>
+      setRowData(data)
+    // ,10)
+  } catch (err) {
+    console.error('Error fetching filtered data:', err);
+  }
+};
 
 
   return {
@@ -187,6 +213,7 @@ export const useTradeData = () => {
     fetchConsecutive,
     keepOnlyThreePages,
     fetchTotalRecords,
-    fetchRecordsByField
+    fetchRecordsByField,
+    fetchFilteredData
   };
 };

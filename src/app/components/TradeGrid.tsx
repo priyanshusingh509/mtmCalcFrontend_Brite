@@ -5,7 +5,7 @@ import { AgGridReact } from 'ag-grid-react';
 import { ColDef } from 'ag-grid-community';
 import type { CellDoubleClickedEvent, SortChangedEvent } from 'ag-grid-community';
 import RecordModal from './RecordModal';
-
+import CustomFilter from './CustomFilter';
 import { useTradeData } from '../hooks/UseTradeData';
 
 
@@ -33,6 +33,7 @@ ModuleRegistry.registerModules([
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
+
 export interface IndexType{
   current: number;
 }
@@ -51,9 +52,15 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
   const [inputPage, setInputPage] = useState('');
   // const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const sortField= useRef<string>(''); // default: empty string
+  const currentSortField= useRef<string>(''); // default: empty string
+  // const nextSortField = useRef<string>('');
   const sortOrder= useRef<'asc' | 'desc' | ''>(''); // default: empty string
-
+  const [currentFilterCol, setCurrentFilterCol] = useState<string | null>(null);
+  
+  const handleSearch = async (tableName: string, value: string, colId: string) => {
+    setCurrentFilterCol(colId);
+    await fetchFilteredData(tableName, value, colId);
+  };
 
   const gridRef = useRef(null);
   const {
@@ -64,7 +71,8 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
     keepOnlyThreePages,
     // pageIndex, // 👈 bring it from the hook directly
     fetchTotalRecords,
-    fetchRecordsByField
+    fetchRecordsByField,
+    fetchFilteredData
   } = useTradeData();
 
   const columnDefs: ColDef[] = [
@@ -74,7 +82,9 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
     sortable: false,
     filter: false,
     width: 100,
-    headerClass: "font-bold text-center",
+    headerComponent: ()=>{
+      return <div className='font-semibold w-full flex justify-center'>Index</div>
+    } ,
     cellClass: 'font-bold text-center',
     
   },
@@ -84,8 +94,15 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
   const defaultColDef: ColDef = {
     resizable: true,
     filter: true,
+    headerComponent: CustomFilter,
+    headerComponentParams: {
+      tableName: tableName,
+      onSearch: handleSearch,
+      currentFilterCol,
+      filter: filter
+    },
     sortable: true,
-    width: 180
+    width: 180,
   };
 
   const handlePrev = () => {
@@ -102,7 +119,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
     }
 
     keepOnlyThreePages(pageIndex);
-    fetchConsecutive(prev, false, tableName, sortField.current, sortOrder.current, filter);
+    fetchConsecutive(prev, false, tableName, currentSortField.current, sortOrder.current, filter);
     setTimeout(()=>{
       setPreviousBtn("");
     }, 70)
@@ -126,7 +143,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
 
     keepOnlyThreePages(pageIndex);
 
-    fetchConsecutive(next, true, tableName, sortField.current, sortOrder.current, filter);
+    fetchConsecutive(next, true, tableName, currentSortField.current, sortOrder.current, filter);
     // if (!localStorage.getItem(`page-${next}`)) {
     // }
     // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
@@ -157,7 +174,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
     } 
     pageIndex.current = page - 1;
     // localStorage.clear();   // reset everything
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current, filter);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, filter);
     setTimeout(()=>{
       setGoBtn("");
     }, 150);
@@ -165,7 +182,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
 
   const handleRefreshPage = () => {
     setRefreshBtn("cursor-wait shadow-2xl");
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current, filter);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, filter);
     const loadinitialpage = async () => {
       const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, filter);
       setTotalPages(total);
@@ -180,22 +197,26 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
   
   const handleSort = (event: SortChangedEvent<TradeRow>) => {
     const columnState = event.api.getColumnState();
+    // console.log("heloow to ogasdoa: ",columnState);
     const sortedColumn = columnState.find(col => col.sort !== null);
+    console.log("sorted column : ",sortedColumn)
+    // console.log("this is called", sortedColumn);
 
     if (sortedColumn) {
       // setSortField(sortedColumn.colId || '');
-      sortField.current = sortedColumn.colId || '';
+
+      currentSortField.current = sortedColumn.colId || '';
       // setSortOrder(sortedColumn.sort as 'asc' | 'desc');
       sortOrder.current = sortedColumn.sort as 'asc' | 'desc';
       // Optional: immediately refetch data
       // fetchPageViaGoto(pageIndex.current * PAGE_SIZE, sortedColumn.colId, sortedColumn.sort);
     } else {
       // setSortField('');
-      sortField.current = '';
+      currentSortField.current = '';
       // setSortOrder('');
       sortOrder.current = '';
     }
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current, filter);
+    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, filter);
   };
 
 function timeToSeconds(t: string | undefined | null) {
@@ -237,7 +258,7 @@ function timeToSeconds(t: string | undefined | null) {
     const loadinitialpage = async () => {
       const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, filter);
       setTotalPages(total);
-      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, sortField.current, sortOrder.current, filter);
+      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, filter);
       setLastUpdated(lastUpdatedTime);
     }
     loadinitialpage();
