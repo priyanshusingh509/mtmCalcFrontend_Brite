@@ -5,18 +5,16 @@ const CustomFilter = (props: any) => {
   const {
     displayName,
     column,
-    api,
     setSort,
     enableSorting,
-    columnApi,
-    sort,
     tableName,
     onSearch,
     currentFilterCol,
-    filter
+    summaryType,
+    clearSignal,
+    clearSortSignal
   } = props;
   const filterBoxRef = useRef<HTMLDivElement>(null);
-  const hasMountedRef = useRef(false);
   const showInputRef = useRef<boolean>(false);
   const [renderTrigger, setRenderTrigger] = React.useState(0); // Used to trigger re-render
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -25,9 +23,9 @@ const CustomFilter = (props: any) => {
   const sortIndexRef = useRef(0); // ✅ persistent between renders
   const [filterText, setFilterText] = React.useState('');
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  
 
   const closeInput = () => {
-  if (!hasMountedRef.current) return;
   showInputRef.current = false;
   setRenderTrigger(prev => prev + 1);
 };
@@ -42,16 +40,15 @@ const CustomFilter = (props: any) => {
         const value = e.target.value.toUpperCase();
         console.log(value);
         setFilterText(value);
-
         if (debounceTimeout.current) {
             clearTimeout(debounceTimeout.current);
         }
 
         debounceTimeout.current = setTimeout(async () => {
-          setFilterClass("Applied")
-            await onSearch(tableName, value, column.colId, filter); // Make backend call
+          value ? setFilterClass("Applied") : setFilterClass('');
+            await onSearch(tableName, column.colId, value, summaryType); // Make backend call
             setRenderTrigger(prev => prev + 1);
-        }, 350); // debounce duration
+        }, 300); // debounce duration
     };
 
 //   const toggleInput = () => setShowInput(prev => !prev);
@@ -86,16 +83,13 @@ React.useEffect(() => {
   }
 }, [currentFilterCol]);
 
-
 React.useEffect(() => {
-  hasMountedRef.current = true; // allow closeInput after initial mount
-
   // 🔁 Delay focus to avoid AG Grid re-render stealing it
   const timeout = setTimeout(() => {
     if (showInputRef.current && inputRef.current) {
       inputRef.current.focus();
     }
-  }, 10);
+  }, 200);
 
   // 🔐 ESC key closes input
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -125,6 +119,19 @@ React.useEffect(() => {
   };
 }, [renderTrigger]);
 
+React.useEffect(() => {
+  setFilterText('');
+  setFilterClass('');
+  showInputRef.current = false;
+  setRenderTrigger(prev => prev + 1); // re-render to hide input
+  // setSort(null);
+  // setSortClass("");
+}, [clearSignal]);
+
+React.useEffect(() => {
+  sortIndexRef.current = 0;
+  setSortClass("hidden");
+}, [clearSortSignal]);
 
 
   return (
@@ -144,7 +151,7 @@ React.useEffect(() => {
       >
         <div className='flex'>
         <img className={`${sortClass}`} src="sort.png" width="16px"/>
-        <img src={`filter${filterClass}.png`} width="16px" />
+        <img src={`filter${filterClass}.png`} width="16px"  className='min-w-4' />
         </div>
       </button>)}
 

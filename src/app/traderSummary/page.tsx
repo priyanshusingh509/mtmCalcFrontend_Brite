@@ -4,12 +4,12 @@ import TradeGrid from '../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
 const columnDefs: ColDef[] = [
-  { headerName: 'Trader ID', field: 'trdr_id' },
-  { headerName: 'Script Code', field: 'scrp_code' },
+  { headerName: 'Trader ID', field: 'trdr_id'},
+  { headerName: 'Script Code', field: 'scrp_code'},
   { headerName: 'Script ID', field: 'scrp_id' },
-  { headerName: "Margin", field: "margin"},
   { headerName: "Net Qty", field: "netQty"},
-  { headerName: "Net Position", field: "netPosition"},
+  { headerName: "Realised PnL", field: "realisedPnL"},
+  { headerName: "Unrealised PnL", field: "unrealisedPnL"},
   { headerName: "MTM", field: "MTM"},
 ];
 
@@ -17,10 +17,10 @@ const pageIndex = { current: 0 };
 
 export default function bseCashMarketPage(){
     return(
-      <div>
+      <div className='h-screen flex flex-col'>
         <Header/>
-        <div className="flex h-full flex-col w-full">
-          <TradeGrid fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex} filter='trader'/>
+        <div className="flex flex-col flex-grow">
+          <TradeGrid fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex} summaryType='trader'/>
         </div>
       </div>
     )

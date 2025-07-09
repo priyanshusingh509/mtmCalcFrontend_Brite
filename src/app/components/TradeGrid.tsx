@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef } from 'ag-grid-community';
-import type { CellDoubleClickedEvent, SortChangedEvent } from 'ag-grid-community';
+import { ColDef, FilterModel, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { CellDoubleClickedEvent, FilterChangedEvent, FilterDestroyedEvent, FilterManager, SortChangedEvent } from 'ag-grid-community';
 import RecordModal from './RecordModal';
 import CustomFilter from './CustomFilter';
 import { useTradeData } from '../hooks/UseTradeData';
@@ -17,7 +17,10 @@ import {
   CustomFilterModule,
   ClientSideRowModelModule,
   CellStyleModule,
-  ColumnApiModule
+  ColumnApiModule,
+  SuppressHeaderKeyboardEventParams,
+  ScrollApiModule,
+  RenderApiModule 
 } from 'ag-grid-community';
 
 ModuleRegistry.registerModules([
@@ -27,12 +30,13 @@ ModuleRegistry.registerModules([
   CustomFilterModule,
   ClientSideRowModelModule,
   CellStyleModule,
-  ColumnApiModule 
+  ColumnApiModule ,
+  ScrollApiModule,
+  RenderApiModule 
 ]);
 
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
-
 
 export interface IndexType{
   current: number;
@@ -42,27 +46,42 @@ type TradeGridProps = {
   fileColDef: ColDef[];
   tableName: string;
   pageIndex: IndexType;
-  filter?: "trader" | "symbol";
+  summaryType?: "trader" | "symbol";
 };
 
-const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps) => {
+
+const TradeGrid = ({ fileColDef, tableName, pageIndex, summaryType }: TradeGridProps) => {
+  // console.log(summaryType)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalField, setModalField] = useState('');
   const [modalValue, setModalValue] = useState('');
   const [inputPage, setInputPage] = useState('');
+  const [clearSortSignal, setClearSortSignal] = useState(0);
+  const [loading, setloading] = useState(true);
+  const [clearSignal, setClearSignal] = useState(0);
   // const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const currentSortField= useRef<string>(''); // default: empty string
+  const currentSortField= useRef<string>(''); // default: empty string  
   // const nextSortField = useRef<string>('');
   const sortOrder= useRef<'asc' | 'desc' | ''>(''); // default: empty string
   const [currentFilterCol, setCurrentFilterCol] = useState<string | null>(null);
-  
-  const handleSearch = async (tableName: string, value: string, colId: string) => {
-    setCurrentFilterCol(colId);
-    await fetchFilteredData(tableName, value, colId);
+  const [currentSearch, setCurrentSearch] = useState<string | null>(null);
+  // const [timeIsUpdated,settimeIsUpdated] = useState(false);
+
+  const handleSearch = async (tableName: string, col: string, search: string) => {
+    setCurrentFilterCol(col);
+    setCurrentSearch(search);
+    await fetchPageViaGoto(0, tableName, { current: 0}, currentSortField.current, sortOrder.current, col, search, summaryType)
+    // console.log(col)
+    const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType, col, search);
+    setTotalPages(total);
+    // console.log(total);
+    // setLastUpdated(lastUpdatedTime)
+    lastUpdated.current = lastUpdatedTime
+    pageIndex.current = 0;
   };
 
-  const gridRef = useRef(null);
+  const gridRef = useRef<AgGridReact<TradeRow> | null>(null);
   const {
     rowData,
     setRowData,
@@ -92,17 +111,27 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
 ];
 
   const defaultColDef: ColDef = {
+    cellClass: 'text-right',
     resizable: true,
     filter: true,
+    minWidth: 120,
     headerComponent: CustomFilter,
     headerComponentParams: {
       tableName: tableName,
       onSearch: handleSearch,
       currentFilterCol,
-      filter: filter
+      summaryType: summaryType,
+      clearSignal,
+      clearSortSignal
     },
     sortable: true,
-    width: 180,
+    // cellDataType:false,
+    suppressHeaderKeyboardEvent(params: SuppressHeaderKeyboardEventParams) {
+      if( params.event.key === 'Enter' ){
+        return true
+      }
+      return false
+    },
   };
 
   const handlePrev = () => {
@@ -119,7 +148,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
     }
 
     keepOnlyThreePages(pageIndex);
-    fetchConsecutive(prev, false, tableName, currentSortField.current, sortOrder.current, filter);
+    fetchConsecutive(prev, false, tableName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     setTimeout(()=>{
       setPreviousBtn("");
     }, 70)
@@ -143,7 +172,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
 
     keepOnlyThreePages(pageIndex);
 
-    fetchConsecutive(next, true, tableName, currentSortField.current, sortOrder.current, filter);
+    fetchConsecutive(next, true, tableName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     // if (!localStorage.getItem(`page-${next}`)) {
     // }
     // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
@@ -164,7 +193,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
     }
   };
 
-  const handleGoToInputPage = () => {
+  const handleGoToInputPage = async () => {
     setGoBtn("cursor-wait shadow-2xl");
     const page = parseInt(inputPage);
     if (isNaN(page) || page < 1 || page>totalPages){
@@ -174,19 +203,21 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
     } 
     pageIndex.current = page - 1;
     // localStorage.clear();   // reset everything
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, filter);
+    await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     setTimeout(()=>{
       setGoBtn("");
     }, 150);
   };
 
-  const handleRefreshPage = () => {
-    setRefreshBtn("cursor-wait shadow-2xl");
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, filter);
+  const handleRefreshPage = async () => {
+    setRefreshBtn("cursor-wait shadow-2xl");  
+    await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     const loadinitialpage = async () => {
-      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, filter);
+      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, summaryType);
       setTotalPages(total);
-      setLastUpdated(lastUpdatedTime);
+      // setLastUpdated(lastUpdatedTime);
+      lastUpdated.current = lastUpdatedTime
+      console.log("lastupdated 2",lastUpdated);
     }
     loadinitialpage();
     // setRefreshBtn("");
@@ -194,8 +225,28 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
       setRefreshBtn("");
     },70)
   }
-  
-  const handleSort = (event: SortChangedEvent<TradeRow>) => {
+    const handleFilter = async () => {
+      const api = gridRef.current?.api;
+      // console.log(gridRef.current);
+      api?.setFilterModel(null);        // Clear filter
+      api?.resetColumnState();            // Clear sorting
+      setCurrentFilterCol(null);
+      setClearSignal(prev => prev + 1);       // Notify filters
+      setClearSortSignal(prev => prev + 1);   // Notify sort headers
+
+      // Reset sort refs so backend gets clean request
+      currentSortField.current = '';
+      sortOrder.current = '';
+      // Refetch with no filters or sort
+      await fetchPageViaGoto(0, tableName, { current: 0 }, '', '', null, null, summaryType);
+      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, summaryType);
+      setTotalPages(total);
+      // setLastUpdated(lastUpdatedTime);
+      lastUpdated.current = lastUpdatedTime
+    };
+
+
+  const handleSort = async (event: SortChangedEvent<TradeRow>) => {
     const columnState = event.api.getColumnState();
     // console.log("heloow to ogasdoa: ",columnState);
     const sortedColumn = columnState.find(col => col.sort !== null);
@@ -208,15 +259,13 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, filter }: TradeGridProps)
       currentSortField.current = sortedColumn.colId || '';
       // setSortOrder(sortedColumn.sort as 'asc' | 'desc');
       sortOrder.current = sortedColumn.sort as 'asc' | 'desc';
-      // Optional: immediately refetch data
-      // fetchPageViaGoto(pageIndex.current * PAGE_SIZE, sortedColumn.colId, sortedColumn.sort);
     } else {
       // setSortField('');
       currentSortField.current = '';
       // setSortOrder('');
       sortOrder.current = '';
     }
-    fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, filter);
+    await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
   };
 
 function timeToSeconds(t: string | undefined | null) {
@@ -241,37 +290,93 @@ function timeToSeconds(t: string | undefined | null) {
   const [nextBtn, setNextBtn] = useState("");
   const [previousBtn, setPreviousBtn] = useState("");
   const [refreshBtn, setRefreshBtn] = useState("");
-  const [lastUpdated, setLastUpdated] = useState<string | null>();
+  const lastUpdated = useRef<string>('');
 
 
-  const NoDataComponent = () =>{
-    if (timeToSeconds(lastUpdated) < timeToSeconds("9:30:00")) {
-      return <div>
-        Market Data Updates at 9:30
+  // const NoDataComponent = () =>{
+  //     console.log("lastupdated",lastUpdated.current)
+  //     if (timeToSeconds(lastUpdated.current) < timeToSeconds("10:30:00")) {
+  //       return <div>
+  //       Market Data Updates at 9:30
 
-      </div>
+  //     </div>
+  //     }
+  //     return <div>No rows to show</div>
+  // };
+  const autoFitOrSizeToFit = (api: GridApi) => {
+    // const containerWidth = api.getHorizontalPixelRange().right || 0;
+    const allColumns = api.getColumns();
+    // const allColumnsLegth = api.getColumns()?.length;
+    if (!allColumns) return;
+    // console.log("total, container",totalColWidth, containerWidth)
+    if (allColumns.length <= 19) {
+      api.sizeColumnsToFit();
+      console.log("this ran 1")
     }
-    return <div>Error: No data from Backend</div>
-  }
+  };
+
+  const onFirstDataRendered = () => {
+    console.log("call from on first data rendered");
+    const api = gridRef.current?.api;
+    if (api){
+      api.sizeColumnsToFit();
+      autoFitOrSizeToFit(api);
+    } 
+    setloading(false);
+    
+  };
+
+  // useEffect(() => {
+  //   console.log("call from use eff")
+  //   const handleResize = () => {
+  //     if (gridRef.current?.api) {
+  //       autoFitOrSizeToFit(gridRef.current.api);
+  //     }
+  //   };
+  //   window.addEventListener('resize', handleResize);
+  //   return () => window.removeEventListener('resize', handleResize);
+  // }, []);
 
   useEffect(() => {
-    const loadinitialpage = async () => {
-      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, filter);
+    const loadInitialPage = async () => {
+      const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType);
       setTotalPages(total);
-      fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, filter);
-      setLastUpdated(lastUpdatedTime);
-    }
-    loadinitialpage();
+      await fetchPageViaGoto(
+        pageIndex.current * PAGE_SIZE,
+        tableName,
+        pageIndex,
+        currentSortField.current,
+        sortOrder.current,
+        currentFilterCol,
+        currentSearch,
+        summaryType
+      );
+      // setLastUpdated(lastUpdatedTime);
+      lastUpdated.current = lastUpdatedTime;
+    };
+    loadInitialPage();
   }, []);
+
+  useEffect(() => {
+    if(loading){
+    document.body.style.overflow = 'hidden';
+    }else{
+      document.body.style.overflow = 'unset';
+
+    }
+  }, [loading])
+
+
+
 
 
   // console.log("this should work ",totalPages);
 
   return (
-    <div className="flex flex-col h-[90vh] w-full">
+    <div className="pt1 flex h-full flex-col w-full">
       {/* Pagination Controls */}
       <div className="flex justify-center items-center p-4 gap-2">
-        <div className='font-semibold'>Last Updated: {lastUpdated}</div>
+        <div className='font-semibold'>Last Updated: {lastUpdated.current}</div>
         <button
           onClick={handlePrev}
           disabled={pageIndex.current === 0}
@@ -288,6 +393,12 @@ function timeToSeconds(t: string | undefined | null) {
           className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
         >
           Next
+        </button>
+        <button
+        onClick={handleFilter}
+        className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
+        >
+          Clear Filter
         </button>
 
         <input
@@ -314,18 +425,28 @@ function timeToSeconds(t: string | undefined | null) {
       </div>
 
       {/* AG Grid */}
-      <div className="flex h-full">
-        <div className="ag-theme-alpine h-full w-full">
-          <AgGridReact<TradeRow>
-            ref={gridRef}
-            rowData={rowData}
-            columnDefs={columnDefs}
-            defaultColDef={defaultColDef}
-            domLayout="normal"
-            onCellDoubleClicked={handleCellDoubleClick}
-            onSortChanged={handleSort}
-            noRowsOverlayComponent={NoDataComponent}
-          />
+      <div className={`flex flex-grow w-full`}>
+        <div className={`flex flex-col ag-theme-alpine w-full relative`}>
+          {loading && (
+            <div className="absolute inset-0 bg-white z-50 bg-opacity-70 flex items-center justify-center">
+              <div className="flex flex-col items-center">
+                {/* <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2" /> */}
+                <div className="z-10 flex justify-center items-center gap-2 text-black animate-pulse font-bold text-3xl"><img src={"logo.png"} width={"48px"}/>Algoquant</div>
+              </div>
+            </div>
+          )}
+            <AgGridReact<TradeRow>
+              ref={gridRef}
+              rowData={rowData}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              domLayout="normal"
+              onCellDoubleClicked={handleCellDoubleClick}
+              onSortChanged={handleSort}
+              onFirstDataRendered={onFirstDataRendered}
+              // onDisplayedColumnsChanged={onFirstDataRendered}
+              // autoSizeStrategy={{ type: 'fitCellContents', skipHeader: true }}
+              />
         </div>
         <RecordModal
           isOpen={isModalOpen}

@@ -25,7 +25,7 @@ export const useTradeData = () => {
     });
   };
 
-  const fetchPageViaGoto = (start: number, tableName: string, pageIndex: IndexType, field:string, order:string, filter?: "trader" | "symbol") => {
+  async function fetchPageViaGoto(start: number, tableName: string, pageIndex: IndexType, field:string, order:string, col: string | null, search: string | null, summaryType?: "trader" | "symbol") {
     const currentChunk: TradeRow[] = [];
     const nextChunk: TradeRow[] = [];
     const prevChunk: TradeRow[] = [];
@@ -34,13 +34,15 @@ export const useTradeData = () => {
     console.log("fetchURL: ",fetchURL);
     const body= {
       start,
-      limit: PAGE_SIZE,
+      limit: 300,
       tableName,
       field,
       order,
-      filter
+      col,
+      search,
+      summaryType
     }
-    console.log(field,order); 
+    // console.log("this did happen",field,order); 
     console.time("oboe stream for page 1")
     console.time("oboe stream for all the pages includes page 1 as well");
     oboe({
@@ -93,13 +95,12 @@ export const useTradeData = () => {
         
       })
       .fail((err) => {
-        console.error('Oboe failed:', err);
+        setRowData([]);
+        console.log('Oboe failed:', err);
       });
   };
 
-
-
-  const fetchConsecutive = (page: number, forward: boolean, tableName: string, field : string, order: string, filter?: "trader" | "symbol") => {
+ async function fetchConsecutive (page: number, forward: boolean, tableName: string, field : string, order: string, col: string | null, search: string | null, summaryType?: "trader" | "symbol") {
     const start = page * PAGE_SIZE;
     const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend`
     const body = {
@@ -109,7 +110,9 @@ export const useTradeData = () => {
       tableName,
       field,
       order,
-      filter
+      col,
+      search,
+      summaryType
     }
     fetch(
       fetchURL, {
@@ -156,12 +159,15 @@ export const useTradeData = () => {
 };
 
 
- async function fetchTotalRecords(tableName: string, filter?: "trader" | "symbol") {
+ async function fetchTotalRecords(tableName: string, summaryType?: "trader" | "symbol", col: string | undefined = undefined , search: string | undefined = undefined) {
   console.log(tableName);
+  console.log("fetch total col:",col)
   const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords`;
   const body = {
     tableName,
-    filter
+    summaryType,
+    col,
+    search
   }
   const response = await fetch(fetchURL, {
     method: 'POST',
@@ -178,12 +184,12 @@ export const useTradeData = () => {
   };
   };
 
-async function fetchFilteredData(tableName: string, search: string, col: string, filter?: "trader" | "symbol") {
+async function fetchFilteredData(tableName: string, search: string, col: string, summaryType?: "trader" | "symbol") {
   try {
     const fetchUrl = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getFilteredData`;
     const body = {
       tableName,
-      filter,
+      summaryType,
       search,
       col
     }
