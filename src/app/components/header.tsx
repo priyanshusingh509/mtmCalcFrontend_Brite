@@ -60,12 +60,12 @@ export default function Header(){
             <div className="lg:hidden" onClick={()=> setShowMenu(!showMenu)}>
                 HMB
             </div>
-            <div className="grid- flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
+            <Link href={"/dashboard"} className="grid- flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
                 <img src={"./logo.png"} width={"36px"}/>
                 <div className="hidden lg:block">
                     Algoquant
                 </div>
-            </div>
+            </Link>
 
         </div>
         
