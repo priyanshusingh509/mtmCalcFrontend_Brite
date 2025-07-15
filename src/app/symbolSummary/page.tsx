@@ -13,7 +13,7 @@ const columnDefs: ColDef[] = [
 
 const pageIndex = { current: 0 };
 
-export default function bseCashMarketPage(){
+export default function symbolSummaryPage(){
     return(
       <div className='h-screen flex flex-col'>
         <Header/>

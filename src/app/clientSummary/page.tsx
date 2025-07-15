@@ -4,7 +4,7 @@ import TradeGrid from '../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
 const columnDefs: ColDef[] = [
-  { headerName: 'Trader ID', field: 'trdr_id'},
+  { headerName: 'Client ID', field: 'clnt_id'},
   { headerName: 'Script Code', field: 'scrp_code'},
   { headerName: 'Script ID', field: 'scrp_id' },
   { headerName: "Net Qty", field: "netQty"},
@@ -15,8 +15,8 @@ const columnDefs: ColDef[] = [
 
 const pageIndex = { current: 0 };
 
-export default function bseCashMarketPage(){
-    return(
+export default function clientSummaryPage(){
+  return(
       <div className='h-screen flex flex-col'>
         <Header/>
         <div className="flex flex-col flex-grow">

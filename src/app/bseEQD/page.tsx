@@ -56,15 +56,13 @@ const columnDefs: ColDef[] = [
 
 const pageIndex = { current: 0 };
 
-export default function bseCashMarketPage(){
+export default function bseEQDPage(){
     return(
       <div className='h-screen flex flex-col'>
-        <ProtectedRoute>
         <Header/>
         <div className="flex-grow flex flex-col">
           <TradeGrid fileColDef={columnDefs} tableName='EQD_ITRTM' pageIndex={pageIndex}/>
         </div>
-        </ProtectedRoute>
       </div>
     )
 }

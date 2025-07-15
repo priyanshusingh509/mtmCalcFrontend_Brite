@@ -44,10 +44,10 @@ export default function TradePage() {
   setFormData(prev => ({ ...prev, [name]: value }));
   }
   return (
-    <div className="bg-blue-600 h-[100vh] text-white flex justify-evenly items-center">
-     <div className="text-8xl font-bold flex flex-col items-center justify-center gap-5"><img src={"./logo.png"} width={"200px"}/> Algoquant</div>
-     <div className="w-1 h-90 bg-white rounded-2xl"></div>
-     <div className="bg-gray-50 w-100 h-120 rounded-3xl shadow-2xl text-black flex flex-col items-center">
+    <div className="bg-blue-600 h-[100vh] text-white flex flex-col lg:flex-row justify-evenly items-center">
+     <div className="text-4xl lg:text-8xl font-bold flex flex-col items-center justify-center gap-5"><img src={"./logo.png"} className="w-[120px] lg:w-[200px]"/> Algoquant</div>
+     <div className="hidden lg:block w-1 h-90 bg-white rounded-2xl"></div>
+     <div className="bg-gray-50 w-[calc(90%)] lg:w-100 h-120 rounded-3xl shadow-2xl text-black flex flex-col items-center">
        <form className="w-full h-full flex flex-col justify-evenly " 
         onSubmit={(e)=>{
           e.preventDefault();

@@ -132,31 +132,32 @@ export const useTradeData = () => {
       });
   };
 
-  const fetchRecordsByField = async (field: string, value: string | number, tableName: string): Promise<TradeRow[]> => {
+  const fetchRecordsByField = async (
+  col: string,
+  search: string | number,
+  tableName: string,
+  summaryType?: "trader" | "symbol"
+): Promise<{ firstGrid: TradeRow[]; secondGrid: TradeRow[] }> => {
   try {
     const fetchUrl = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getby`;
-    const body = {
-      field,
-      value,
-      tableName
-    }
+    const body = { col, search, tableName, summaryType };
+
     const res = await fetch(fetchUrl, {
       method: 'POST',
       body: JSON.stringify(body),
-       headers: {
-    'Content-Type': 'application/json',
-  },
+      headers: { 'Content-Type': 'application/json' },
     });
+
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    
-    const data: TradeRow[] = await res.json();
-    console.log("Fetched data:", data);
-    return data;
+
+    const { firstGrid, secondGrid }: { firstGrid: TradeRow[]; secondGrid: TradeRow[] } = await res.json();
+    return { firstGrid, secondGrid };
   } catch (error) {
     console.error("Error fetching records by field:", error);
-    return []; // Return empty array on failure to prevent downstream errors
+    return { firstGrid: [], secondGrid: [] };
   }
 };
+
 
 
  async function fetchTotalRecords(tableName: string, summaryType?: "trader" | "symbol", col: string | undefined = undefined , search: string | undefined = undefined) {
