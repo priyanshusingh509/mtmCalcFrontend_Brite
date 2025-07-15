@@ -54,6 +54,27 @@ const columnDefs: ColDef[] = [
   { headerName: "Sell Order Active Flag", field: "SellOrderActiveFlag" },
 ];
 
+const mobileColumnDefs: ColDef[] = [
+  { headerName: "Trade Number", field: "TradeNumber" },
+  { headerName: "Trade Date Time", field: "TradeDateTime" },
+  { headerName: "Expiry Date", field: "ExpiryDate" },
+  { headerName: "Strike Price", field: "StrikePrice" },
+  { headerName: "Option Type", field: "OptionType" },
+  { headerName: "Series Code", field: "SeriesCode" },
+  { headerName: "Trade Price", field: "TradePrice" },
+  { headerName: "Trade Quantity", field: "TradeQuantity" },
+  { headerName: "Trade Buyer Terminal ID", field: "TradeBuyerTerminalID" },
+  { headerName: "Trade Seller Terminal ID", field: "TradeSellerTerminalID" },
+  { headerName: "Buy Client Code", field: "BuyClientCode" },
+  { headerName: "Sell Client Code", field: "SellClientCode" },
+  { headerName: "Buy Position", field: "BuyPosition" },
+  { headerName: "Sell Position", field: "SellPosition" },
+  { headerName: "Buy Order Time Stamp", field: "BuyOrderTimeStamp" },
+  { headerName: "Sell Order Time Stamp", field: "SellOrderTimeStamp" },
+  { headerName: "Buy Order Active Flag", field: "BuyOrderActiveFlag" },
+  { headerName: "Sell Order Active Flag", field: "SellOrderActiveFlag" },
+];
+
 const pageIndex = { current: 0 };
 
 export default function bseEQDPage(){
@@ -61,7 +82,7 @@ export default function bseEQDPage(){
       <div className='h-screen flex flex-col'>
         <Header/>
         <div className="flex-grow flex flex-col">
-          <TradeGrid fileColDef={columnDefs} tableName='EQD_ITRTM' pageIndex={pageIndex}/>
+          <TradeGrid mobColDef={mobileColumnDefs} fileColDef={columnDefs} tableName='EQD_ITRTM' pageIndex={pageIndex}/>
         </div>
       </div>
     )

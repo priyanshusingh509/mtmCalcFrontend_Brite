@@ -31,6 +31,21 @@ const columnDefs: ColDef[] = [
   { headerName: 'time_3', field: 'time_3' },
   { headerName: 'NNF', field: 'nnf' },
 ];
+const mobileColumnDefs: ColDef[] = [
+  { headerName: 'symbol', field: 'symbol' },
+  { headerName: 'Sgmt', field: 'sgmt' },
+  { headerName: 'srcip Name', field: 'scrip_name' },
+  { headerName: 'user id', field: 'user_id' },
+  { headerName: 'b/s', field: 'b_s' },
+  { headerName: 'qty', field: 'qty' },
+  { headerName: 'rate', field: 'rate' },
+  { headerName: 'clnt/pro', field: 'clnt_pro' },
+  { headerName: 'ucc', field: 'ucc' },
+  { headerName: 'time_1', field: 'time_1' },
+  { headerName: 'time_2', field: 'time_2' },
+  { headerName: 'time_3', field: 'time_3' },
+  { headerName: 'NNF', field: 'nnf' },
+];
 
 
 const pageIndex = { current: 0 };
@@ -39,8 +54,8 @@ export default function nseCashMarketPage(){
     return(
       <div className='h-screen flex flex-col'>
             <Header/>
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <TradeGrid fileColDef={columnDefs} tableName='NSE_CM_tradeFile' pageIndex={pageIndex}/>
+        <div className="flex flex-col flex-grow">
+          <TradeGrid mobColDef={mobileColumnDefs} fileColDef={columnDefs} tableName='NSE_CM_tradeFile' pageIndex={pageIndex}/>
         </div>
       </div>
     )

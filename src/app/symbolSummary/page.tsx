@@ -18,7 +18,7 @@ export default function symbolSummaryPage(){
       <div className='h-screen flex flex-col'>
         <Header/>
         <div className="flex flex-col flex-grow">
-          <TradeGrid fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex} summaryType='symbol'/>
+          <TradeGrid mobColDef={columnDefs} fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex} summaryType='symbol'/>
         </div>
       </div>
     )
