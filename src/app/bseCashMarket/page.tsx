@@ -40,12 +40,12 @@ const pageIndex = { current: 0 };
 export default function bseCashMarketPage(){
     return(
       <div className='h-screen flex flex-col'>
-        <ProtectedRoute>
+        {/* <ProtectedRoute> */}
             <Header/>
         <div className="flex-1 flex flex-col overflow-hidden">
           <TradeGrid fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex}/>
         </div>
-        </ProtectedRoute>
+        {/* </ProtectedRoute> */}
       </div>
     )
 }

@@ -54,10 +54,10 @@ export default function Header(){
         // pageIndex.current = 0;
     }
     return <div className="bg-blue-600 text-white grid grid-cols-6 justify-between items-center">
-        <div className="grid- flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
+        <Link href={"/dashboard"} className="max-w-min flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
             <img src={"./logo.png"} width={"36px"}/>
             Algoquant
-        </div>
+        </Link>
         <div className="flex gap-10 my-6 col-span-4 justify-center text-lg">
            {headerFields.map((field, index) =>{
             return <Link key={index} href={field.href}>{field.name}</Link>

@@ -20,19 +20,9 @@ export default function TradePage() {
     
     if (response.ok) {
       setIsAuthenticated(true);
-      router.push('/bseCashMarket');
+      router.push('/dashboard');
     }
-    const data = await response.json();
-
-    
-    if (!response.ok) {
-      alert("Invalid Credentials");
-      return;
-    }
-    
-    // Redirect if successful
-    console.log(data);
-    router.push("/bseCashMarket");
+    else alert("Invalid Credentials");
   } catch (error) {
     alert(`Internal Server Error ${error}`);
   }
