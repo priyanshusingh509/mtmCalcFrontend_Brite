@@ -71,6 +71,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, summaryType }: TradeGridP
   const handleSearch = async (tableName: string, col: string, search: string) => {
     setCurrentFilterCol(col);
     setCurrentSearch(search);
+
     await fetchPageViaGoto(0, tableName, { current: 0}, currentSortField.current, sortOrder.current, col, search, summaryType)
     // console.log(col)
     const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType, col, search);
@@ -202,7 +203,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, summaryType }: TradeGridP
       return;
     } 
     pageIndex.current = page - 1;
-    // localStorage.clear();   // reset everything
+    localStorage.clear();   // reset everything
     await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     setTimeout(()=>{
       setGoBtn("");

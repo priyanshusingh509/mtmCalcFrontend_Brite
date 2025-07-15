@@ -26,8 +26,10 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
   const {
   fetchRecordsByField
   } = useTradeData();
-
-  const columnDefs: ColDef[] = [
+  
+  const getColDef = (firstGridCheck : boolean) => {
+    const changeCol = firstGridCheck ? { headerName: 'Script ID', field: 'scrp_id' } : { headerName: 'client ID', field: 'clnt_id' };
+    const columnDefs: ColDef[] = [
     {
       headerName: 'Index',
       valueGetter: params => (params?.node?.rowIndex ?? 0) + 1,
@@ -35,16 +37,19 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
       filter: false,
       cellClass: 'font-bold text-center'
     },
-    { headerName: 'Trader ID', field: 'trdr_id'},
+    changeCol,
     { headerName: 'Script Code', field: 'scrp_code'},
-    { headerName: 'Script ID', field: 'scrp_id' },
     { headerName: "Net Qty", field: "netQty"},
     { headerName: "Realised PnL", field: "realisedPnL"},
     { headerName: "Unrealised PnL", field: "unrealisedPnL"},
     { headerName: "Net Position", field: "netPosition"},
     { headerName: "MTM", field: "MTM"},
 
-  ];
+    ];
+
+    return columnDefs;
+  }
+
   const gridRef = useRef<null>(null);
   const defaultColDef: ColDef = {
     sortable: true,
@@ -53,75 +58,85 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
     minWidth: 120,
     flex: 1,
   };
+
+  const handleClose = () => {
+    onClose();
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (isOpen && field && value) {
-          const {firstGrid, secondGrid} = await fetchRecordsByField(field,value, tableName);
-          setsummaryData(firstGrid);
-          settradeData(secondGrid);
-        }
-      }catch(error){
-        console.log("error while fetching : ",error)
+  const fetchData = async () => {
+    try {
+      if (isOpen && field && value) {
+        const { firstGrid, secondGrid } = await fetchRecordsByField(field, value, tableName);
+        setsummaryData(firstGrid);
+        settradeData(secondGrid);
       }
+    } catch (error) {
+      console.log("error while fetching : ", error);
     }
+  };
 
-    fetchData();
-  }, [isOpen, field, value]);
+  fetchData();
+}, [isOpen, field, value]);
+
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0,0,0,0.6)] "
-    >
-      <div className="bg-white w-full mx-10 h-[93vh] rounded-2xl shadow-2xl flex flex-col space-y-4">
-        {/* Header */}
-        <div className="flex justify-between items-center px-4 py-2 bg-gray-100 border-b rounded-t-2xl">
-          <div className="w-full text-lg md:text-xl font-semibold text-gray-800 flex justify-center">
-            <div className="text-blue-600 mx-2">
-              {columnDefs.find(col => col.field === field)?.headerName}:
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0,0,0,0.6)]"
+      >
+        <div className="bg-white w-full mx-10 h-[93vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden space-y-2">
+          {/* Header */}
+          <div className="flex justify-between items-center px-4 py-2 bg-gray-100 border-b rounded-t-2xl">
+            <div className="w-full text-lg md:text-xl font-semibold text-gray-800 flex justify-center">
+              <div className="text-blue-600 mx-2">
+                {fileColDef.find(col => col.field === field)?.headerName}:
+              </div>
+              <div className="font-mono">{value}</div>
             </div>
-            <div className="font-mono">{value}</div>
+            <button
+              onClick={handleClose}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-md transition-all"
+            >
+              Close
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-md transition-all"
-          >
-            Close
-          </button>
-        </div>
-          <div>
-          {/* Summary Grid (only if tradeData exists) */}
-          {tradeData.length > 0 && (
-            <div className="ag-theme-alpine max-h-min px-2">
-              <AgGridReact<TradeRow>
 
-                ref={gridRef}
-                rowData={summaryData}
-                columnDefs={columnDefs.filter(col => col.field !== field)}
-                defaultColDef={defaultColDef}
-                domLayout="autoHeight"
-              />
-            </div>
-          )}
+          {/* Body */}
+          <div className="flex flex-col flex-grow overflow-hidden">
+            
+            {/* Summary Grid */}
+            {tradeData.length > 0 && (
+              <div className="ag-theme-alpine max-h-[25%] overflow-auto px-4">
+                <AgGridReact<TradeRow>
+                  ref={gridRef}
+                  rowData={summaryData}
+                  columnDefs={getColDef(true)}
+                  defaultColDef={defaultColDef}
+                  domLayout='autoHeight'
+                />
+              </div>
+            )
+            }
 
-          {/* Trade Grid (always visible) */}
-          <div className="ag-theme-alpine flex-grow px-4 py-2">
-            <AgGridReact<TradeRow>
-              ref={gridRef}
-              rowData={tradeData.length > 0 ? tradeData : summaryData}
-              columnDefs={
-                tradeData.length > 0
-                  ? columnDefs.filter(col => col.field !== field)
-                  : fileColDef
-              }
-              defaultColDef={defaultColDef}
-              domLayout="autoHeight"
-            />
+
+            {/* Trade Grid */}
+              <div className="ag-theme-alpine flex-grow overflow-auto px-4 py-2">   
+                    <AgGridReact<TradeRow>
+                      ref={gridRef}
+                      rowData={tradeData.length > 0 ? tradeData : summaryData}
+                      columnDefs={
+                        tradeData.length > 0
+                        ? getColDef(false).filter(col => col.field !== field)
+                        : fileColDef
+                      }
+                      defaultColDef={defaultColDef}
+                      />
+              </div>
           </div>
         </div>
-      </div>
-    </Dialog>
+      </Dialog>
+
 
   );
 }
