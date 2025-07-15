@@ -20,7 +20,7 @@ export default function clientSummaryPage(){
       <div className='h-screen flex flex-col'>
         <Header/>
         <div className="flex flex-col flex-grow">
-          <TradeGrid fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex} summaryType='trader'/>
+          <TradeGrid mobColDef={columnDefs} fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex} summaryType='trader'/>
         </div>
       </div>
     )

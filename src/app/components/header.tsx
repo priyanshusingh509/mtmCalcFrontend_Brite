@@ -86,10 +86,10 @@ export default function Header(){
     <div className="bg-blue-600 text-white grid grid-cols-2 lg:grid-cols-6 justify-between items-center">
         <div className="flex justify-center items-center">
             <div className="lg:hidden" onClick={()=> setShowMenu(!showMenu)}>
-                HMB
+                <img src={"/menu.png"} className="w-6 mx-3 invert" onClick={()=> setShowMenu(!showMenu)}/>
             </div>
-            <Link href={"/dashboard"} className="grid- flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
-                <img src={"./logo.png"} width={"36px"}/>
+            <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
+                <img src={"./logo.png"} width={"36px"} className="hidden lg:block"/>
                 <div className="hidden lg:block">
                     Algoquant
                 </div>
@@ -155,5 +155,6 @@ export default function Header(){
             Logout
            </button>
         </div>
-    </div>)
+    </div>
+    )
 }

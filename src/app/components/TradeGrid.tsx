@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, FilterModel, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { CellDoubleClickedEvent, FilterChangedEvent, FilterDestroyedEvent, FilterManager, SortChangedEvent } from 'ag-grid-community';
@@ -43,6 +43,7 @@ export interface IndexType{
 }
 
 type TradeGridProps = {
+  mobColDef: ColDef[],
   fileColDef: ColDef[];
   tableName: string;
   pageIndex: IndexType;
@@ -50,7 +51,7 @@ type TradeGridProps = {
 };
 
 
-const TradeGrid = ({ fileColDef, tableName, pageIndex, summaryType }: TradeGridProps) => {
+const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: TradeGridProps) => {
   // console.log(summaryType)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalField, setModalField] = useState('');
@@ -59,6 +60,7 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, summaryType }: TradeGridP
   const [clearSortSignal, setClearSortSignal] = useState(0);
   const [loading, setloading] = useState(true);
   const [clearSignal, setClearSignal] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(0);
   // const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const currentSortField= useRef<string>(''); // default: empty string  
@@ -81,7 +83,6 @@ const TradeGrid = ({ fileColDef, tableName, pageIndex, summaryType }: TradeGridP
     lastUpdated.current = lastUpdatedTime
     pageIndex.current = 0;
   };
-
   const gridRef = useRef<AgGridReact<TradeRow> | null>(null);
   const {
     rowData,
@@ -339,6 +340,7 @@ function timeToSeconds(t: string | undefined | null) {
   // }, []);
 
   useEffect(() => {
+
     const loadInitialPage = async () => {
       const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType);
       setTotalPages(total);
@@ -366,7 +368,14 @@ function timeToSeconds(t: string | undefined | null) {
 
     }
   }, [loading])
-
+  useEffect(() => {
+    function handleResize() {
+      setWindowWidth(window.innerWidth);
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, [])
 
 
 
@@ -376,58 +385,61 @@ function timeToSeconds(t: string | undefined | null) {
   return (
     <div className="pt1 flex h-full flex-col w-full">
       {/* Pagination Controls */}
-      <div className="flex justify-center items-center p-4 gap-2">
+      <div className="flex flex-col lg:flex-row justify-center items-center p-4 gap-2">
         <div className='font-semibold'>Last Updated: {lastUpdated.current}</div>
-        <button
-          onClick={handlePrev}
-          disabled={pageIndex.current === 0}
-          className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${previousBtn}`}
-        >
-          Previous
-        </button>
-        <span className="px-4 py-2 text-lg font-semibold">
-          Page {pageIndex.current + 1} / {totalPages}
-        </span>
-        <button
-          onClick={handleNext}
-          disabled={pageIndex.current >= (totalPages - 1)}
-          className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
-        >
-          Next
-        </button>
-        <button
-        onClick={handleFilter}
-        className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
-        >
-          Clear Filter
-        </button>
-
-        <input
-          type="number"
-          min="1"
-          value={inputPage}
-          onChange={handleInputPageChange}
-          onKeyPress={handleKeyPress}
-          placeholder="Search"
-          className="ml-4 p-2 w-[10vw] border border-gray-300 rounded text-center"
-        />
-        <button
-          onClick={handleGoToInputPage}
-          className={`px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 active:scale-95 transition transform duration-100 ${goBtn}`}
-        >
-          Go
-        </button>
-        <button
-        className={`px-4 py-2 w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100 ${refreshBtn}`}
-        onClick={handleRefreshPage}
-        >
-          Refresh
-        </button>
+        <div>
+          <button
+            onClick={handlePrev}
+            disabled={pageIndex.current === 0}
+            className={`px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${previousBtn}`}
+          >
+            Previous
+          </button>
+          <span className="px-4 py-2 text-lg font-semibold">
+            Page {pageIndex.current + 1} / {totalPages}
+          </span>
+          <button
+            onClick={handleNext}
+            disabled={pageIndex.current >= (totalPages - 1)}
+            className={`px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
+          >
+            Next
+          </button>
+        </div>
+        <div className='flex'>
+          <button
+          onClick={handleFilter}
+          className={`mx-1 px-4 py-2 w-[30vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
+          >
+            Clear Filter
+          </button>
+          <input
+            type="number"
+            min="1"
+            value={inputPage}
+            onChange={handleInputPageChange}
+            onKeyPress={handleKeyPress}
+            placeholder="Search"
+            className="hidden md:block mx-1 p-2 w-[20vw] lg:w-[10vw] border border-gray-300 rounded text-center"
+          />
+          <button
+            onClick={handleGoToInputPage}
+            className={`hidden md:block mx-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 active:scale-95 transition transform duration-100 ${goBtn}`}
+          >
+            Go
+          </button>
+          <button
+          className={`mx-1 px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100 ${refreshBtn}`}
+          onClick={handleRefreshPage}
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* AG Grid */}
       <div className={`flex flex-grow w-full`}>
-        <div className={`flex flex-col ag-theme-alpine w-full relative`}>
+        <div className={`flex flex-col ag-theme-alpine w-full relative min-h-screen lg:min-h-0`}>
           {loading && (
             <div className="absolute inset-0 bg-white z-50 bg-opacity-70 flex items-center justify-center">
               <div className="flex flex-col items-center">
@@ -439,7 +451,7 @@ function timeToSeconds(t: string | undefined | null) {
             <AgGridReact<TradeRow>
               ref={gridRef}
               rowData={rowData}
-              columnDefs={columnDefs}
+              columnDefs={windowWidth > 1024 ? columnDefs : mobColDef}
               defaultColDef={defaultColDef}
               domLayout="normal"
               onCellDoubleClicked={handleCellDoubleClick}

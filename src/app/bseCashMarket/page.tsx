@@ -35,14 +35,31 @@ const columnDefs: ColDef[] = [
   { headerName: 'Old Custodian Code', field: 'old_cust_code' }
 ];
 
+const mobilecolumnDefs: ColDef[] = [
+  { headerName: 'Trader ID', field: 'trdr_id' },
+  { headerName: 'Script ID', field: 'scrp_id' },
+  { headerName: 'Rate', field: 'rate' },
+  { headerName: 'Quantity', field: 'qty' },
+  { headerName: 'Time', field: 'time' },
+  { headerName: 'Client ID', field: 'clnt_id' },
+  { headerName: 'Order ID', field: 'ordr_id' },
+  { headerName: 'Buy/Sell', field: 'bs_flag' },
+  { headerName: 'Trade ID', field: 'trade_id' },
+  { headerName: 'Client Type', field: 'clnt_type' },
+  { headerName: 'Order Time', field: 'ord_time' },
+  { headerName: 'AO/PO Flag', field: 'ao_po_flag' },
+  { headerName: 'Trade Modified Time', field: 'trd_mod_time' }
+];
+
+
 const pageIndex = { current: 0 };
 
 export default function bseCashMarketPage(){
     return(
       <div className='h-screen flex flex-col'>
             <Header/>
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <TradeGrid fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex}/>
+        <div className="flex flex-col flex-grow">
+          <TradeGrid mobColDef={mobilecolumnDefs} fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex}/>
         </div>
       </div>
     )
