@@ -83,14 +83,15 @@ export default function Header(){
     // return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openDropdown]);
     return (
+      <div>
     <div className="bg-blue-600 text-white grid grid-cols-2 lg:grid-cols-6 justify-between items-center">
         <div className="flex justify-center items-center">
-            <div className="lg:hidden" onClick={()=> setShowMenu(!showMenu)}>
+            <div className="lg:hidden">
                 <img src={"/menu.png"} className="w-6 mx-3 invert" onClick={()=> setShowMenu(!showMenu)}/>
             </div>
             <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
                 <img src={"./logo.png"} width={"36px"} className="hidden lg:block"/>
-                <div className="hidden lg:block">
+                <div className="">
                     Algoquant
                 </div>
             </Link>
@@ -131,29 +132,38 @@ export default function Header(){
           </div>
         ))}
       </div>
-
-        <div className={`${showMenu ? 'flex flex-col' : 'hidden'} gap-10 my-6 col-span-4 justify-center text-lg`}>
+      <div className="hidden lg:flex mx-8 justify-end font-semibold">
+           <button className="cursor-pointer border-2 bg-red-500 shadow-2xl px-6 py-2 rounded-2xl hover:bg-blue-600 hover:text-red-500 border-red-500" onClick={handleLogout} >
+            Logout
+           </button>
+      </div>
+      
+    </div>
+    <div className={`${showMenu ? 'fixed z-10 w-2/3 flex flex-col justify-center items-center border-1 border-gray-500 rounded-2xl font-bold shadow-2xl bg-white p-2' : 'hidden'} m-2 justify-center text-lg`}>
+          
            {groupedHeaderFields.map((group, i) => (
-            <div key={i} className="relative group">
-            <button className="font-semibold">{group.group}</button>
+            <div key={i} className="relative group w-full flex flex-col justify-center items-center">
+            <button className="py-2">{group.group}</button>
             <div className="absolute hidden group-hover:flex group-hover:flex-col bg-white text-black rounded-md shadow-lg mt-2 z-50 min-w-[180px]">
                 {group.items ? group.items.map((item, idx) => (
+                  <div key={idx}>
                 <Link
-                    key={idx}
+                    
                     href={item.href}
                     className="px-4 py-2 hover:bg-blue-100"
                 >
                     {item.name}
                 </Link>
+                <div className="w-[calc(90%)] h-[1px] bg-gray-500"></div>
+                </div>
                 )):null}
             </div>
+            <div className="w-[calc(90%)] h-[1px] bg-black"></div>
             </div>
             ))}
-        </div>
-        <div className="flex mx-8 justify-end font-semibold">
-           <button className="cursor-pointer border-2 bg-red-500 shadow-2xl px-6 py-2 rounded-2xl hover:bg-blue-600 hover:text-red-500 border-red-500" onClick={handleLogout} >
-            Logout
-           </button>
+            <div className="py-1 text-red-500 font-bold" onClick={handleLogout}>
+              Logout
+            </div>
         </div>
     </div>
     )
