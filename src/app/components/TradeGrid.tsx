@@ -2,7 +2,7 @@
 
 import { use, useEffect, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef, FilterModel, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, FilterModel, GridApi, GridReadyEvent, themeAlpine, themeQuartz } from 'ag-grid-community';
 import { CellDoubleClickedEvent, FilterChangedEvent, FilterDestroyedEvent, FilterManager, SortChangedEvent } from 'ag-grid-community';
 import RecordModal from './RecordModal';
 import CustomFilter from './CustomFilter';
@@ -20,7 +20,7 @@ import {
   ColumnApiModule,
   SuppressHeaderKeyboardEventParams,
   ScrollApiModule,
-  RenderApiModule 
+  RenderApiModule
 } from 'ag-grid-community';
 
 ModuleRegistry.registerModules([
@@ -56,7 +56,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalField, setModalField] = useState('');
   const [modalValue, setModalValue] = useState('');
-  const [inputPage, setInputPage] = useState('');
+  const [inputPage, setInputPage] = useState(pageIndex.current + 1);
   const [clearSortSignal, setClearSortSignal] = useState(0);
   const [loading, setloading] = useState(true);
   const [clearSignal, setClearSignal] = useState(0);
@@ -84,6 +84,14 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     pageIndex.current = 0;
   };
   const gridRef = useRef<AgGridReact<TradeRow> | null>(null);
+  const gridTheme = themeAlpine.withParams({
+    spacing: 6,
+    accentColor: '#2196F3',
+    oddRowBackgroundColor: '#00000008',
+    wrapperBorderRadius: 10,
+    rowBorder: true
+  })
+
   const {
     rowData,
     setRowData,
@@ -186,7 +194,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
   };
 
   const handleInputPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputPage(e.target.value);
+    setInputPage(parseInt(e.target.value));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -197,7 +205,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
 
   const handleGoToInputPage = async () => {
     setGoBtn("cursor-wait shadow-2xl");
-    const page = parseInt(inputPage);
+    const page = inputPage;
     if (isNaN(page) || page < 1 || page>totalPages){
       alert("page does not exist");
 
@@ -385,7 +393,7 @@ function timeToSeconds(t: string | undefined | null) {
   return (
     <div className="pt1 flex h-full flex-col w-full">
       {/* Pagination Controls */}
-      <div className="flex flex-col lg:flex-row justify-center items-center p-4 gap-2">
+      <div className="flex-col lg:flex-row justify-center items-center p-4 gap-2 hidden">
         <div className='font-semibold'>Last Updated: {lastUpdated.current}</div>
         <div>
           <button
@@ -438,6 +446,60 @@ function timeToSeconds(t: string | undefined | null) {
       </div>
 
       {/* AG Grid */}
+      <div className='bg-gray-200 h-12 w-full grid grid-cols-3 justify-around items-center border-1 shadow-2xl border-gray-300'>
+        <div className='flex justify-center items-center font-semibold'>Last Updated: {lastUpdated.current}</div>
+        <div className='flex justify-center items-center'>
+          <button
+            onClick={handlePrev}
+            disabled={pageIndex.current === 0}
+            className={`bg-gray-300 w-10 h-10 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${previousBtn}`}
+          >
+            {"<"}
+          </button>
+          {/* <span className="px-4 py-2 text-lg font-semibold">
+            {pageIndex.current + 1} / {totalPages}
+          </span> */}
+          <div className='flex px-4 py-2 text-lg font-semibold'>
+            <input
+              type="number"
+              min="1"
+              value={inputPage}
+              onChange={handleInputPageChange}
+              onKeyPress={handleKeyPress}
+              className="w-8 border border-gray-300 rounded text-center"
+              />
+              / {totalPages}
+          </div>
+          <button
+            onClick={handleNext}
+            disabled={pageIndex.current >= (totalPages - 1)}
+            className={`bg-gray-300 w-10 h-10 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
+          >
+            {">"}
+          </button>
+        </div>
+        <div className='flex justify-center items-center'>
+          <button
+          onClick={handleFilter}
+          className={`mx-1 px-4 py-2 w-[30vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
+          >
+            Clear Filter
+          </button>
+          {/* <button
+            onClick={handleGoToInputPage}
+            className={`hidden md:block mx-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 active:scale-95 transition transform duration-100 ${goBtn}`}
+          >
+            Go
+          </button> */}
+          <button
+          className={`mx-1 px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100 ${refreshBtn}`}
+          onClick={handleRefreshPage}
+          >
+            Refresh
+          </button>
+        </div>
+      
+      </div>
       <div className={`flex flex-grow w-full`}>
         <div className={`flex flex-col ag-theme-alpine w-full relative min-h-screen lg:min-h-0`}>
           {loading && (
@@ -449,6 +511,7 @@ function timeToSeconds(t: string | undefined | null) {
             </div>
           )}
             <AgGridReact<TradeRow>
+              theme={gridTheme}
               ref={gridRef}
               rowData={rowData}
               columnDefs={windowWidth > 1024 ? columnDefs : mobColDef}

@@ -11,15 +11,15 @@ const groupedHeaderFields = [
   {
     group: "BSE",
     items: [
-      { name: "BSE EQ", href: "/bseCashMarket" },
-      { name: "BSE EQD", href: "/bseEQD" },
+      { name: "BSE CM", href: "/bseCashMarket" },
+      { name: "BSE FNO", href: "/bseEQD" },
     ],
   },
   {
     group: "NSE",
     items: [
       { name: "NSE CM", href: "/nseCashMarket" },
-      {name: "NSE FNO", href: "/nseFno"},
+      {name: "NSE FNO", href: "/nseFnoAlgo"},
     ],
   },
   {
@@ -84,16 +84,14 @@ export default function Header(){
   }, [openDropdown]);
     return (
       <div>
-    <div className="bg-blue-600 text-white grid grid-cols-2 lg:grid-cols-6 justify-between items-center">
-        <div className="flex justify-center items-center">
-            <div className="lg:hidden">
-                <img src={"/menu.png"} className="w-6 mx-3 invert" onClick={()=> setShowMenu(!showMenu)}/>
-            </div>
-            <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
-                <img src={"./logo.png"} width={"36px"} className="hidden lg:block"/>
-                <div className="">
-                    Algoquant
-                </div>
+    <div className="bg-blue-600 text-white grid grid-cols-4 lg:grid-cols-6 justify-between items-center">
+        <div className="lg:hidden">
+            <img src={"/menu.png"} className="w-6 mx-3 invert" onClick={()=> setShowMenu(!showMenu)}/>
+        </div>
+        <div className="flex w-full col-span-2 lg:col-span-1 justify-center items-center">
+            <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-center lg:justify-start">
+                <img src={"./logo.png"} width={"36px"} />
+                <div>Algoquant</div>
             </Link>
 
         </div>
