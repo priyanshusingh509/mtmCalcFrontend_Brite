@@ -5,28 +5,32 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 
 const groupedHeaderFields = [
-    { group: "Dashboard", href: "/dashboard" },
     {
-        group: "BSE",
-        items: [
-            { name: "BSE EQ", href: "/bseCashMarket" },
-            { name: "BSE EQD", href: "/bseEQD" },
-        ],
+        group: "Dashboard",
+        href: "/dashboard"
     },
-    {
-        group: "NSE",
-        items: [
-            { name: "NSE CM", href: "/nseCashMarket" },
-            { name: "NSE FNO", href: "/nseFno" },
-        ],
-    },
-    {
-        group: "Summary",
-        items: [
-            { name: "Client Summary", href: "/clientSummary" },
-            { name: "Symbol Summary", href: "/symbolSummary" },
-        ],
-    },
+
+  {
+    group: "BSE",
+    items: [
+      { name: "BSE CM", href: "/bseCashMarket" },
+      { name: "BSE FNO", href: "/bseEQD" },
+    ],
+  },
+  {
+    group: "NSE",
+    items: [
+      { name: "NSE CM", href: "/nseCashMarket" },
+      {name: "NSE FNO", href: "/nseFnoAlgo"},
+    ],
+  },
+  {
+    group: "Summary",
+    items: [
+      { name: "Client Summary", href: "/clientSummary" },
+      { name: "Symbol Summary", href: "/symbolSummary" },
+    ],
+  },
 ];
 
 export default function Header() {
@@ -102,18 +106,18 @@ export default function Header() {
 
     return (
         <div>
-            <div className="bg-blue-600 text-white grid grid-cols-2 lg:grid-cols-6 justify-between items-center">
+            <div className="bg-blue-600 text-white grid grid-cols-3 lg:grid-cols-6 justify-between items-center">
+                <div className="lg:hidden">
+                    <img
+                        ref={hamburgerRef}
+                        src={"/menu.png"}
+                        className="w-6 mx-3 invert"
+                        onClick={() => setShowMenu((prev) => !prev)}
+                    />
+                </div>
                 <div className="flex justify-center items-center">
-                    <div className="lg:hidden">
-                        <img
-                            ref={hamburgerRef}
-                            src={"/menu.png"}
-                            className="w-6 mx-3 invert"
-                            onClick={() => setShowMenu((prev) => !prev)}
-                        />
-                    </div>
-                    <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
-                        <img src={"./logo.png"} width={"36px"} className="hidden lg:block" />
+                    <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-center lg:justify-start">
+                        <img src={"./logo.png"} width={"36px"} />
                         <div>Algoquant</div>
                     </Link>
                 </div>

@@ -71,10 +71,10 @@ export default function ColumnSelector({ gridRef }: Props) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <button
         onClick={() => setOpen(!open)}
-        className="p-2 bg-blue-500 text-white rounded"
+        className="p-2 bg-blue-500 text-white rounded w-full"
       >
         Columns
       </button>
