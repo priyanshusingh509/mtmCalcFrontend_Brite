@@ -25,14 +25,23 @@ export const useTradeData = () => {
     });
   };
 
-  async function fetchPageViaGoto(start: number, tableName: string, pageIndex: IndexType, field:string, order:string, col: string | null, search: string | null, summaryType?: "trader" | "symbol") {
+  async function fetchPageViaGoto(
+    start: number,
+    tableName: string,
+    pageIndex: IndexType,
+    field: string,
+    order: string,
+    col: string | null,
+    search: string | null,
+    summaryType?: "trader" | "symbol" 
+  ) {
     const currentChunk: TradeRow[] = [];
     const nextChunk: TradeRow[] = [];
     const prevChunk: TradeRow[] = [];
     let stage: 'current' | 'next' | 'prev' | 'done' = 'current';
+
     const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/goto`;
-    console.log("fetchURL: ",fetchURL);
-    const body= {
+    const body = {
       start,
       limit: 300,
       tableName,
@@ -41,24 +50,26 @@ export const useTradeData = () => {
       col,
       search,
       summaryType
-    }
-    // console.log("this did happen",field,order); 
-    console.time("oboe stream for page 1")
+    };
+
+    console.time("oboe stream for page 1");
     console.time("oboe stream for all the pages includes page 1 as well");
-    oboe({
-      url: fetchURL,
-      method: 'POST',
-      body: JSON.stringify(body),
-       headers: {
-         'Content-Type': 'application/json',
-        },
+
+    const oboePromise = new Promise<void>((resolve, reject) => {
+      oboe({
+        url: fetchURL,
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: {
+          'Content-Type': 'application/json',
+        }
       })
       .node('![*]', (node) => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
           setRowData(currentChunk);
           console.timeEnd("oboe stream for page 1");
-          console.log("updated page 1 by setRowData()")
+          console.log("updated page 1 by setRowData()");
           return oboe.drop;
         }
 
@@ -82,27 +93,62 @@ export const useTradeData = () => {
       })
       .done(() => {
         console.timeEnd("oboe stream for all the pages includes page 1 as well");
-        const curr = pageIndex.current;
-
-        localStorage.setItem(`page-${curr}`, JSON.stringify(currentChunk));
-        if (nextChunk.length > 0) {
-          localStorage.setItem(`page-${curr + 1}`, JSON.stringify(nextChunk));
-        }
-        if (curr > 0 && prevChunk.length > 0) {
-          localStorage.setItem(`page-${curr - 1}`, JSON.stringify(prevChunk));
-        }
-        keepOnlyThreePages(pageIndex);
-        
+        resolve();
       })
       .fail((err) => {
+        console.error('Oboe failed:', err);
         setRowData([]);
-        console.log('Oboe failed:', err);
+        reject(err);
       });
-  };
+    });
 
- async function fetchConsecutive (page: number, forward: boolean, tableName: string, field : string, order: string, col: string | null, search: string | null, summaryType?: "trader" | "symbol") {
+    // Wait for stream to complete
+    await oboePromise;
+
+    // 🔄 Fetch total and lastUpdated AFTER data is collected
+    const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType, col, search);
+
+    // ✅ Store each window with timestamp
+    const curr = pageIndex.current;
+    localStorage.setItem(`page-${curr}`, JSON.stringify({
+      data: currentChunk,
+      lastUpdatedTime
+    }));
+    if (nextChunk.length > 0) {
+      localStorage.setItem(`page-${curr + 1}`, JSON.stringify({
+        data: nextChunk,
+        lastUpdatedTime
+      }));
+    }
+    if (curr > 0 && prevChunk.length > 0) {
+      localStorage.setItem(`page-${curr - 1}`, JSON.stringify({
+        data: prevChunk,
+        lastUpdatedTime
+      }));
+    }
+
+    // Clean up others
+    keepOnlyThreePages(pageIndex);
+
+    return {
+      total,
+      lastUpdatedTime
+    };
+  }
+
+
+  async function fetchConsecutive(
+    page: number,
+    forward: boolean,
+    tableName: string,
+    field: string,
+    order: string,
+    col: string | null,
+    search: string | null,
+    summaryType?: "trader" | "symbol"
+  ) {
     const start = page * PAGE_SIZE;
-    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend`
+    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/consecutivesend`;
     const body = {
       start,
       limit: PAGE_SIZE,
@@ -113,24 +159,36 @@ export const useTradeData = () => {
       col,
       search,
       summaryType
-    }
-    fetch(
-      fetchURL, {
+    };
+
+    let pageData: TradeRow[] = [];
+
+    try {
+      const res = await fetch(fetchURL, {
         method: 'POST',
         body: JSON.stringify(body),
-         headers: {
-    'Content-Type': 'application/json',
-  },
-      }
-    )
-      .then((res) => res.json())
-      .then((data: TradeRow[]) => {
-        localStorage.setItem(`page-${page}`, JSON.stringify(data));
-      })
-      .catch((err) => {
-        console.error('Error prefetching:', err);
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-  };
+
+      pageData = await res.json(); // Save result
+
+    } catch (err) {
+      console.error('Error prefetching:', err);
+    }
+
+    const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType, col, search);
+
+    // ✅ Now we have both pageData & lastUpdatedTime — safe to store
+    localStorage.setItem(`page-${page}`, JSON.stringify({
+      data: pageData,
+      lastUpdatedTime
+    }));
+
+    return { total, lastUpdatedTime };
+  }
+
 
   const fetchRecordsByField = async (
   col: string,
@@ -160,7 +218,7 @@ export const useTradeData = () => {
 
 
 
- async function fetchTotalRecords(tableName: string, summaryType?: "trader" | "symbol", col: string | undefined = undefined , search: string | undefined = undefined) {
+ async function fetchTotalRecords(tableName: string, summaryType?: "trader" | "symbol", col: string | null = null , search: string | null = null) {
   console.log(tableName);
   console.log("fetch total col:",col)
   const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords`;

@@ -37,6 +37,7 @@ ModuleRegistry.registerModules([
 
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
+import ColumnSelector from './ColumnSelector';
 
 export interface IndexType{
   current: number;
@@ -74,9 +75,8 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     setCurrentFilterCol(col);
     setCurrentSearch(search);
 
-    await fetchPageViaGoto(0, tableName, { current: 0}, currentSortField.current, sortOrder.current, col, search, summaryType)
+    const { total, lastUpdatedTime } = await fetchPageViaGoto(0, tableName, { current: 0}, currentSortField.current, sortOrder.current, col, search, summaryType)
     // console.log(col)
-    const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType, col, search);
     setTotalPages(total);
     // console.log(total);
     // setLastUpdated(lastUpdatedTime)
@@ -89,11 +89,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     setRowData,
     fetchPageViaGoto,
     fetchConsecutive,
-    keepOnlyThreePages,
-    // pageIndex, // 👈 bring it from the hook directly
-    fetchTotalRecords,
-    fetchRecordsByField,
-    fetchFilteredData
+    keepOnlyThreePages
   } = useTradeData();
 
   const columnDefs: ColDef[] = [
@@ -136,7 +132,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     },
   };
 
-  const handlePrev = () => {
+  const handlePrev = async () => {
     setPreviousBtn("cursor-wait shadow-2xl");
     if (pageIndex.current === 0) return;
 
@@ -146,11 +142,16 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
 
     const currentCached = localStorage.getItem(`page-${curr}`);
     if (currentCached) {
-      setRowData(JSON.parse(currentCached));
+      const parsed = JSON.parse(currentCached);
+      setRowData(parsed.data || parsed);
+      lastUpdated.current = parsed.lastUpdatedTime || lastUpdated.current;
     }
 
+
     keepOnlyThreePages(pageIndex);
-    fetchConsecutive(prev, false, tableName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    const {total, lastUpdatedTime} = await fetchConsecutive(prev, false, tableName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    setTotalPages(total);
+    lastUpdated.current = lastUpdatedTime;
     setTimeout(()=>{
       setPreviousBtn("");
     }, 70)
@@ -161,7 +162,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     // }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setNextBtn("cursor-wait shadow-2xl");
     pageIndex.current += 1;
     const curr = pageIndex.current;
@@ -169,12 +170,16 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
 
     const currentCached = localStorage.getItem(`page-${curr}`);
     if (currentCached) {
-      setRowData(JSON.parse(currentCached));
+      const parsed = JSON.parse(currentCached);
+      setRowData(parsed.data || parsed); // Fallback for old format
+      lastUpdated.current = parsed.lastUpdatedTime || lastUpdated.current;
     }
 
     keepOnlyThreePages(pageIndex);
 
-    fetchConsecutive(next, true, tableName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    const {total, lastUpdatedTime} = await fetchConsecutive(next, true, tableName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    setTotalPages(total);
+    lastUpdated.current = lastUpdatedTime;
     // if (!localStorage.getItem(`page-${next}`)) {
     // }
     // if (!localStorage.getItem(`page-${prev}`) && curr > 0) {
@@ -205,7 +210,9 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     } 
     pageIndex.current = page - 1;
     localStorage.clear();   // reset everything
-    await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    setTotalPages(total);
+    lastUpdated.current = lastUpdatedTime;
     setTimeout(()=>{
       setGoBtn("");
     }, 150);
@@ -213,12 +220,10 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
 
   const handleRefreshPage = async () => {
     setRefreshBtn("cursor-wait shadow-2xl");  
-    await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     const loadinitialpage = async () => {
-      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, summaryType);
+      const {total, lastUpdatedTime} = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
       setTotalPages(total);
-      // setLastUpdated(lastUpdatedTime);
-      lastUpdated.current = lastUpdatedTime
+      lastUpdated.current = lastUpdatedTime;
       console.log("lastupdated 2",lastUpdated);
     }
     loadinitialpage();
@@ -228,6 +233,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     },70)
   }
     const handleFilter = async () => {
+      localStorage.clear(); 
       const api = gridRef.current?.api;
       // console.log(gridRef.current);
       api?.setFilterModel(null);        // Clear filter
@@ -240,8 +246,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
       currentSortField.current = '';
       sortOrder.current = '';
       // Refetch with no filters or sort
-      await fetchPageViaGoto(0, tableName, { current: 0 }, '', '', null, null, summaryType);
-      const {total, lastUpdatedTime} = await fetchTotalRecords(tableName, summaryType);
+      const {total, lastUpdatedTime} = await  fetchPageViaGoto(0, tableName, { current: 0 }, '', '', null, null, summaryType);
       setTotalPages(total);
       // setLastUpdated(lastUpdatedTime);
       lastUpdated.current = lastUpdatedTime
@@ -267,7 +272,9 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
       // setSortOrder('');
       sortOrder.current = '';
     }
-    await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    const {total, lastUpdatedTime} = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    setTotalPages(total);
+    lastUpdated.current = lastUpdatedTime;
   };
 
 function timeToSeconds(t: string | undefined | null) {
@@ -342,9 +349,7 @@ function timeToSeconds(t: string | undefined | null) {
   useEffect(() => {
 
     const loadInitialPage = async () => {
-      const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType);
-      setTotalPages(total);
-      await fetchPageViaGoto(
+      const { total, lastUpdatedTime } = await fetchPageViaGoto(
         pageIndex.current * PAGE_SIZE,
         tableName,
         pageIndex,
@@ -355,6 +360,7 @@ function timeToSeconds(t: string | undefined | null) {
         summaryType
       );
       // setLastUpdated(lastUpdatedTime);
+      setTotalPages(total);
       lastUpdated.current = lastUpdatedTime;
     };
     loadInitialPage();
@@ -370,6 +376,7 @@ function timeToSeconds(t: string | undefined | null) {
   }, [loading])
   useEffect(() => {
     function handleResize() {
+      console.log("THISSSS")
       setWindowWidth(window.innerWidth);
     }
     window.addEventListener('resize', handleResize);
@@ -439,6 +446,9 @@ function timeToSeconds(t: string | undefined | null) {
 
       {/* AG Grid */}
       <div className={`flex flex-grow w-full`}>
+        {gridRef.current?.api && (
+            <ColumnSelector gridRef={gridRef}/>  
+        )}
         <div className={`flex flex-col ag-theme-alpine w-full relative min-h-screen lg:min-h-0`}>
           {loading && (
             <div className="absolute inset-0 bg-white z-3 bg-opacity-70 flex items-center justify-center">
@@ -452,6 +462,7 @@ function timeToSeconds(t: string | undefined | null) {
               ref={gridRef}
               rowData={rowData}
               columnDefs={windowWidth > 1024 ? columnDefs : mobColDef}
+              key={windowWidth > 1024 ? 'desktop' : 'mobile'}
               defaultColDef={defaultColDef}
               domLayout="normal"
               onCellDoubleClicked={handleCellDoubleClick}

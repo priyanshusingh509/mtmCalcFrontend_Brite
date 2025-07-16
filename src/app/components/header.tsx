@@ -1,63 +1,67 @@
+'use client';
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 
 const groupedHeaderFields = [
+    { group: "Dashboard", href: "/dashboard" },
     {
-        group: "Dashboard",
-        href: "/dashboard"
+        group: "BSE",
+        items: [
+            { name: "BSE EQ", href: "/bseCashMarket" },
+            { name: "BSE EQD", href: "/bseEQD" },
+        ],
     },
-
-  {
-    group: "BSE",
-    items: [
-      { name: "BSE EQ", href: "/bseCashMarket" },
-      { name: "BSE EQD", href: "/bseEQD" },
-    ],
-  },
-  {
-    group: "NSE",
-    items: [
-      { name: "NSE CM", href: "/nseCashMarket" },
-      {name: "NSE FNO", href: "/nseFno"},
-    ],
-  },
-  {
-    group: "Summary",
-    items: [
-      { name: "Client Summary", href: "/clientSummary" },
-      { name: "Symbol Summary", href: "/symbolSummary" },
-    ],
-  },
+    {
+        group: "NSE",
+        items: [
+            { name: "NSE CM", href: "/nseCashMarket" },
+            { name: "NSE FNO", href: "/nseFno" },
+        ],
+    },
+    {
+        group: "Summary",
+        items: [
+            { name: "Client Summary", href: "/clientSummary" },
+            { name: "Symbol Summary", href: "/symbolSummary" },
+        ],
+    },
 ];
 
-
-
-
-export default function Header(){
-    
-    // const { pageIndex } = useTradeData();
+export default function Header() {
     const [showMenu, setShowMenu] = useState(false);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const desktopDropdownRef = useRef<HTMLDivElement>(null);
+    const mobileMenuRef = useRef<HTMLDivElement>(null);
+    const hamburgerRef = useRef<HTMLImageElement>(null);
+
     const toggleDropdown = (group: string) => {
-    setOpenDropdown((prev) => (prev === group ? null : group));
+        setOpenDropdown((prev) => (prev === group ? null : group));
     };
+
+    const handleMobileNavLinkClick = () => {
+        setShowMenu(false);
+        setOpenDropdown(null);
+    };
+
     const router = useRouter();
-    function handleLogout(){
-        const refrestToken = document.cookie.split(";").find(row => row.startsWith('refreshToken='))?.split('=')[1]; 
+
+    function handleLogout() {
+        const refreshToken = document.cookie.split(";").find(row => row.startsWith('refreshToken='))?.split('=')[1];
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/user/logout`, {
             method: 'POST',
-            credentials: 'include', // include cookies like refreshToken
+            credentials: 'include',
             headers: {
-            'Content-Type': 'application/json',
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ refrestToken })
+            body: JSON.stringify({ refreshToken })
         })
         .then((res) => {
             if (res.status === 204) {
                 console.log('✅ Logged out');
-                router.push('/'); // Navigate to home page or login
+                router.push('/');
             } else {
                 console.error('❌ Logout failed');
             }
@@ -65,106 +69,156 @@ export default function Header(){
         .catch((err) => {
             console.error('❌ Logout error:', err);
         });
-        localStorage.clear()
-        // pageIndex.current = 0;
+        localStorage.clear();
     }
 
     useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-        
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setOpenDropdown(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    // return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [openDropdown]);
-    return (
-      <div>
-    <div className="bg-blue-600 text-white grid grid-cols-2 lg:grid-cols-6 justify-between items-center">
-        <div className="flex justify-center items-center">
-            <div className="lg:hidden">
-                <img src={"/menu.png"} className="w-6 mx-3 invert" onClick={()=> setShowMenu(!showMenu)}/>
-            </div>
-            <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
-                <img src={"./logo.png"} width={"36px"} className="hidden lg:block"/>
-                <div className="">
-                    Algoquant
-                </div>
-            </Link>
+        function handleClick(event: MouseEvent) {
+            const target = event.target as Node;
 
-        </div>
-        
-              <div className="hidden lg:flex gap-10 my-6 col-span-4 justify-center text-lg relative">
-        {groupedHeaderFields.map((group, i) => (
-          <div key={i} className="relative">
-            {group.items ? 
-                <button
-                    className=""
-                    onClick={() =>  toggleDropdown(group.group)}
-                >
-                    {group.group}
-                </button> : 
-                <Link href={group.href}>{group.group}</Link>
+            if (
+                openDropdown &&
+                desktopDropdownRef.current &&
+                !desktopDropdownRef.current.contains(target)
+            ) {
+                setOpenDropdown(null);
             }
-            
 
-            {openDropdown === group.group && (
-              <div className="absolute flex flex-col bg-white text-black rounded-md shadow-2xl mt-2 z-5 min-w-[180px] text-sm justify-center items-center" ref={dropdownRef}>
-                {group.items ? group.items.map((item, idx) => (
-                    <div key={idx} className="flex flex-col justify-center items-center w-full h-full">
-                    {idx != 0 ? <div className="h-[1px] w-[calc(90%)] bg-black"/> : null}
-                    <Link
-                        href={item.href}
-                        className="px-4 py-2 hover:text-blue-500 hover:font-bold"
-                        onClick={(e) => setOpenDropdown(null)}
-                    >
-                        {item.name}
-                    </Link>
-                    
+            if (
+                showMenu &&
+                mobileMenuRef.current &&
+                !mobileMenuRef.current.contains(target) &&
+                hamburgerRef.current &&
+                !hamburgerRef.current.contains(target)
+            ) {
+                setShowMenu(false);
+                setOpenDropdown(null);
+            }
+        }
+
+        document.addEventListener("click", handleClick);
+        return () => document.removeEventListener("click", handleClick);
+    }, [openDropdown, showMenu]);
+
+    return (
+        <div>
+            <div className="bg-blue-600 text-white grid grid-cols-2 lg:grid-cols-6 justify-between items-center">
+                <div className="flex justify-center items-center">
+                    <div className="lg:hidden">
+                        <img
+                            ref={hamburgerRef}
+                            src={"/menu.png"}
+                            className="w-6 mx-3 invert"
+                            onClick={() => setShowMenu((prev) => !prev)}
+                        />
                     </div>
-                )) : null}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="hidden lg:flex mx-8 justify-end font-semibold">
-           <button className="cursor-pointer border-2 bg-red-500 shadow-2xl px-6 py-2 rounded-2xl hover:bg-blue-600 hover:text-red-500 border-red-500" onClick={handleLogout} >
-            Logout
-           </button>
-      </div>
-      
-    </div>
-    <div className={`${showMenu ? 'fixed z-5 w-2/3 flex flex-col justify-center items-center border-1 border-gray-500 rounded-2xl font-bold shadow-2xl bg-white p-2' : 'hidden'} m-2 justify-center text-lg`}>
-          
-           {groupedHeaderFields.map((group, i) => (
-            <div key={i} className="relative group w-full flex flex-col justify-center items-center">
-            <button className="py-2">{group.group}</button>
-            <div className="absolute hidden group-hover:flex group-hover:flex-col bg-white text-black rounded-md shadow-lg mt-2 min-w-[180px]">
-                {group.items ? group.items.map((item, idx) => (
-                  <div key={idx}>
-                <Link
-                    
-                    href={item.href}
-                    className="px-4 py-2 hover:bg-blue-100"
-                >
-                    {item.name}
-                </Link>
-                <div className="w-[calc(90%)] h-[1px] bg-gray-500"></div>
+                    <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-start">
+                        <img src={"./logo.png"} width={"36px"} className="hidden lg:block" />
+                        <div>Algoquant</div>
+                    </Link>
                 </div>
-                )):null}
+
+                {/* Desktop Menu */}
+                <div className="hidden lg:flex gap-10 my-6 col-span-4 justify-center text-lg relative">
+                    {groupedHeaderFields.map((group, i) => (
+                        <div key={i} className="relative">
+                            {group.items ? (
+                                <button onClick={() => toggleDropdown(group.group)}>
+                                    {group.group}
+                                </button>
+                            ) : (
+                                <Link href={group.href}>{group.group}</Link>
+                            )}
+
+                            {openDropdown === group.group && group.items && (
+                                <div
+                                    className="absolute flex flex-col bg-white text-black rounded-md shadow-2xl mt-2 z-5 min-w-[180px] text-sm justify-center items-center"
+                                    ref={desktopDropdownRef}
+                                >
+                                    {group.items.map((item, idx) => (
+                                        <div key={idx} className="flex flex-col justify-center items-center w-full h-full">
+                                            {idx !== 0 && <div className="h-[1px] w-[calc(90%)] bg-black" />}
+                                            <Link
+                                                href={item.href}
+                                                className="px-4 py-2 hover:text-blue-500 hover:font-bold"
+                                            >
+                                                {item.name}
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                <div className="hidden lg:flex mx-8 justify-end font-semibold">
+                    <button
+                        className="cursor-pointer border-2 bg-red-500 shadow-2xl px-6 py-2 rounded-2xl hover:bg-blue-600 hover:text-red-500 border-red-500"
+                        onClick={handleLogout}
+                    >
+                        Logout
+                    </button>
+                </div>
             </div>
-            <div className="w-[calc(90%)] h-[1px] bg-black"></div>
-            </div>
-            ))}
-            <div className="py-1 text-red-500 font-bold" onClick={handleLogout}>
-              Logout
+
+            {/* Mobile Menu */}
+            <div
+                ref={mobileMenuRef}
+                className={`${showMenu ? 'fixed z-5 w-2/3 flex flex-col justify-center items-center border-1 border-gray-500 rounded-2xl font-bold shadow-2xl bg-white p-2' : 'hidden'} m-2 justify-center text-lg`}
+            >
+                {groupedHeaderFields.map((group, i) => (
+                    group.items ? (
+                        <div key={i} className="relative w-full flex flex-col justify-center items-center">
+                            <button
+                                className="py-2 w-full text-center"
+                                onClick={() => toggleDropdown(group.group)}
+                            >
+                                {group.group}
+                            </button>
+
+                            {openDropdown === group.group && (
+                                <div className="flex flex-col bg-white text-black rounded-md mt-2 min-w-[90%] w-[90%] z-50">
+                                    {group.items.map((item, idx) => (
+                                        <div key={idx} className="flex flex-col justify-center items-center w-full">
+                                            {idx !== 0 && <div className="h-[1px] w-[90%] bg-gray-500" />}
+                                            <Link
+                                                href={item.href}
+                                                className="px-4 py-2 w-full text-center"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleMobileNavLinkClick();
+                                                }}
+                                            >
+                                                {item.name}
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="w-[90%] h-[1px] bg-black mt-2" />
+                        </div>
+                    ) : (
+                        <div key={i} className="relative w-full flex flex-col justify-center items-center">
+                            <Link
+                                href={group.href}
+                                className="px-4 py-2 w-full text-center"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMobileNavLinkClick();
+                                }}
+                            >
+                                {group.group}
+                            </Link>
+                            <div className="w-[90%] h-[1px] bg-black mt-2" />
+                        </div>
+                    )
+                ))}
+
+                <div className="py-1 text-red-500 font-bold" onClick={handleLogout}>
+                    Logout
+                </div>
             </div>
         </div>
-    </div>
-    )
+    );
 }
