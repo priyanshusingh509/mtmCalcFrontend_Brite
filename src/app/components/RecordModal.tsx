@@ -83,7 +83,7 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
       <Dialog
         open={isOpen}
         onClose={onClose}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(0,0,0,0.6)]"
+        className="fixed inset-0 z-6 flex items-center justify-center bg-[rgb(0,0,0,0.6)]"
       >
         <div className="bg-white w-full mx-10 h-[93vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden space-y-2">
           {/* Header */}

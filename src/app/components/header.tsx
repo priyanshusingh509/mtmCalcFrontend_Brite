@@ -113,7 +113,7 @@ export default function Header(){
             
 
             {openDropdown === group.group && (
-              <div className="absolute flex flex-col bg-white text-black rounded-md shadow-2xl mt-2 z-50 min-w-[180px] text-sm justify-center items-center" ref={dropdownRef}>
+              <div className="absolute flex flex-col bg-white text-black rounded-md shadow-2xl mt-2 z-5 min-w-[180px] text-sm justify-center items-center" ref={dropdownRef}>
                 {group.items ? group.items.map((item, idx) => (
                     <div key={idx} className="flex flex-col justify-center items-center w-full h-full">
                     {idx != 0 ? <div className="h-[1px] w-[calc(90%)] bg-black"/> : null}
@@ -139,12 +139,12 @@ export default function Header(){
       </div>
       
     </div>
-    <div className={`${showMenu ? 'fixed z-10 w-2/3 flex flex-col justify-center items-center border-1 border-gray-500 rounded-2xl font-bold shadow-2xl bg-white p-2' : 'hidden'} m-2 justify-center text-lg`}>
+    <div className={`${showMenu ? 'fixed z-5 w-2/3 flex flex-col justify-center items-center border-1 border-gray-500 rounded-2xl font-bold shadow-2xl bg-white p-2' : 'hidden'} m-2 justify-center text-lg`}>
           
            {groupedHeaderFields.map((group, i) => (
             <div key={i} className="relative group w-full flex flex-col justify-center items-center">
             <button className="py-2">{group.group}</button>
-            <div className="absolute hidden group-hover:flex group-hover:flex-col bg-white text-black rounded-md shadow-lg mt-2 z-50 min-w-[180px]">
+            <div className="absolute hidden group-hover:flex group-hover:flex-col bg-white text-black rounded-md shadow-lg mt-2 min-w-[180px]">
                 {group.items ? group.items.map((item, idx) => (
                   <div key={idx}>
                 <Link

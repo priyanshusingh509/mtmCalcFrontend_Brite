@@ -162,7 +162,7 @@ React.useEffect(() => {
           placeholder="Search"
           value={filterText}
           onChange={onFilterChange}
-          className="absolute top-0 left-0 z-10 w-full h-[calc(70%)] px-2 py-1 text-sm text-black bg-white border focus:outline-blue-500 rounded shadow-md"
+          className="absolute top-0 left-0 z-5 w-full h-[calc(70%)] px-2 py-1 text-sm text-black bg-white border focus:outline-blue-500 rounded shadow-md"
         />
       )}
     </div>

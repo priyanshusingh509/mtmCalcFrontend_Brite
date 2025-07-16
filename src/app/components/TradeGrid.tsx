@@ -441,10 +441,10 @@ function timeToSeconds(t: string | undefined | null) {
       <div className={`flex flex-grow w-full`}>
         <div className={`flex flex-col ag-theme-alpine w-full relative min-h-screen lg:min-h-0`}>
           {loading && (
-            <div className="absolute inset-0 bg-white z-50 bg-opacity-70 flex items-center justify-center">
+            <div className="absolute inset-0 bg-white z-3 bg-opacity-70 flex items-center justify-center">
               <div className="flex flex-col items-center">
                 {/* <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2" /> */}
-                <div className="z-10 flex justify-center items-center gap-2 text-black animate-pulse font-bold text-3xl"><img src={"logo.png"} width={"48px"}/>Algoquant</div>
+                <div className="flex justify-center items-center gap-2 text-black animate-pulse font-bold text-3xl"><img src={"logo.png"} width={"48px"}/>Algoquant</div>
               </div>
             </div>
           )}
