@@ -18,9 +18,9 @@ export const useTradeData = () => {
   const keepOnlyThreePages = (pageIndex: IndexType) => {
     const curr = pageIndex.current;
     const valid = [`page-${curr - 1}`, `page-${curr}`, `page-${curr + 1}`,"username"];
-    Object.keys(localStorage).forEach((key) => {
+    Object.keys(sessionStorage).forEach((key) => {
       if (!valid.includes(key)) {
-        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
       }
     });
   };
@@ -110,18 +110,18 @@ export const useTradeData = () => {
 
     // ✅ Store each window with timestamp
     const curr = pageIndex.current;
-    localStorage.setItem(`page-${curr}`, JSON.stringify({
+    sessionStorage.setItem(`page-${curr}`, JSON.stringify({
       data: currentChunk,
       lastUpdatedTime
     }));
     if (nextChunk.length > 0) {
-      localStorage.setItem(`page-${curr + 1}`, JSON.stringify({
+      sessionStorage.setItem(`page-${curr + 1}`, JSON.stringify({
         data: nextChunk,
         lastUpdatedTime
       }));
     }
     if (curr > 0 && prevChunk.length > 0) {
-      localStorage.setItem(`page-${curr - 1}`, JSON.stringify({
+      sessionStorage.setItem(`page-${curr - 1}`, JSON.stringify({
         data: prevChunk,
         lastUpdatedTime
       }));
@@ -181,7 +181,7 @@ export const useTradeData = () => {
     const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType, col, search);
 
     // ✅ Now we have both pageData & lastUpdatedTime — safe to store
-    localStorage.setItem(`page-${page}`, JSON.stringify({
+    sessionStorage.setItem(`page-${page}`, JSON.stringify({
       data: pageData,
       lastUpdatedTime
     }));
@@ -269,6 +269,11 @@ async function fetchFilteredData(tableName: string, search: string, col: string,
     console.error('Error fetching filtered data:', err);
   }
 };
+
+
+async function saveColDefs(){
+  
+}
 
 
   return {

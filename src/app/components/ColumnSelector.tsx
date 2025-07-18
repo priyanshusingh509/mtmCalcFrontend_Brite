@@ -17,10 +17,8 @@ export default function ColumnSelector({ gridRef }: Props) {
   const [columns, setColumns] = useState<ColumnMeta[]>([]);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    if (!gridRef.current?.api) return;
-
-    const colState = gridRef.current.api.getColumnState()?.map(col => {
+  const updateColumnMeta = () => {
+    const colState = gridRef.current?.api.getColumnState()?.map(col => {
       const colId = col.colId ?? '';
       const colDef = gridRef.current?.api.getColumnDef(colId);
       const displayName = colDef?.headerName ?? colId;
@@ -30,8 +28,12 @@ export default function ColumnSelector({ gridRef }: Props) {
         hidden: col.hide ?? false,
       };
     });
-
     if (colState) setColumns(colState);
+  };
+
+  useEffect(() => {
+    if (!gridRef.current?.api) return;
+    updateColumnMeta();
   }, [gridRef.current?.api]);
 
   const toggleColumn = (colId: string) => {
@@ -39,35 +41,22 @@ export default function ColumnSelector({ gridRef }: Props) {
       col.colId === colId ? { ...col, hidden: !col.hidden } : col
     );
     setColumns(newState);
-    gridRef.current?.api.setColumnsVisible([colId], !!newState.find(c => c.colId === colId)?.hidden === false);
+
+    const newHidden = !newState.find(c => c.colId === colId)?.hidden;
+    gridRef.current?.api.setColumnsVisible([colId], newHidden);
   };
 
   const saveState = () => {
     const state = gridRef.current?.api.getColumnState();
     if (state) {
-      localStorage.setItem('savedColumnState', JSON.stringify(state));
+      sessionStorage.setItem('savedColumnState', JSON.stringify(state));
       alert('Column visibility saved!');
     }
   };
 
-  const loadState = () => {
-    const saved = localStorage.getItem('savedColumnState');
-    if (saved) {
-      const state = JSON.parse(saved);
-      gridRef.current?.api.applyColumnState({ state, applyOrder: true });
-
-      const updated = state.map((col: any) => {
-        const colId = col.colId ?? '';
-        const colDef = gridRef.current?.api.getColumnDef(colId);
-        const displayName = colDef?.headerName ?? colId;
-        return {
-          colId,
-          displayName,
-          hidden: col.hide ?? false,
-        };
-      });
-      setColumns(updated);
-    }
+  const resetState = () => {
+    gridRef.current?.api.resetColumnState();
+    updateColumnMeta();
   };
 
   return (
@@ -78,6 +67,7 @@ export default function ColumnSelector({ gridRef }: Props) {
       >
         Columns
       </button>
+
       {open && (
         <div className="absolute top-12 left-0 bg-white border shadow-lg p-4 rounded z-50 max-h-64 overflow-auto w-64">
           {columns.map(col => (
@@ -91,6 +81,7 @@ export default function ColumnSelector({ gridRef }: Props) {
               {col.displayName}
             </label>
           ))}
+
           <div className="mt-4 flex justify-between">
             <button
               onClick={saveState}
@@ -99,10 +90,10 @@ export default function ColumnSelector({ gridRef }: Props) {
               Save
             </button>
             <button
-              onClick={loadState}
-              className="text-sm px-2 py-1 bg-gray-500 text-white rounded"
+              onClick={resetState}
+              className="text-sm px-2 py-1 bg-red-500 text-white rounded"
             >
-              Load
+              Reset
             </button>
           </div>
         </div>

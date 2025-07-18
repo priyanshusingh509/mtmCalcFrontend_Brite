@@ -85,7 +85,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
   };
   const gridRef = useRef<AgGridReact<TradeRow> | null>(null);
   const gridTheme = themeAlpine.withParams({
-    spacing: 6,
+    spacing: 2,
     accentColor: '#2196F3',
     oddRowBackgroundColor: '#00000008',
     wrapperBorderRadius: 10,
@@ -148,7 +148,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     const curr = pageIndex.current;
     const prev = curr - 1;  
 
-    const currentCached = localStorage.getItem(`page-${curr}`);
+    const currentCached = sessionStorage.getItem(`page-${curr}`);
     if (currentCached) {
       const parsed = JSON.parse(currentCached);
       setRowData(parsed.data || parsed);
@@ -176,7 +176,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     const curr = pageIndex.current;
     const next = curr + 1;
 
-    const currentCached = localStorage.getItem(`page-${curr}`);
+    const currentCached = sessionStorage.getItem(`page-${curr}`);
     if (currentCached) {
       const parsed = JSON.parse(currentCached);
       setRowData(parsed.data || parsed); // Fallback for old format
@@ -217,7 +217,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
       return;
     } 
     pageIndex.current = page - 1;
-    localStorage.clear();   // reset everything
+    sessionStorage.clear();   // reset everything
     const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     setTotalPages(total);
     lastUpdated.current = lastUpdatedTime;
@@ -241,7 +241,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     },70)
   }
     const handleFilter = async () => {
-      localStorage.clear(); 
+      sessionStorage.clear(); 
       const api = gridRef.current?.api;
       // console.log(gridRef.current);
       api?.setFilterModel(null);        // Clear filter
@@ -311,13 +311,6 @@ function timeToSeconds(t: string | undefined | null) {
 
 
   // const NoDataComponent = () =>{
-  //     console.log("lastupdated",lastUpdated.current)
-  //     if (timeToSeconds(lastUpdated.current) < timeToSeconds("10:30:00")) {
-  //       return <div>
-  //       Market Data Updates at 9:30
-
-  //     </div>
-  //     }
   //     return <div>No rows to show</div>
   // };
   const autoFitOrSizeToFit = (api: GridApi) => {
