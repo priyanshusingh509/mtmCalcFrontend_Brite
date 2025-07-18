@@ -104,7 +104,6 @@ export const useTradeData = () => {
 
     // Wait for stream to complete
     await oboePromise;
-
     // 🔄 Fetch total and lastUpdated AFTER data is collected
     const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType, col, search);
 
@@ -228,6 +227,7 @@ export const useTradeData = () => {
     col,
     search
   }
+  console.log(body)
   const response = await fetch(fetchURL, {
     method: 'POST',
     body: JSON.stringify(body),

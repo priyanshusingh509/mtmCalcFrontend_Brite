@@ -79,7 +79,7 @@ export default function ColumnSelector({ gridRef }: Props) {
         Columns
       </button>
       {open && (
-        <div className="absolute top-12 left-0 bg-white border shadow-lg p-4 rounded z-50 max-h-64 overflow-auto w-64">
+        <div className="absolute top-10 right-0 bg-white border shadow-lg p-4 rounded z-50 max-h-48 lg:max-h-64 overflow-auto w-64">
           {columns.map(col => (
             <label key={col.colId} className="block py-1">
               <input

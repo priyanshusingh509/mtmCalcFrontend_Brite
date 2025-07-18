@@ -7,30 +7,36 @@ import { useState, useEffect, useRef } from "react";
 const groupedHeaderFields = [
     {
         group: "Dashboard",
-        href: "/dashboard"
+        items: [
+            { name: "Main", href: "/dashboard" },
+            { name: "NSE FUT Algo", href: "nseAlgoDashboard" },
+        ]
     },
-
-  {
-    group: "BSE",
-    items: [
-      { name: "BSE CM", href: "/bseCashMarket" },
-      { name: "BSE FNO", href: "/bseEQD" },
-    ],
-  },
-  {
-    group: "NSE",
-    items: [
-      { name: "NSE CM", href: "/nseCashMarket" },
-      {name: "NSE FNO", href: "/nseFnoAlgo"},
-    ],
-  },
-  {
-    group: "Summary",
-    items: [
-      { name: "Client Summary", href: "/clientSummary" },
-      { name: "Symbol Summary", href: "/symbolSummary" },
-    ],
-  },
+    {
+        group: "BSE",
+        items: [
+        { name: "BSE CM", href: "/bseCashMarket" },
+        { name: "BSE FNO", href: "/bseEQD" },
+        ],
+    },
+    {
+        group: "NSE",
+        items: [
+        { name: "NSE CM", href: "/nseCashMarket" },
+        {name: "NSE FNO", href: "/nseFnoAlgo"},
+        ],
+    },
+    {
+        group: "Summary",
+        items: [
+        { name: "Client Summary", href: "/clientSummary" },
+        { name: "Symbol Summary", href: "/symbolSummary" },
+        ],
+    },
+    {
+        group: "Turnover",
+        href: "/turnover"
+    }
 ];
 
 export default function Header() {
@@ -116,14 +122,14 @@ export default function Header() {
                     />
                 </div>
                 <div className="flex justify-center items-center">
-                    <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-6 justify-center lg:justify-start">
+                    <Link href={"/dashboard"} className="flex gap-3 items-center font-bold text-2xl mx-8 my-2 justify-center lg:justify-start">
                         <img src={"./logo.png"} width={"36px"} />
                         <div>Algoquant</div>
                     </Link>
                 </div>
 
                 {/* Desktop Menu */}
-                <div className="hidden lg:flex gap-10 my-6 col-span-4 justify-center text-lg relative">
+                <div className="hidden lg:flex gap-10 my-2 col-span-4 justify-center text-lg relative">
                     {groupedHeaderFields.map((group, i) => (
                         <div key={i} className="relative">
                             {group.items ? (
@@ -156,9 +162,9 @@ export default function Header() {
                     ))}
                 </div>
 
-                <div className="hidden lg:flex mx-8 justify-end font-semibold">
+                <div className="hidden lg:flex mx-8 justify-end">
                     <button
-                        className="cursor-pointer border-2 bg-red-500 shadow-2xl px-6 py-2 rounded-2xl hover:bg-blue-600 hover:text-red-500 border-red-500"
+                        className="cursor-pointer border-2 bg-red-500 shadow-2xl px-2 rounded-md hover:bg-blue-600 hover:text-red-500 border-red-500"
                         onClick={handleLogout}
                     >
                         Logout
