@@ -48,7 +48,7 @@ const CustomFilter = (props: any) => {
           value ? setFilterClass("Applied") : setFilterClass('');
             await onSearch(tableName, column.colId, value, summaryType); // Make backend call
             setRenderTrigger(prev => prev + 1);
-        }, 300); // debounce duration
+        }, 500); // debounce duration
     };
 
 //   const toggleInput = () => setShowInput(prev => !prev);
@@ -135,9 +135,10 @@ React.useEffect(() => {
 
 
   return (
-    <div ref={filterBoxRef} className="flex items-center justify-between h-full w-full relative px-1">
+    <div ref={filterBoxRef} className="grid grid-cols-3 h-full w-full relative px-1">
+      {!showInputRef.current && <div></div>}
       {!showInputRef.current && (<div
-        className={`font-semibold truncate cursor-pointer`}
+        className={`font-semibold cursor-pointer flex justify-center items-center`}
         onClick={handleSortClick}
         title="Click to sort"
       >
@@ -146,12 +147,12 @@ React.useEffect(() => {
 
       {!showInputRef.current && (<button
         onClick={toggleInput}
-        className="ml-1 text-gray-600 hover:text-black focus:outline-none"
+        className="ml-1 text-gray-600 hover:text-black focus:outline-none flex justify-end items-center "
         title="Filter"
       >
         <div className='flex'>
         <img className={`${sortClass}`} src="sort.png" width="16px"/>
-        <img src={`filter${filterClass}.png`} width="16px"  className='min-w-4' />
+        <img src={`filter${filterClass}.png`} width="16px"  className='min-w-4 bg-gray-100'/>
         </div>
       </button>)}
 
@@ -162,7 +163,7 @@ React.useEffect(() => {
           placeholder="Search"
           value={filterText}
           onChange={onFilterChange}
-          className="absolute top-0 left-0 z-5 w-full h-[calc(70%)] px-2 py-1 text-sm text-black bg-white border focus:outline-blue-500 rounded shadow-md"
+          className="absolute top-0 left-0 z-5 w-full h-[calc(70%)] px-2 py-1 text-sm text-black bg-white border focus:outline-blue-500 rounded shadow-md col-span-3"
         />
       )}
     </div>

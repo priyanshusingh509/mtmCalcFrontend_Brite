@@ -49,10 +49,18 @@ type TradeGridProps = {
   tableName: string;
   pageIndex: IndexType;
   summaryType?: "trader" | "symbol";
+  divFactor?: number;
+  setDivFactor?: Function
 };
 
+const divFactors = [
 
-const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: TradeGridProps) => {
+  { field: "Per Crore", factor: 10000000 },
+  { field: "Per Lakh", factor: 100000}
+]
+
+
+const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType, divFactor, setDivFactor}: TradeGridProps) => {
   // console.log(summaryType)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalField, setModalField] = useState('');
@@ -69,19 +77,25 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
   const sortOrder= useRef<'asc' | 'desc' | ''>(''); // default: empty string
   const [currentFilterCol, setCurrentFilterCol] = useState<string | null>(null);
   const [currentSearch, setCurrentSearch] = useState<string | null>(null);
+  const [openDivDropdown, setOpenDivDropdown] = useState(false);
   // const [timeIsUpdated,settimeIsUpdated] = useState(false);
 
   const handleSearch = async (tableName: string, col: string, search: string) => {
     setCurrentFilterCol(col);
     setCurrentSearch(search);
-
-    const { total, lastUpdatedTime } = await fetchPageViaGoto(0, tableName, { current: 0}, currentSortField.current, sortOrder.current, col, search, summaryType)
+    try{
+      const { total, lastUpdatedTime } = await fetchPageViaGoto(0, tableName, { current: 0}, currentSortField.current, sortOrder.current, col, search, summaryType)
+      setTotalPages(total);
+      lastUpdated.current = lastUpdatedTime
+    }
+    catch {
+      setTotalPages(0);
+    }
+    pageIndex.current = 0;
+    setInputPage(1);
     // console.log(col)
-    setTotalPages(total);
     // console.log(total);
     // setLastUpdated(lastUpdatedTime)
-    lastUpdated.current = lastUpdatedTime
-    pageIndex.current = 0;
   };
   const gridRef = useRef<AgGridReact<TradeRow> | null>(null);
   const gridTheme = themeAlpine.withParams({
@@ -117,7 +131,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
 ];
 
   const defaultColDef: ColDef = {
-    cellClass: 'text-right',
+    cellClass: 'text-center',
     resizable: true,
     filter: true,
     minWidth: 120,
@@ -143,8 +157,8 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
   const handlePrev = async () => {
     setPreviousBtn("cursor-wait shadow-2xl");
     if (pageIndex.current === 0) return;
-
     pageIndex.current -= 1;
+    setInputPage(inputPage-1)
     const curr = pageIndex.current;
     const prev = curr - 1;  
 
@@ -172,6 +186,7 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
 
   const handleNext = async () => {
     setNextBtn("cursor-wait shadow-2xl");
+    setInputPage(inputPage+1)
     pageIndex.current += 1;
     const curr = pageIndex.current;
     const next = curr + 1;
@@ -250,15 +265,15 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
       setClearSignal(prev => prev + 1);       // Notify filters
       setClearSortSignal(prev => prev + 1);   // Notify sort headers
 
-      // Reset sort refs so backend gets clean request
-      currentSortField.current = '';
-      sortOrder.current = '';
-      // Refetch with no filters or sort
-      const {total, lastUpdatedTime} = await  fetchPageViaGoto(0, tableName, { current: 0 }, '', '', null, null, summaryType);
-      setTotalPages(total);
-      // setLastUpdated(lastUpdatedTime);
-      lastUpdated.current = lastUpdatedTime
-    };
+    // Reset sort refs so backend gets clean request
+    currentSortField.current = '';
+    sortOrder.current = '';
+    // Refetch with no filters or sort
+    const {total, lastUpdatedTime} = await  fetchPageViaGoto(0, tableName, { current: 0 }, '', '', null, null, summaryType);
+    setTotalPages(total);
+    // setLastUpdated(lastUpdatedTime);
+    lastUpdated.current = lastUpdatedTime
+  };
 
 
   const handleSort = async (event: SortChangedEvent<TradeRow>) => {
@@ -285,14 +300,13 @@ const TradeGrid = ({mobColDef, fileColDef, tableName, pageIndex, summaryType }: 
     lastUpdated.current = lastUpdatedTime;
   };
 
-function timeToSeconds(t: string | undefined | null) {
-    if (t) {
-      const [h, m, s = 0] = t.split(':').map(Number);
-    return h * 3600 + m * 60 + s;
-    }
-    return 1e+17;
-}
-
+  function timeToSeconds(t: string | undefined | null) {
+      if (t) {
+        const [h, m, s = 0] = t.split(':').map(Number);
+      return h * 3600 + m * 60 + s;
+      }
+      return 1e+17;
+  }
 
   const handleCellDoubleClick = (event: CellDoubleClickedEvent<TradeRow>) => {
     const clickedField = event.colDef.field;
@@ -375,6 +389,7 @@ function timeToSeconds(t: string | undefined | null) {
 
     }
   }, [loading])
+
   useEffect(() => {
     function handleResize() {
       console.log("THISSSS")
@@ -385,80 +400,21 @@ function timeToSeconds(t: string | undefined | null) {
     return () => window.removeEventListener('resize', handleResize);
   }, [])
 
-
-
-
   // console.log("this should work ",totalPages);
 
   return (
     <div className="pt1 flex h-full flex-col w-full">
       {/* Pagination Controls */}
-      <div className="flex-col lg:flex-row justify-center items-center p-4 gap-2 hidden">
-        <div className='font-semibold'>Last Updated: {lastUpdated.current}</div>
-        <div>
-          <button
-            onClick={handlePrev}
-            disabled={pageIndex.current === 0}
-            className={`px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${previousBtn}`}
-          >
-            Previous
-          </button>
-          <span className="px-4 py-2 text-lg font-semibold">
-            Page {pageIndex.current + 1} / {totalPages}
-          </span>
-          <button
-            onClick={handleNext}
-            disabled={pageIndex.current >= (totalPages - 1)}
-            className={`px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
-          >
-            Next
-          </button>
-        </div>
-        <div className='flex'>
-          <button
-          onClick={handleFilter}
-          className={`mx-1 px-4 py-2 w-[30vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
-          >
-            Clear Filter
-          </button>
-          <input
-            type="number"
-            min="1"
-            value={inputPage}
-            onChange={handleInputPageChange}
-            onKeyPress={handleKeyPress}
-            placeholder="Search"
-            className="hidden md:block mx-1 p-2 w-[20vw] lg:w-[10vw] border border-gray-300 rounded text-center"
-          />
-          <button
-            onClick={handleGoToInputPage}
-            className={`hidden md:block mx-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 active:scale-95 transition transform duration-100 ${goBtn}`}
-          >
-            Go
-          </button>
-          <button
-          className={`mx-1 px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100 ${refreshBtn}`}
-          onClick={handleRefreshPage}
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* AG Grid */}
-      <div className='bg-gray-200 lg:h-12 w-full grid grid-cols-1 lg:grid-cols-3 justify-around items-center border-1 border-gray-300'>
-        <div className='flex justify-center items-center font-semibold'>Last Updated: {lastUpdated.current}</div>
+       <div className='bg-gray-200 lg:h-12 w-full grid grid-cols-3 lg:grid-cols-3 justify-around items-center border-1 border-gray-300'>
+        <div className='flex justify-center items-center font-semibold col-span-3 lg:col-span-1'>Last Updated: {lastUpdated.current}</div>
         <div className='flex justify-center items-center '>
           <button
             onClick={handlePrev}
             disabled={pageIndex.current === 0}
-            className={`bg-gray-300 w-10 h-10 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${previousBtn}`}
+            className={`flex justify-center items-center bg-gray-300 w-10 h-10 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${previousBtn}`}
           >
-            {"<"}
+            <img src={"./prev.png"} className='h-6 w-8'/>
           </button>
-          {/* <span className="px-4 py-2 text-lg font-semibold">
-            {pageIndex.current + 1} / {totalPages}
-          </span> */}
           <div className='flex px-4 py-2 text-lg font-semibold'>
             <input
               type="number"
@@ -473,12 +429,34 @@ function timeToSeconds(t: string | undefined | null) {
           <button
             onClick={handleNext}
             disabled={pageIndex.current >= (totalPages - 1)}
-            className={`bg-gray-300 w-10 h-10 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
+            className={`flex justify-center items-center bg-gray-300 w-10 h-10 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
           >
-            {">"}
+            <img src={"./prev.png"} className='h-6 w-8 rotate-180'/>
           </button>
         </div>
-        <div className='flex justify-center items-center m-1'>
+        <div className='flex justify-center items-center m-1 col-span-2 lg:col-span-1'>
+          {tableName == 'turnover' ?
+            <div>
+              <div onClick={()=> setOpenDivDropdown(!openDivDropdown)} className={`flex justify-center items-center mx-1 px-4 py-2 w-[30vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100`}>
+                Div Factor
+              </div>
+              {openDivDropdown ?
+                <div className='absolute z-50 bg-white border-1 rounded-md'>
+                      {divFactors.map((factor, id) => {
+                        return <div key={id} className={`py-1 px-5 cursor-pointer ${factor.factor == divFactor ? "bg-blue-500 text-white" : ""}`} onClick={()=>{
+                          setDivFactor ? setDivFactor(factor.factor) : null;
+                          setOpenDivDropdown(false)
+                        }
+                      }>
+                      {factor.field}
+                </div>
+              })}
+              </div>
+              : null
+              } 
+            </div> 
+            : null
+          }
           <button
           onClick={handleFilter}
           className={`mx-1 px-4 py-2 w-[30vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
@@ -505,6 +483,9 @@ function timeToSeconds(t: string | undefined | null) {
         </div>
       
       </div>
+
+      {/* AG Grid */}
+     
       <div className={`flex flex-grow w-full`}>
         <div className={`flex flex-col ag-theme-alpine m-2 w-full relative min-h-screen lg:min-h-0`}>
           {loading && (

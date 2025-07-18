@@ -7,30 +7,36 @@ import { useState, useEffect, useRef } from "react";
 const groupedHeaderFields = [
     {
         group: "Dashboard",
-        href: "/dashboard"
+        items: [
+            { name: "Main", href: "/dashboard" },
+            { name: "NSE FUT Algo", href: "nseAlgoDashboard" },
+        ]
     },
-
-  {
-    group: "BSE",
-    items: [
-      { name: "BSE CM", href: "/bseCashMarket" },
-      { name: "BSE FNO", href: "/bseEQD" },
-    ],
-  },
-  {
-    group: "NSE",
-    items: [
-      { name: "NSE CM", href: "/nseCashMarket" },
-      {name: "NSE FNO", href: "/nseFnoAlgo"},
-    ],
-  },
-  {
-    group: "Summary",
-    items: [
-      { name: "Client Summary", href: "/clientSummary" },
-      { name: "Symbol Summary", href: "/symbolSummary" },
-    ],
-  },
+    {
+        group: "BSE",
+        items: [
+        { name: "BSE CM", href: "/bseCashMarket" },
+        { name: "BSE FNO", href: "/bseEQD" },
+        ],
+    },
+    {
+        group: "NSE",
+        items: [
+        { name: "NSE CM", href: "/nseCashMarket" },
+        {name: "NSE FNO", href: "/nseFnoAlgo"},
+        ],
+    },
+    {
+        group: "Summary",
+        items: [
+        { name: "Client Summary", href: "/clientSummary" },
+        { name: "Symbol Summary", href: "/symbolSummary" },
+        ],
+    },
+    {
+        group: "Turnover",
+        href: "/turnover"
+    }
 ];
 
 export default function Header() {
