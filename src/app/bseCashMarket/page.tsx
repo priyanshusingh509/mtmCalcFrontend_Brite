@@ -91,7 +91,7 @@ export default function bseCashMarketPage(){
       <div className='h-screen flex flex-col'>
             <Header/>
         <div className="flex flex-col flex-grow">
-          <TradeGrid mobColDef={mobilecolumnDefs} fileColDef={columnDefs} tableName='EQ_ITR' pageIndex={pageIndex}/>
+          <TradeGrid mobColDef={mobilecolumnDefs} fileColDef={columnDefs} requestType={'table'} requestName='EQ_ITR' pageIndex={pageIndex}/>
         </div>
       </div>
     )

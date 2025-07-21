@@ -113,7 +113,7 @@ export default function nseFnoAlgoPage(){
       <div className='h-screen flex flex-col'>
             <Header/>
         <div className="flex flex-col flex-grow">
-          <TradeGrid mobColDef={mobileColumnDefs} fileColDef={columnDefs} tableName='NSE_FNO_Algo' pageIndex={pageIndex}/>
+          <TradeGrid mobColDef={mobileColumnDefs} fileColDef={columnDefs} requestType={'table'} requestName='NSE_FNO_Algo' pageIndex={pageIndex}/>
         </div>
       </div>
     )

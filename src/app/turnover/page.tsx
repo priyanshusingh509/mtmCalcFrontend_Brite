@@ -74,7 +74,7 @@ export default function turnoverPage(){
       <div className='h-screen flex flex-col'>
         <Header/>
         <div className="flex flex-col flex-grow">
-          <TradeGrid mobColDef={columnDefs} fileColDef={columnDefs} tableName='turnover' pageIndex={pageIndex} divFactor={divFactor} setDivFactor={setDivFactor}/>
+          <TradeGrid mobColDef={columnDefs} fileColDef={columnDefs} requestType={'aggregate'} requestName='turnover' pageIndex={pageIndex} divFactor={divFactor} setDivFactor={setDivFactor}/>
         </div>
       </div>
     )

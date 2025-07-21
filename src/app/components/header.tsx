@@ -9,7 +9,7 @@ const groupedHeaderFields = [
         group: "Dashboard",
         items: [
             { name: "Main", href: "/dashboard" },
-            { name: "NSE FUT Algo", href: "nseAlgoDashboard" },
+            { name: "NSE Algo", href: "nseAlgoDashboard" },
         ]
     },
     {

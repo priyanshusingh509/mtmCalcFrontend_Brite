@@ -28,7 +28,8 @@ export const useTradeData = () => {
 
   async function fetchPageViaGoto(
     start: number,
-    tableName: string,
+    requestType: 'table' | "aggregate",
+    requestName: string,
     pageIndex: IndexType,
     field: string,
     order: string,
@@ -45,14 +46,15 @@ export const useTradeData = () => {
     const body = {
       start,
       limit: 300,
-      tableName,
+      requestType,
+      requestName,
       field,
       order,
       col,
       search,
       summaryType
     };
-
+    console.log(body)
     console.time("oboe stream for page 1");
     console.time("oboe stream for all the pages includes page 1 as well");
 
@@ -106,7 +108,7 @@ export const useTradeData = () => {
     // Wait for stream to complete
     await oboePromise;
     // 🔄 Fetch total and lastUpdated AFTER data is collected
-    const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType, col, search);
+    const { total, lastUpdatedTime } = await fetchTotalRecords(requestType, requestName, summaryType, col, search);
 
     // ✅ Store each window with timestamp
     const curr = pageIndex.current;
@@ -140,7 +142,8 @@ export const useTradeData = () => {
   async function fetchConsecutive(
     page: number,
     forward: boolean,
-    tableName: string,
+    requestType: 'table' | 'aggregate',
+    requestName: string | undefined,
     field: string,
     order: string,
     col: string | null,
@@ -153,7 +156,8 @@ export const useTradeData = () => {
       start,
       limit: PAGE_SIZE,
       action: forward,
-      tableName,
+      requestType,
+      requestName,
       field,
       order,
       col,
@@ -178,7 +182,7 @@ export const useTradeData = () => {
       console.error('Error prefetching:', err);
     }
 
-    const { total, lastUpdatedTime } = await fetchTotalRecords(tableName, summaryType, col, search);
+    const { total, lastUpdatedTime } = await fetchTotalRecords(requestType, requestName, summaryType, col, search);
 
     // ✅ Now we have both pageData & lastUpdatedTime — safe to store
     sessionStorage.setItem(`page-${page}`, JSON.stringify({
@@ -193,12 +197,12 @@ export const useTradeData = () => {
   const fetchRecordsByField = async (
   col: string,
   search: string | number,
-  tableName: string,
+  requestName: string | undefined,
   summaryType?: "trader" | "symbol"
 ): Promise<{ firstGrid: TradeRow[]; secondGrid: TradeRow[] }> => {
   try {
     const fetchUrl = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getby`;
-    const body = { col, search, tableName, summaryType };
+    const body = { col, search, requestName, summaryType };
 
     const res = await fetch(fetchUrl, {
       method: 'POST',
@@ -218,12 +222,13 @@ export const useTradeData = () => {
 
 
 
- async function fetchTotalRecords(tableName: string, summaryType?: "trader" | "symbol", col: string | null = null , search: string | null = null) {
-  console.log(tableName);
+ async function fetchTotalRecords(requestType: string, requestName: string | undefined, summaryType?: "trader" | "symbol", col: string | null = null , search: string | null = null) {
+  console.log(requestName);
   console.log("fetch total col:",col)
   const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords`;
   const body = {
-    tableName,
+    requestType,
+    requestName,
     summaryType,
     col,
     search
@@ -244,11 +249,11 @@ export const useTradeData = () => {
   };
   };
 
-async function fetchFilteredData(tableName: string, search: string, col: string, summaryType?: "trader" | "symbol") {
+async function fetchFilteredData(requestName: string | undefined, search: string, col: string, summaryType?: "trader" | "symbol") {
   try {
     const fetchUrl = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getFilteredData`;
     const body = {
-      tableName,
+      requestName,
       summaryType,
       search,
       col

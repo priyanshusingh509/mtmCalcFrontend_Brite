@@ -43,11 +43,13 @@ export interface IndexType {
 type TradeGridProps = {
   mobColDef: ColDef[],
   fileColDef: ColDef[];
-  tableName: string;
+  requestType: "table" | "aggregate";
+  requestName: string;
   pageIndex: IndexType;
   summaryType?: "trader" | "symbol";
   divFactor?: number;
-  setDivFactor?: Function
+  setDivFactor?: Function;
+  setTableUsed?: Function;
 };
 
 const divFactors = [
@@ -55,8 +57,15 @@ const divFactors = [
   { field: "Per Lakh", factor: 100000 }
 ];
 
+const tables = [
+  { field: "BSE CM", value: "EQ_ITR"},
+  { field: "BSE FNO", value: "EQD_ITRTM"},
+  { field: "NSE CM", value: "NSE_Cash_Algo"},
+  { field: "NSE FNO", value: "NSE_FNO_Algo"}
+]
 
-const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, divFactor, setDivFactor }: TradeGridProps) => {
+
+const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex, summaryType, divFactor, setDivFactor, setTableUsed }: TradeGridProps) => {
   const pathname = usePathname();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalField, setModalField] = useState('');
@@ -91,11 +100,11 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
     getColDefs
   } = useTradeData();
   
-  const handleSearch = async (tableName: string, col: string, search: string) => {
+  const handleSearch = async (requestName: string, col: string, search: string) => {
     setCurrentFilterCol(col);
     setCurrentSearch(search);
-    try {
-      const { total, lastUpdatedTime } = await fetchPageViaGoto(0, tableName, { current: 0 }, currentSortField.current, sortOrder.current, currentFilterCol, search, summaryType);
+    try{
+      const { total, lastUpdatedTime } = await fetchPageViaGoto(0, requestType, requestName, { current: 0}, currentSortField.current, sortOrder.current, col, search, summaryType)
       setTotalPages(total);
       setLastUpdated(lastUpdatedTime); // ✅ Use state setter
     } catch {
@@ -134,7 +143,7 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
     minWidth:120,
     headerComponent: CustomFilter,
     headerComponentParams: {
-      tableName: tableName,
+      requestName: requestName,
       onSearch: handleSearch,
       currentFilterCol,
       summaryType: summaryType,
@@ -161,14 +170,14 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
       setRowData(parsed.data || parsed);
       setLastUpdated(parsed.lastUpdatedTime || lastUpdated); // ✅ Use state setter
     } else {
-      const { total, lastUpdatedTime } = await fetchPageViaGoto(curr * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+      const { total, lastUpdatedTime } = await fetchPageViaGoto(curr * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
       setTotalPages(total);
       setLastUpdated(lastUpdatedTime); // ✅ Use state setter
     }
 
     keepOnlyThreePages(pageIndex);
     if (curr > 0) {
-      fetchConsecutive(curr - 1, false, tableName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+      fetchConsecutive(curr - 1, false, requestType, requestName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     }
     setTimeout(() => setPreviousBtn(""), 70);
   };
@@ -187,13 +196,13 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
       setRowData(parsed.data || parsed);
       setLastUpdated(parsed.lastUpdatedTime || lastUpdated); // ✅ Use state setter
     } else {
-      const { total, lastUpdatedTime } = await fetchPageViaGoto(curr * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+      const { total, lastUpdatedTime } = await fetchPageViaGoto(curr * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
       setTotalPages(total);
       setLastUpdated(lastUpdatedTime); // ✅ Use state setter
     }
     
     keepOnlyThreePages(pageIndex);
-    fetchConsecutive(curr + 1, true, tableName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    fetchConsecutive(curr + 1, true, requestType, requestName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     setTimeout(() => setNextBtn(""), 70);
   };
   
@@ -216,7 +225,7 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
     }
     pageIndex.current = page - 1;
     sessionStorage.clear();
-    const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     setTotalPages(total);
     setLastUpdated(lastUpdatedTime); // ✅ Use state setter
     setTimeout(() => setGoBtn(""), 150);
@@ -227,7 +236,7 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
     sessionStorage.clear(); // ✅ Clear cache for a true refresh
     
     const loadInitialPage = async () => {
-      const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+      const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
       setTotalPages(total);
       setLastUpdated(lastUpdatedTime); // ✅ Use state setter
     };
@@ -247,7 +256,7 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
     setClearSortSignal(prev => prev + 1);
     currentSortField.current = '';
     sortOrder.current = '';
-    const { total, lastUpdatedTime } = await fetchPageViaGoto(0, tableName, { current: 0 }, '', '', null, null, summaryType);
+    const { total, lastUpdatedTime } = await fetchPageViaGoto(0, requestType, requestName, { current: 0 }, '', '', null, null, summaryType);
     setTotalPages(total);
     setLastUpdated(lastUpdatedTime); // ✅ Use state setter
   };
@@ -263,7 +272,7 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
       currentSortField.current = '';
       sortOrder.current = '';
     }
-    const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
+    const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
     setTotalPages(total);
     setLastUpdated(lastUpdatedTime); // ✅ Use state setter
   };
@@ -294,9 +303,20 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
     sessionStorage.clear(); // ✅ Clear cache on initial mount for browser refresh
     
     const loadInitialPage = async () => {
-      const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, tableName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
-      setTotalPages(total);
-      setLastUpdated(lastUpdatedTime); // ✅ Use state setter
+        const { total, lastUpdatedTime } = await fetchPageViaGoto(
+          pageIndex.current * PAGE_SIZE,
+          requestType,
+          requestName,
+          pageIndex,
+          currentSortField.current,
+          sortOrder.current,
+          currentFilterCol,
+          currentSearch,
+          summaryType
+        );
+        // setLastUpdated(lastUpdatedTime);
+        setTotalPages(total);
+        setLastUpdated(lastUpdatedTime);
     };
     loadInitialPage();
   }, []);
@@ -363,9 +383,43 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
           </button>
         </div>
         <div className='flex justify-center items-center m-1 col-span-2 lg:col-span-1'>
-          {tableName == 'turnover' ?
+          {setTableUsed ?
             <div>
-
+              <Dropdown 
+              id='tables'
+              label='Table'
+              openDropdown={openDivDropdown}
+              setOpenDropdown={setOpenDivDropdown}
+              >
+                {tables.map((table, id) => {
+                        return <div key={id} className={`py-1 px-5 cursor-pointer ${table.value == requestName ? "bg-blue-500 text-white" : ""}`} onClick={()=>{
+                          setTableUsed(table.value);
+                          setOpenDivDropdown(null)
+                        }
+                      }>
+                      {table.field}
+                </div>
+              })}
+              </Dropdown>
+              {/* {openDivDropdown ?
+                <div className='absolute z-50 bg-white border-1 rounded-md'>
+                      {tables.map((table, id) => {
+                        return <div key={id} className={`py-1 px-5 cursor-pointer ${table.value == requestName ? "bg-blue-500 text-white" : ""}`} onClick={()=>{
+                          setTableUsed(table.value);
+                          setOpenDivDropdown(false)
+                        }
+                      }>
+                      {table.field}
+                </div>
+              })}
+              </div>
+              : null
+              }  */}
+            </div> 
+            : null
+          }
+          {requestName == 'turnover' ?
+            <div>
               <Dropdown
                 id="divFactor"
                 label="Div Factor"
@@ -388,7 +442,7 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
                 ))}
 
               </Dropdown>
-
+                  
               {/* {openDivDropdown ?
                 <div className='absolute z-50 bg-white border-1 rounded-md'>
                       {divFactors.map((factor, id) => {
@@ -458,15 +512,15 @@ const TradeGrid = ({ mobColDef, fileColDef, tableName, pageIndex, summaryType, d
             onFirstDataRendered={onFirstDataRendered}
           />
         </div>
-        <RecordModal
+        {(requestType == 'table' && requestName) && <RecordModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           field={modalField}
           value={modalValue}
           fileColDef={fileColDef}
-          tableName={tableName}
+          tableName={requestName}
           gridTheme={gridTheme}
-        />
+        />}
       </div>
     </div>
   );
