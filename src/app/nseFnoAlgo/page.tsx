@@ -1,8 +1,9 @@
 'use client'; 
 import Header from '../components/header';
 import TradeGrid from '../components/TradeGrid';
+import { ColDef } from 'ag-grid-community';
 
-const columnDefs = [
+const columnDefs: ColDef[] = [
   { headerName: "ID", field: "id" },  
   { headerName: "Trade Number", field: "trade_number" },
   { headerName: "Trade Time", field: "trade_time" },
@@ -12,7 +13,22 @@ const columnDefs = [
   { headerName: "Option Type", field: "opt_type" },
   { headerName: "Expiry", field: "expiry" },
   { headerName: "Strike Price", field: "strike_price" },
-  { headerName: "Trade Quantity", field: "trade_qty" },
+  { headerName: "Trade Quantity", 
+    field: "trade_qty",
+    valueFormatter:(params) => {
+      const qty = params.value;
+      const bsflag = params.data?.buy_sell?.toUpperCase();
+      if (qty == null || isNaN(qty)) return '0';
+      const signedQty = bsflag === 'BUY' ? qty : -qty;
+      return signedQty.toString();
+    },
+    cellStyle: (params) => {
+      const bsFlag = params.data?.buy_sell?.toUpperCase();
+      return {
+        color: bsFlag === 'BUY' ? 'green' : 'red'
+      };
+    }
+  },
   { headerName: "Trade Price", field: "trade_price" },
   { headerName: "CTCL ID", field: "ctcl_id" },
   { headerName: "Broker ID", field: "broker_id" },
@@ -50,7 +66,7 @@ const columnDefs = [
   { headerName: "NNF", field: "nnf" }
 ];
 
-const mobileColumnDefs = [ 
+const mobileColumnDefs: ColDef[] = [ 
   { headerName: "Trade Number", field: "trade_number" },
   { headerName: "Trade Time", field: "trade_time" },
   { headerName: "Symbol", field: "symbol" },
@@ -58,7 +74,22 @@ const mobileColumnDefs = [
   { headerName: "Option Type", field: "opt_type" },
   { headerName: "Expiry", field: "expiry" },
   { headerName: "Strike Price", field: "strike_price" },
-  { headerName: "Trade Quantity", field: "trade_qty" },
+  { headerName: "Trade Quantity", 
+    field: "trade_qty",
+    valueFormatter:(params) => {
+      const qty = params.value;
+      const bsflag = params.data?.buy_sell?.toUpperCase();
+      if (qty == null || isNaN(qty)) return '0';
+      const signedQty = bsflag === 'BUY' ? qty : -qty;
+      return signedQty.toString();
+    },
+    cellStyle: (params) => {
+      const bsFlag = params.data?.buy_sell?.toUpperCase();
+      return {
+        color: bsFlag === 'BUY' ? 'green' : 'red'
+      };
+    }
+  },
   { headerName: "Trade Price", field: "trade_price" },
   { headerName: "CTCL ID", field: "ctcl_id" },
   { headerName: "Response Order Number", field: "response_order_number" },

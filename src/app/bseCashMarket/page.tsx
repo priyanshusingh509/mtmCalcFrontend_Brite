@@ -10,12 +10,30 @@ const columnDefs: ColDef[] = [
   { headerName: 'Script Code', field: 'scrp_code' },
   { headerName: 'Script ID', field: 'scrp_id' },
   { headerName: 'Rate', field: 'rate' },
-  { headerName: 'Quantity', field: 'qty' },
+  {
+    headerName: 'Quantity',
+    field: 'qty',
+    valueFormatter: (params) => {
+      const qty = params.value;
+      const bsFlag = params.data?.bs_flag?.toUpperCase();
+      if (qty == null || isNaN(qty)) return '0';
+      const signedQty = bsFlag === 'S' ? -qty : qty;
+      return signedQty.toString();
+    },
+    cellStyle: (params) => {
+      const bsFlag = params.data?.bs_flag?.toUpperCase();
+      return {
+        color: bsFlag === 'S' ? 'red' : 'green'
+      };
+    }
+  },
   { headerName: 'Trade Status', field: 'trd_status' },
   { headerName: 'CM Code', field: 'cm_code' },
   { headerName: 'Time', field: 'time' },
   { headerName: 'Date', field: 'date' },
-  { headerName: 'Client ID', field: 'clnt_id' },
+  {
+    headerName: 'Client ID', field: 'clnt_id'
+  },
   { headerName: 'Order ID', field: 'ordr_id' },
   { headerName: 'Transaction Type / Order Type', field: 'trns_type' },
   { headerName: 'Buy/Sell', field: 'bs_flag' },
@@ -39,7 +57,23 @@ const mobilecolumnDefs: ColDef[] = [
   { headerName: 'Trader ID', field: 'trdr_id' },
   { headerName: 'Script ID', field: 'scrp_id' },
   { headerName: 'Rate', field: 'rate' },
-  { headerName: 'Quantity', field: 'qty' },
+  {
+    headerName: 'Quantity',
+    field: 'qty',
+    valueFormatter: (params) => {
+      const qty = params.value;
+      const bsFlag = params.data?.bs_flag?.toUpperCase();
+      if (qty == null || isNaN(qty)) return '0';
+      const signedQty = bsFlag === 'S' ? -qty : qty;
+      return signedQty.toString();
+    },
+    cellStyle: (params) => {
+      const bsFlag = params.data?.bs_flag?.toUpperCase();
+      return {
+        color: bsFlag === 'S' ? 'red' : 'green'
+      };
+    }
+  },
   { headerName: 'Time', field: 'time' },
   { headerName: 'Client ID', field: 'clnt_id' },
   { headerName: 'Order ID', field: 'ordr_id' },

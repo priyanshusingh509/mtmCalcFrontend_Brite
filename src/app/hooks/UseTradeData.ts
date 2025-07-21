@@ -9,6 +9,7 @@ import { PAGE_SIZE } from '../utils/constants';
 
 import dotenv from 'dotenv';
 import { IndexType } from '../components/TradeGrid';
+import { ColDef, ColumnState } from 'ag-grid-enterprise';
 dotenv.config();
 
   
@@ -271,9 +272,48 @@ async function fetchFilteredData(tableName: string, search: string, col: string,
 };
 
 
-async function saveColDefs(){
-  
+async function saveColDefs(state: ColumnState[], currentHref: string | undefined){
+  console.log(state, currentHref);
+  const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/saveColDefs`;
+  const body = {
+    state,
+    currentHref
+  }
+  fetch(fetchURL,{credentials: 'include', method: 'POST',
+    body: JSON.stringify(body),
+    headers: {
+        'Content-Type': 'application/json',
+    },
+  });
 }
+
+async function getColDefs(currentHref: string | undefined) {
+  const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getColDefs`;
+  const body = { currentHref };
+
+  const response = await fetch(fetchURL, {
+    credentials: 'include',
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    getAccessToken();
+  }
+
+  const data = await response.json();
+  console.log(data);
+  return data;
+}
+
+async function getAccessToken(){
+  const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/user/refresh-token`;
+  const response = await fetch(fetchURL, {method: 'POST', credentials: 'include'});
+}
+
 
 
   return {
@@ -284,6 +324,8 @@ async function saveColDefs(){
     keepOnlyThreePages,
     fetchTotalRecords,
     fetchRecordsByField,
-    fetchFilteredData
+    fetchFilteredData,
+    saveColDefs,
+    getColDefs
   };
 };

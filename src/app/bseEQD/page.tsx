@@ -20,7 +20,22 @@ const columnDefs: ColDef[] = [
   { headerName: "Buy Broker", field: "BuyBroker" },
   { headerName: "Sell Broker", field: "SellBroker" },
   { headerName: "Trade Price", field: "TradePrice" },
-  { headerName: "Trade Quantity", field: "TradeQuantity" },
+  { headerName: "Trade Quantity", 
+    field: "TradeQuantity",
+    valueFormatter: (params) => {
+      const qty = params.value;
+      const bsflag = params.data?.BuyPosition?.toUpperCase();
+      if (qty == null || isNaN(qty)) return '0';
+      const signedQty = bsflag === '0' ? qty : -qty;
+      return signedQty.toString();
+    },
+    cellStyle: (params) => {
+      const bsFlag = params.data?.BuyPosition?.toUpperCase();
+      return {
+        color: bsFlag === '0' ? 'green' : 'red'
+      };
+    }
+  },
   { headerName: "Series ID", field: "SeriesID" },
   { headerName: "Trade Buyer Location ID", field: "TradeBuyerLocationID" },
   { headerName: "Buy CM Code", field: "BuyCMCode" },
@@ -62,7 +77,22 @@ const mobileColumnDefs: ColDef[] = [
   { headerName: "Option Type", field: "OptionType" },
   { headerName: "Series Code", field: "SeriesCode" },
   { headerName: "Trade Price", field: "TradePrice" },
-  { headerName: "Trade Quantity", field: "TradeQuantity" },
+  { headerName: "Trade Quantity", 
+    field: "TradeQuantity",
+    valueFormatter: (params) => {
+      const qty = params.value;
+      const bsflag = params.data?.BuyPosition?.toUpperCase();
+      if (qty == null || isNaN(qty)) return '0';
+      const signedQty = bsflag === '0' ? -qty : qty;
+      return signedQty.toString();
+    },
+    cellStyle: (params) => {
+      const bsFlag = params.data?.BuyPosition?.toUpperCase();
+      return {
+        color: bsFlag === '0' ? 'red' : 'green'
+      };
+    }
+  },
   { headerName: "Trade Buyer Terminal ID", field: "TradeBuyerTerminalID" },
   { headerName: "Trade Seller Terminal ID", field: "TradeSellerTerminalID" },
   { headerName: "Buy Client Code", field: "BuyClientCode" },

@@ -36,7 +36,7 @@ useEffect(() => {
       const payload = isSignup
         ? { username: formData.username, name: formData.name, password: formData.password }
         : { username: formData.username, password: formData.password };
-
+      console.log("PAYLOAD IS THIS : ",payload);
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

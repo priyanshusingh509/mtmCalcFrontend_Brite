@@ -2,7 +2,7 @@
 
 import { Dialog, DialogPanel } from '@headlessui/react';
 import { AgGridReact } from 'ag-grid-react';
-import type { ColDef, GridReadyEvent } from 'ag-grid-community';
+import type { ColDef, GridReadyEvent, Theme, ThemeDefaultParams } from 'ag-grid-community';
 import type { TradeRow } from '../types/TradeRow';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTradeData } from '../hooks/UseTradeData';
@@ -18,25 +18,27 @@ type Props = {
   value: string | number;
   fileColDef: ColDef[];
   tableName: string;
+  gridTheme: Theme<ThemeDefaultParams>;
 };
 
-export default function RecordModal({ isOpen, onClose, field, value, fileColDef, tableName }: Props) {
+export default function RecordModal({ isOpen, onClose, field, value, fileColDef, tableName, gridTheme }: Props) {
   const [summaryData, setsummaryData] = useState<TradeRow[]>([]);
   const [tradeData, settradeData] = useState<TradeRow[]>([]);
   const {
   fetchRecordsByField
   } = useTradeData();
-  
+  const indexColDef: ColDef = {
+    headerName: 'Index',
+    valueGetter: params => (params?.node?.rowIndex ?? 0) + 1,
+    sortable: false,
+    filter: false,
+    cellClass: 'font-bold text-center'
+  };
+
   const getColDef = (firstGridCheck : boolean) => {
     const changeCol = firstGridCheck ? { headerName: 'Script ID', field: 'scrp_id' } : { headerName: 'client ID', field: 'clnt_id' };
     const columnDefs: ColDef[] = [
-    {
-      headerName: 'Index',
-      valueGetter: params => (params?.node?.rowIndex ?? 0) + 1,
-      sortable: false,
-      filter: false,
-      cellClass: 'font-bold text-center'
-    },
+    indexColDef,
     changeCol,
     { headerName: 'Script Code', field: 'scrp_code'},
     { headerName: "Net Qty", field: "netQty"},
@@ -114,6 +116,7 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
                   columnDefs={getColDef(true)}
                   defaultColDef={defaultColDef}
                   domLayout='autoHeight'
+                  theme={gridTheme}
                 />
               </div>
             )
@@ -128,9 +131,10 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
                       columnDefs={
                         tradeData.length > 0
                         ? getColDef(false).filter(col => col.field !== field)
-                        : fileColDef
+                        : [indexColDef, ...fileColDef]
                       }
                       defaultColDef={defaultColDef}
+                      theme={gridTheme}
                       />
               </div>
           </div>

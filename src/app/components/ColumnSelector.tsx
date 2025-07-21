@@ -1,7 +1,10 @@
 'use client';
-import { useState, useEffect, RefObject } from 'react';
+
+import { useState, useEffect, RefObject, useRef } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { TradeRow } from '../types/TradeRow';
+import { useTradeData } from '../hooks/UseTradeData';
+import { usePathname } from 'next/navigation';
 
 type Props = {
   gridRef: RefObject<AgGridReact<TradeRow> | null>;
@@ -16,9 +19,29 @@ type ColumnMeta = {
 export default function ColumnSelector({ gridRef }: Props) {
   const [columns, setColumns] = useState<ColumnMeta[]>([]);
   const [open, setOpen] = useState(false);
+  const { saveColDefs, getColDefs } = useTradeData();
+  const pathname = usePathname();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const updateColumnMeta = () => {
-    const colState = gridRef.current?.api.getColumnState()?.map(col => {
+    const columnState = gridRef.current?.api.getColumnState();
+    if (!columnState) return;
+
+    const updated = columnState.map(col => {
       const colId = col.colId ?? '';
       const colDef = gridRef.current?.api.getColumnDef(colId);
       const displayName = colDef?.headerName ?? colId;
@@ -28,13 +51,17 @@ export default function ColumnSelector({ gridRef }: Props) {
         hidden: col.hide ?? false,
       };
     });
-    if (colState) setColumns(colState);
+
+    setColumns(updated);
   };
 
   useEffect(() => {
-    if (!gridRef.current?.api) return;
-    updateColumnMeta();
-  }, [gridRef.current?.api]);
+    setTimeout(() => {
+      
+      if (!gridRef.current?.api) return;
+      updateColumnMeta();
+    }, 1000);
+    }, []);
 
   const toggleColumn = (colId: string) => {
     const newState = columns.map(col =>
@@ -42,16 +69,30 @@ export default function ColumnSelector({ gridRef }: Props) {
     );
     setColumns(newState);
 
-    const newHidden = !newState.find(c => c.colId === colId)?.hidden;
-    gridRef.current?.api.setColumnsVisible([colId], newHidden);
+    const isVisible = !newState.find(c => c.colId === colId)?.hidden;
+    gridRef.current?.api.setColumnsVisible([colId], isVisible);
   };
 
   const saveState = () => {
     const state = gridRef.current?.api.getColumnState();
-    if (state) {
-      sessionStorage.setItem('savedColumnState', JSON.stringify(state));
+    const currentHref = pathname.split('/').filter(Boolean).pop();
+    if (state && currentHref) {
+      saveColDefs(state, currentHref);
       alert('Column visibility saved!');
     }
+  };
+
+  const loadState = async () => {
+    const currentHref = pathname.split('/').filter(Boolean).pop();
+    if (!currentHref) return;
+
+    const state = await getColDefs(currentHref);
+    gridRef.current?.api.applyColumnState({
+      state,
+      applyOrder: true,
+    });
+
+    updateColumnMeta();
   };
 
   const resetState = () => {
@@ -60,10 +101,10 @@ export default function ColumnSelector({ gridRef }: Props) {
   };
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" ref={dropdownRef}>
       <button
-        onClick={() => setOpen(!open)}
-        className="p-2 bg-blue-500 text-white rounded w-full"
+        onClick={() => setOpen(prev => !prev)}
+        className="mx-1 px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100"
       >
         Columns
       </button>
@@ -88,6 +129,12 @@ export default function ColumnSelector({ gridRef }: Props) {
               className="text-sm px-2 py-1 bg-green-500 text-white rounded"
             >
               Save
+            </button>
+            <button
+              onClick={loadState}
+              className="text-sm px-2 py-1 bg-blue-500 text-white rounded"
+            >
+              Load
             </button>
             <button
               onClick={resetState}
