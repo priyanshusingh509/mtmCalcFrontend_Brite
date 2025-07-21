@@ -82,7 +82,7 @@ export default function bseEQDPage(){
       <div className='h-screen flex flex-col'>
         <Header/>
         <div className="flex-grow flex flex-col">
-          <TradeGrid mobColDef={mobileColumnDefs} fileColDef={columnDefs} tableName='EQD_ITRTM' pageIndex={pageIndex}/>
+          <TradeGrid mobColDef={mobileColumnDefs} fileColDef={columnDefs} requestType={'table'} requestName='EQD_ITRTM' pageIndex={pageIndex}/>
         </div>
       </div>
     )

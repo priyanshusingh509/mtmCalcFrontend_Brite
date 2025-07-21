@@ -7,7 +7,7 @@ const CustomFilter = (props: any) => {
     column,
     setSort,
     enableSorting,
-    tableName,
+    requestName,
     onSearch,
     currentFilterCol,
     summaryType,
@@ -46,7 +46,7 @@ const CustomFilter = (props: any) => {
 
         debounceTimeout.current = setTimeout(async () => {
           value ? setFilterClass("Applied") : setFilterClass('');
-            await onSearch(tableName, column.colId, value, summaryType); // Make backend call
+            await onSearch(requestName, column.colId, value, summaryType); // Make backend call
             setRenderTrigger(prev => prev + 1);
         }, 500); // debounce duration
     };
