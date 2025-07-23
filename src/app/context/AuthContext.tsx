@@ -1,26 +1,25 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, RefObject } from 'react';
 import { useRouter } from 'next/navigation';
 
 type AuthContextType = {
-  isAuthenticated: boolean;
-  setIsAuthenticated: (val: boolean) => void;
+  isAuthenticated: RefObject<boolean>;
   loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
-  setIsAuthenticated: () => {},
+  isAuthenticated: {current : false},
   loading: true,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = useRef<boolean>(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    //console.log("AUTH PROVIDER RAN");
     const verifyTokens = async () => {
       try {
         const accessRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/user/verify-token`, {
@@ -29,7 +28,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
 
         if (accessRes.ok) {
-          setIsAuthenticated(true);
+          // setIsAuthenticated(true);
+          isAuthenticated.current = true;
           setLoading(false);
           return;
         }
@@ -40,17 +40,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
         
         if (refreshRes.ok) {
-          console.log("this ran1")
-          setIsAuthenticated(true);
+          isAuthenticated.current = true;
         } else {
-          console.log("this ran2");
-          setIsAuthenticated(false);
+          isAuthenticated.current = false;
           router.push('/');
+          //console.log("first one")
         }
       } catch (err) {
         console.error('Auth check failed:', err);
-        setIsAuthenticated(false);
+        isAuthenticated.current = false;
         router.push('/');
+        //console.log("second one")
       } finally {
         setLoading(false);
       }
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, loading }}>
+    <AuthContext.Provider value={{ isAuthenticated, loading }}>
       {children}
     </AuthContext.Provider>
   );

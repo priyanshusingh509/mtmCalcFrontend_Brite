@@ -1,31 +1,82 @@
-'use client'; 
+'use client';
+import { useCallback, useMemo, useRef, memo } from 'react'; 
 import Header from '../components/header';
 import ProtectedRoute from '../components/ProtectedRoute';
 import TradeGrid from '../components/TradeGrid';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, colorSchemeDark } from 'ag-grid-community';
 
-const columnDefs: ColDef[] = [
+const mycomp = ({ value, data }: { value: any; data: any }) => {
+
+  if (value == null || isNaN(value)) return '0';
+
+  const bsFlag = data?.bs_flag?.toUpperCase();
+  const signedQty = bsFlag === 'S' ? -value : value;
+
+  const isNegative = signedQty < 0;
+  const colorClass = isNegative ? 'text-red-500' : 'text-green-500';
+
+  return (
+    <div className={colorClass}>
+      {signedQty}
+    </div>
+  );
+};
+
+const mobilecolumnDefs: ColDef[] = [
+  { headerName: 'Trader ID', field: 'trdr_id' },
+  { headerName: 'Script ID', field: 'scrp_id' },
+  { headerName: 'Rate', field: 'rate' },
+  {
+      headerName: 'Quantity',
+      field: 'qty',
+      // Use the stable, memoized functions
+      // valueFormatter: quantityValueFormatter,
+      // cellStyle: quantityCellStyle
+      cellRenderer: memo(mycomp),
+  },
+  { headerName: 'Time', field: 'time' },
+  { headerName: 'Client ID', field: 'clnt_id' },
+  { headerName: 'Order ID', field: 'ordr_id' },
+  { headerName: 'Buy/Sell', field: 'bs_flag' },
+  { headerName: 'Trade ID', field: 'trade_id' },
+  { headerName: 'Order Time', field: 'ord_time' },
+  { headerName: 'Trade Modified Time', field: 'trd_mod_time' }
+];
+
+
+
+const pageIndex = { current: 0 };
+
+export default function bseCashMarketPage(){
+//   const quantityValueFormatter = useCallback((params) => {
+//     const qty = params.value;
+//     const bsFlag = params.data?.bs_flag?.toUpperCase();
+//     if (qty == null || isNaN(qty)) return '0';
+//     const signedQty = bsFlag === 'S' ? -qty : qty;
+//     return signedQty.toString();
+// }, [])
+
+// const quantityCellStyle = useCallback((params) => {
+//   const bsFlag = params.data?.bs_flag?.toUpperCase();
+//   return {
+//     color: bsFlag === 'S' ? 'red' : 'green'
+//   };
+// }, [])
+
+
+ const columnDefs: ColDef[] = [
   { headerName: 'Member ID', field: 'membr_id' },
   { headerName: 'Trader ID', field: 'trdr_id' },
   { headerName: 'Script Code', field: 'scrp_code' },
   { headerName: 'Script ID', field: 'scrp_id' },
   { headerName: 'Rate', field: 'rate' },
   {
-    headerName: 'Quantity',
-    field: 'qty',
-    valueFormatter: (params) => {
-      const qty = params.value;
-      const bsFlag = params.data?.bs_flag?.toUpperCase();
-      if (qty == null || isNaN(qty)) return '0';
-      const signedQty = bsFlag === 'S' ? -qty : qty;
-      return signedQty.toString();
-    },
-    cellStyle: (params) => {
-      const bsFlag = params.data?.bs_flag?.toUpperCase();
-      return {
-        color: bsFlag === 'S' ? 'red' : 'green'
-      };
-    }
+      headerName: 'Quantity',
+      field: 'qty',
+      // Use the stable, memoized functions
+      // valueFormatter: quantityValueFormatter,
+      // cellStyle: quantityCellStyle
+      cellRenderer: memo(mycomp),
   },
   { headerName: 'Trade Status', field: 'trd_status' },
   { headerName: 'CM Code', field: 'cm_code' },
@@ -51,42 +102,8 @@ const columnDefs: ColDef[] = [
   { headerName: 'CP Code Confirmation', field: 'cp_code_confrn' },
   { headerName: 'Old Custodian Participant', field: 'old_cust_participant' },
   { headerName: 'Old Custodian Code', field: 'old_cust_code' }
-];
+ ];
 
-const mobilecolumnDefs: ColDef[] = [
-  { headerName: 'Trader ID', field: 'trdr_id' },
-  { headerName: 'Script ID', field: 'scrp_id' },
-  { headerName: 'Rate', field: 'rate' },
-  {
-    headerName: 'Quantity',
-    field: 'qty',
-    valueFormatter: (params) => {
-      const qty = params.value;
-      const bsFlag = params.data?.bs_flag?.toUpperCase();
-      if (qty == null || isNaN(qty)) return '0';
-      const signedQty = bsFlag === 'S' ? -qty : qty;
-      return signedQty.toString();
-    },
-    cellStyle: (params) => {
-      const bsFlag = params.data?.bs_flag?.toUpperCase();
-      return {
-        color: bsFlag === 'S' ? 'red' : 'green'
-      };
-    }
-  },
-  { headerName: 'Time', field: 'time' },
-  { headerName: 'Client ID', field: 'clnt_id' },
-  { headerName: 'Order ID', field: 'ordr_id' },
-  { headerName: 'Buy/Sell', field: 'bs_flag' },
-  { headerName: 'Trade ID', field: 'trade_id' },
-  { headerName: 'Order Time', field: 'ord_time' },
-  { headerName: 'Trade Modified Time', field: 'trd_mod_time' }
-];
-
-
-const pageIndex = { current: 0 };
-
-export default function bseCashMarketPage(){
     return(
       <div className='h-screen flex flex-col'>
             <Header/>

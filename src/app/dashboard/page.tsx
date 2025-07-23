@@ -37,7 +37,7 @@ const columnDefs: ColDef[] = [
   { headerName: 'Margin Percentage', field: 'marginPercentage' },
 ];
 setTimeout(() => {
-  console.log(document.cookie.split(";").find(row => row.startsWith('username='))?.split('=')[1]);
+  //console.log(document.cookie.split(";").find(row => row.startsWith('username='))?.split('=')[1]);
 }, 7000);
 const pageIndex = { current: 0 };
 

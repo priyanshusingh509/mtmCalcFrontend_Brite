@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, GridApi, themeAlpine } from 'ag-grid-community';
 import { CellDoubleClickedEvent, SortChangedEvent } from 'ag-grid-community';
@@ -18,7 +18,8 @@ import {
   ColumnApiModule,
   SuppressHeaderKeyboardEventParams,
   ScrollApiModule,
-  RenderApiModule
+  RenderApiModule,
+  GridStateModule,
 } from 'ag-grid-community';
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
@@ -33,7 +34,8 @@ ModuleRegistry.registerModules([
   CellStyleModule,
   ColumnApiModule,
   ScrollApiModule,
-  RenderApiModule
+  RenderApiModule,
+  GridStateModule 
 ]);
 
 export interface IndexType {
@@ -80,16 +82,19 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
   const sortOrder = useRef<'asc' | 'desc' | ''>('');
   const [currentFilterCol, setCurrentFilterCol] = useState<string | null>(null);
   const [currentSearch, setCurrentSearch] = useState<string | null>(null);
-  const [openDivDropdown, setOpenDivDropdown] = useState<string | null>(null);;
+  const [openDivDropdown, setOpenDivDropdown] = useState<string | null>(null);
   const [goBtn, setGoBtn] = useState("");
   const [nextBtn, setNextBtn] = useState("");
   const [previousBtn, setPreviousBtn] = useState("");
   const [refreshBtn, setRefreshBtn] = useState("");
+  const [autoRefresh, setAutoRefresh] = useState(false);
   
   // ✅ Changed from useRef to useState to trigger UI updates
   const [lastUpdated, setLastUpdated] = useState('');
   
   const gridRef = useRef<AgGridReact<TradeRow> | null>(null);
+  
+  const gridColumnState = useRef<any[]>([]);
   
   const {
     rowData,
@@ -100,19 +105,19 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
     getColDefs
   } = useTradeData();
   
-  const handleSearch = async (requestName: string, col: string, search: string) => {
-    setCurrentFilterCol(col);
-    setCurrentSearch(search);
-    try{
-      const { total, lastUpdatedTime } = await fetchPageViaGoto(0, requestType, requestName, { current: 0}, currentSortField.current, sortOrder.current, col, search, summaryType)
-      setTotalPages(total);
-      setLastUpdated(lastUpdatedTime); // ✅ Use state setter
-    } catch {
-      setTotalPages(0);
-    }
-    pageIndex.current = 0;
-    setInputPage(1);
-  };
+const handleSearch = useCallback(async (requestName: string, col: string, search: string) => {
+  setCurrentFilterCol(col);
+  setCurrentSearch(search);
+  try {
+    const { total, lastUpdatedTime } = await fetchPageViaGoto(0, requestType, requestName, { current: 0 }, currentSortField.current, sortOrder.current, col, search, summaryType);
+    setTotalPages(total);
+    setLastUpdated(lastUpdatedTime);
+  } catch {
+    setTotalPages(0);
+  }
+  pageIndex.current = 0;
+  setInputPage(1);
+}, [fetchPageViaGoto, requestType, summaryType]); 
   
   const gridTheme = themeAlpine.withParams({
     spacing: 2,
@@ -123,28 +128,28 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
   });
   
   const columnDefs: ColDef[] = [
-    {
-      headerName: 'Index',
-      valueGetter: params => (pageIndex.current * PAGE_SIZE) + (params?.node?.rowIndex ?? 0) + 1,
-      sortable: false,
-      filter: false,
-      width: 100,
-      lockPosition:"left",
-      headerComponent: () => <div className='font-semibold w-full flex justify-center'>Index</div>,
-      cellClass: 'font-bold text-center',
-    },
+    // {
+    //   headerName: 'Index',
+    //   valueGetter: params => (pageIndex.current * PAGE_SIZE) + (params?.node?.rowIndex ?? 0) + 1,
+    //   sortable: false,
+    //   filter: false,
+    //   width: 100,
+    //   lockPosition:"left",
+    //   headerComponent: () => <div className='font-semibold w-full flex justify-center'>Index</div>,
+    //   cellClass: 'font-bold text-center',
+    // },
     ...fileColDef
   ];
   
-  const defaultColDef: ColDef = {
+  const defaultColDef = useMemo<ColDef>(() => ({
     cellClass: 'text-center',
     resizable: true,
     filter: true,
-    minWidth:120,
+    minWidth: 120,
     headerComponent: CustomFilter,
     headerComponentParams: {
       requestName: requestName,
-      onSearch: handleSearch,
+      onSearch: handleSearch, // Uses the stable function
       currentFilterCol,
       summaryType: summaryType,
       clearSignal,
@@ -154,7 +159,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
     suppressHeaderKeyboardEvent(params: SuppressHeaderKeyboardEventParams) {
       return params.event.key === 'Enter';
     },
-  };
+  }), [requestName, handleSearch, currentFilterCol, summaryType, clearSignal, clearSortSignal]);
   
   const handlePrev = async () => {
     setPreviousBtn("cursor-wait shadow-2xl");
@@ -168,6 +173,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
     if (cachedPage) {
       const parsed = JSON.parse(cachedPage);
       setRowData(parsed.data || parsed);
+      //console.log("1 set")
       setLastUpdated(parsed.lastUpdatedTime || lastUpdated); // ✅ Use state setter
     } else {
       const { total, lastUpdatedTime } = await fetchPageViaGoto(curr * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
@@ -194,6 +200,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
     if (cachedPage) {
       const parsed = JSON.parse(cachedPage);
       setRowData(parsed.data || parsed);
+      //console.log("2 set")
       setLastUpdated(parsed.lastUpdatedTime || lastUpdated); // ✅ Use state setter
     } else {
       const { total, lastUpdatedTime } = await fetchPageViaGoto(curr * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
@@ -232,7 +239,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
   };
   
   const handleRefreshPage = async () => {
-    setRefreshBtn("cursor-wait shadow-2xl");
+    setRefreshBtn("shadow-2xl transition rotate-360 transform duration-500");
     sessionStorage.clear(); // ✅ Clear cache for a true refresh
     
     const loadInitialPage = async () => {
@@ -273,10 +280,28 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
       sortOrder.current = '';
     }
     const { total, lastUpdatedTime } = await fetchPageViaGoto(pageIndex.current * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
-    setTotalPages(total);
-    setLastUpdated(lastUpdatedTime); // ✅ Use state setter
+    // setTotalPages(total);
+    // setLastUpdated(lastUpdatedTime); // ✅ Use state setter
   };
-  
+
+  const saveState = () => {
+      const columnState = gridRef.current?.api?.getColumnState();
+      if (columnState) {
+        gridColumnState.current = columnState;
+      };
+  };
+
+  // Load column state
+  const loadState = () => {
+      if(gridColumnState.current != null){
+        if (gridColumnState.current.length > 0) {
+          gridRef.current?.api?.applyColumnState({
+            state: gridColumnState.current,
+            applyOrder: true,
+          });
+        }
+      }
+    };
   const handleCellDoubleClick = (event: CellDoubleClickedEvent<TradeRow>) => {
     const clickedField = event.colDef.field;
     const clickedValue = event.value;
@@ -293,15 +318,20 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
     if (api) {
       const allColumns = api.getColumns();
       if (allColumns && allColumns.length <= 19) {
-        console.log("this ran1233");
+        //console.log("this ran1233");
         api.autoSizeAllColumns(true);
       }
     }
   };
-  
+
+  const onAutoRefresh = (checked: boolean) => {
+    setAutoRefresh(checked); // ✅ triggers UI update
+  };
+
   useEffect(() => {
+    console.log("use eff 1")
     sessionStorage.clear(); // ✅ Clear cache on initial mount for browser refresh
-    
+
     const loadInitialPage = async () => {
         const { total, lastUpdatedTime } = await fetchPageViaGoto(
           pageIndex.current * PAGE_SIZE,
@@ -319,42 +349,63 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
         setLastUpdated(lastUpdatedTime);
     };
     loadInitialPage();
-  }, []);
+  }, [requestName]);
   
   useEffect(() => {
-    document.body.style.overflow = loading ? 'hidden' : 'unset';
-  }, [loading]);
-  
-  useEffect(() => {
+    // console.log("use eff 3")
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
-  
+
   
   useEffect(() => {
     const applyColumnState = async () => {
       const currentHref = pathname.split("/").filter(Boolean).pop();
       const state = await getColDefs(currentHref);
-
-      gridRef.current?.api.applyColumnState({
-        state,
-        applyOrder: true,
-      });
+      gridColumnState.current =  state;
     }
-    applyColumnState();
-    // ColumnSelector.
-    
-  })
+      applyColumnState();
+  },[TradeGrid])
+
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const refreshInterval = setInterval(() => {
+      //console.log("refresh occur");
+      handleRefreshPage();
+    }, 10000);
+
+    // Cleanup: runs when autoRefresh changes or component unmounts
+    return () => {
+      //console.log("Auto-refresh stopped");
+      clearInterval(refreshInterval);
+    };  
+  }, [autoRefresh]);
+
+  
 
   return (
     <div className="pt-1 flex h-full flex-col w-full">
       {/* Pagination Controls */}
       <div className='bg-gray-200 lg:h-12 w-full grid grid-cols-3 lg:grid-cols-3 justify-around items-center border-1 border-gray-300'>
         {/* ✅ Display value directly from state */}
-        <div className='flex justify-center items-center font-semibold col-span-3 lg:col-span-1'>Last Updated: {lastUpdated}</div>
+        <div className='flex justify-center items-center gap-4 font-semibold col-span-3 lg:col-span-1'>
+          <label htmlFor="auto-refresh" className="flex items-center gap-2 text-sm font-medium">
+           <input
+              id="auto-refresh"
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => onAutoRefresh(e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+              Auto-refresh
+          </label>
+          <span className="text-sm">Last Updated: {lastUpdated}</span>
+        </div>
+
         <div className='flex justify-center items-center '>
           <button
             onClick={handlePrev}
@@ -394,27 +445,14 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
                 {tables.map((table, id) => {
                         return <div key={id} className={`py-1 px-5 cursor-pointer ${table.value == requestName ? "bg-blue-500 text-white" : ""}`} onClick={()=>{
                           setTableUsed(table.value);
-                          setOpenDivDropdown(null)
+                          setOpenDivDropdown(null);
+                          console.log(setTableUsed);
                         }
                       }>
                       {table.field}
                 </div>
               })}
               </Dropdown>
-              {/* {openDivDropdown ?
-                <div className='absolute z-50 bg-white border-1 rounded-md'>
-                      {tables.map((table, id) => {
-                        return <div key={id} className={`py-1 px-5 cursor-pointer ${table.value == requestName ? "bg-blue-500 text-white" : ""}`} onClick={()=>{
-                          setTableUsed(table.value);
-                          setOpenDivDropdown(false)
-                        }
-                      }>
-                      {table.field}
-                </div>
-              })}
-              </div>
-              : null
-              }  */}
             </div> 
             : null
           }
@@ -473,11 +511,18 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             Go
           </button> */}
           <button
-          className={`mx-1 px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100 ${refreshBtn}`}
-          onClick={handleRefreshPage}
+            className={refreshBtn}
+            // className={`mx-1 px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100 flex items-center justify-center ${refreshBtn}`}
+            onClick={handleRefreshPage}
           >
-            Refresh
+            <img
+              src={'refresh.png'}
+              alt="Refresh"
+              className="w-5 h-5 object-contain transition"
+            />
           </button>
+
+          
           <div className='w-[25vw] md:w-[20vw] lg:w-[8vw]'>
             {gridRef.current?.api && (
               <ColumnSelector gridRef={gridRef}/>  
@@ -510,6 +555,13 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             onCellDoubleClicked={handleCellDoubleClick}
             onSortChanged={handleSort}
             onFirstDataRendered={onFirstDataRendered}
+            blockLoadDebounceMillis={1000}
+            debounceVerticalScrollbar={true}
+            rowBuffer={0}
+            enableCellTextSelection={true}
+            onDragStopped={saveState}
+            onPaginationChanged={loadState}
+            suppressColumnMoveAnimation={true}
           />
         </div>
         {(requestType == 'table' && requestName) && <RecordModal
@@ -520,6 +572,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
           fileColDef={fileColDef}
           tableName={requestName}
           gridTheme={gridTheme}
+          
         />}
       </div>
     </div>

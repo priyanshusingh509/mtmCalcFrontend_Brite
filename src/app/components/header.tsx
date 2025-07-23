@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "../context/AuthContext";
 
 const groupedHeaderFields = [
     {
@@ -40,6 +41,7 @@ const groupedHeaderFields = [
 ];
 
 export default function Header() {
+    const {isAuthenticated} = useAuth();
     const [showMenu, setShowMenu] = useState(false);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
@@ -59,18 +61,17 @@ export default function Header() {
     const router = useRouter();
 
     function handleLogout() {
-        const refreshToken = document.cookie.split(";").find(row => row.startsWith('refreshToken='))?.split('=')[1];
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/user/logout`, {
             method: 'POST',
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ refreshToken })
+            }
         })
         .then((res) => {
             if (res.status === 204) {
-                console.log('✅ Logged out');
+                //console.log('✅ Logged out');
+                isAuthenticated.current = false;
                 router.push('/');
             } else {
                 console.error('❌ Logout failed');

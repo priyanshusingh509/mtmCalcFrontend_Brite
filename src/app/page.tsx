@@ -2,33 +2,20 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "./context/AuthContext";
+import { useFormState } from "react-dom";
 
 export default function TradePage() {
-  const { isAuthenticated, setIsAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({ name: "", username: "", password: "" });
   const [isSignup, setIsSignup] = useState(false);
+  //console.log("authenticated",isAuthenticated);
 
-  // Redirect if already logged in
-useEffect(() => {
-  const verifyToken =  async () => {
-    try{
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/user/verify-token`,{credentials: 'include', method: 'POST'});
-      console.log(res);
-      if(res.ok){
-        setIsAuthenticated(true);
-        router.push('/dashboard');
-      } else{
-        setIsAuthenticated(false);
-      }
-    } catch(err){
-      console.error('session check failed', err);
-      setIsAuthenticated(false);
-    }
-  }
-  verifyToken();
-}, []);
-
+  useEffect(() => {
+   if(isAuthenticated.current){
+    router.push('/dashboard')
+   } 
+  },[isAuthenticated.current]);
 
   const handleSubmit = async () => {
     try {
@@ -36,7 +23,7 @@ useEffect(() => {
       const payload = isSignup
         ? { username: formData.username, name: formData.name, password: formData.password }
         : { username: formData.username, password: formData.password };
-      console.log("PAYLOAD IS THIS : ",payload);
+      //console.log("PAYLOAD IS THIS : ",payload);
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,7 +35,8 @@ useEffect(() => {
         if (isSignup) {
           setIsSignup(false);
         } else {
-          setIsAuthenticated(true);
+          // setIsAuthenticated(true);
+          isAuthenticated.current = true;
           router.push('/dashboard');
         }
 
@@ -59,12 +47,11 @@ useEffect(() => {
       }
     } catch (error) {
       alert(`Internal Server Error ${error}`);
-      console.log(error);
+      //console.log(error);
     }
   };
 
-  // Optionally prevent render while redirecting
-  if (isAuthenticated) return null;
+
 
   return (
     <div className="bg-blue-600 h-[100vh] text-white flex flex-col lg:flex-row justify-evenly items-center">
