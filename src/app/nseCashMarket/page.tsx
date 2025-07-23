@@ -5,17 +5,32 @@ import TradeGrid from '../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
 
-const columnDefs = [
+const columnDefs: ColDef[] = [
   { headerName: "ID", field: "id" },  
   { headerName: "Trade Number", field: "trade_number" },
-  { headerName: "Trade Time", field: "trade_time" },
+  { headerName: "Trade Time", field: "tradeTime" },
   { headerName: "Buy/Sell", field: "buy_sell" },
   { headerName: "Symbol", field: "symbol" },
   { headerName: "Instrument Type", field: "inst_type" },
   { headerName: "Option Type", field: "opt_type" },
   { headerName: "Expiry", field: "expiry" },
   { headerName: "Strike Price", field: "strike_price" },
-  { headerName: "Trade Quantity", field: "trade_qty" },
+  { headerName: "Trade Quantity", 
+    field: "trade_qty",
+    valueFormatter:(params) => {
+      const qty = params.value;
+      const bsflag = params.data?.buy_sell?.toUpperCase();
+      if (qty == null || isNaN(qty)) return '0';
+      const signedQty = bsflag === 'BUY' ? qty : -qty;
+      return signedQty.toString();
+    },
+    cellStyle: (params) => {
+      const bsFlag = params.data?.buy_sell?.toUpperCase();
+      return {
+        color: bsFlag === 'BUY' ? 'green' : 'red'
+      };
+    }
+  },
   { headerName: "Trade Price", field: "trade_price" },
   { headerName: "CTCL ID", field: "ctcl_id" },
   { headerName: "Broker ID", field: "broker_id" },

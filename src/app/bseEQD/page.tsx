@@ -6,7 +6,7 @@ import { ColDef } from 'ag-grid-community';
 
 const columnDefs: ColDef[] = [
   { headerName: "Trade Number", field: "TradeNumber" },
-  { headerName: "Trade Date Time", field: "TradeDateTime" },
+  { headerName: "Trade Time", field: "TradeTime" },
   { headerName: "Trade Status", field: "TradeStatus" },
   { headerName: "Segment Indicator", field: "SegmentIndicator" },
   { headerName: "Settlement Type", field: "SettlementType" },

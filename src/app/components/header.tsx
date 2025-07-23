@@ -27,6 +27,10 @@ const groupedHeaderFields = [
         ],
     },
     {
+        group: "MCX",
+        href: "/mcxTrades"
+    },
+    {
         group: "Summary",
         items: [
         { name: "Client Summary", href: "/clientSummary" },

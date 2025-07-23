@@ -4,16 +4,46 @@ import TradeGrid from '../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
 const columnDefs: ColDef[] = [
-  { headerName: 'Client code', field: 'clnt_id' },
+  { headerName: 'Client code', field: 'clientCode' },
   { headerName: 'Branch', field: 'branch' },
   { headerName: 'Name', field: 'name' },
-  { headerName: 'Total Fund', field: 'totalFund' },
+  { 
+    headerName: 'Total Fund', 
+    field: 'totalFund',
+    valueGetter: (params) => {
+      console.log(params.data)
+      const { deposit=0, collateral=0} = params.data;
+      return deposit + collateral
+    }
+  },
   { headerName: 'Deposit', field: 'deposit' },
   { headerName: 'Collateral', field: 'collateral' },
   { headerName: 'Cash Margin', field: 'cashMargin' },
-  { headerName: 'FO Margin', field: 'foMargin' },
-  { headerName: 'MCX Margin', field: 'mcxMargin' },
-  { headerName: 'Combined Margin', field: 'combinedMargin' },
+  { 
+    headerName: 'FO Margin', 
+    field: 'foMargin',
+    valueGetter: (params) => {
+      const {foSpan=0, foExposure=0} = params.data;
+      return foSpan + foExposure
+    }
+  },
+  { 
+    headerName: 'MCX Margin', 
+    field: 'mcxMargin',
+    valueGetter: (params) => {
+      const {mcxSpan=0, mcxExposure=0} = params.data;
+      return mcxSpan + mcxExposure
+    }
+  },
+  { 
+    headerName: 'Combined Margin', 
+    field: 'combinedMargin',
+    valueGetter: (params) => {
+      const foMargin = (params.data.foSpan || 0) + (params.data.foExposure || 0)
+      const mcxMargin = (params.data.mcxSpan || 0) + (params.data.mcxExposure || 0)
+      return foMargin + mcxMargin + (params.data.cashMargin || 0)
+    }
+  },
   { headerName: 'FO Span', field: 'foSpan' },
   { headerName: 'FO exposure', field: 'foExposure' },
   { headerName: 'MCX Span', field: 'mcxSpan' },
@@ -24,21 +54,42 @@ const columnDefs: ColDef[] = [
   { headerName: 'MCX Net Premium', field: 'mcxNetPremium' },
   { headerName: 'FO Option MTM', field: 'foOptionMtm' },
   { headerName: 'FO Future MTM', field: 'foFutureMtm' },
-  { headerName: 'FO MTM', field: 'foMtm' },
+  { 
+    headerName: 'FO MTM', 
+    field: 'foMtm',
+    valueGetter: (params) =>{
+      const {foOptionMtm=0, foFutureMtm=0} = params.data;
+      return foOptionMtm + foFutureMtm; 
+    }
+  },
   { headerName: 'MCX Option MTM', field: 'mcxOptionMtm' },
   { headerName: 'MCX Future MTM', field: 'mcxFutureMtm' },
-  { headerName: 'MCX MTM', field: 'mcxMtm' },
+  { 
+    headerName: 'MCX MTM', 
+    field: 'mcxMtm',
+    valueGetter: (params) =>{
+      const {mcxOptionMtm=0, mcxFutureMtm=0} = params.data;
+      return mcxOptionMtm + mcxFutureMtm; 
+    }
+  },
   { headerName: 'Cash MTM', field: 'cashMtm' },
-  { headerName: 'MTM Exp', field: 'mtmExp' },
-  { headerName: 'FO Peak Margin', field: 'foPeakMargin' },
+  { headerName: 'Total Charges', field: 'totalCharges'},
+  { 
+    headerName: 'MTM Exp', 
+    field: 'mtmExp', 
+    valueGetter: (params) => {
+      const {cashMTM=0,foOptionMtm=0, foFutureMtm=0,mcxOptionMtm=0, mcxFutureMtm=0, totalCharges=0} = params.data
+      const netMTM = cashMTM + foOptionMtm + foFutureMtm + mcxOptionMtm + mcxFutureMtm
+      return netMTM - totalCharges
+    }
+  },
+  { headerName: 'FO Peak Margin', field: 'foPeakMargin'},
   { headerName: 'MCX Peak Margin', field: 'mcxPeakMargin' },
   { headerName: 'Cash Peak Margin', field: 'cashPeakMargin' },
   { headerName: 'Delivery Margin', field: 'deliveryMargin' },
   { headerName: 'Margin Percentage', field: 'marginPercentage' },
 ];
-setTimeout(() => {
-  console.log(document.cookie.split(";").find(row => row.startsWith('username='))?.split('=')[1]);
-}, 7000);
+
 const pageIndex = { current: 0 };
 
 export default function bseCashMarketPage(){

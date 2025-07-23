@@ -14,7 +14,7 @@ export default function turnoverPage(){
     field: 'clientCode'
   },
   { 
-    headerName: 'BSE CM Turnover', 
+    headerName: 'BSE CM', 
     field: 'bseCmTurnover',
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
@@ -22,7 +22,7 @@ export default function turnoverPage(){
     }
   },
   { 
-    headerName: 'BSE Futures Turnover', 
+    headerName: 'BSE Futures', 
     field: 'bseFuturesTurnover',
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
@@ -30,7 +30,7 @@ export default function turnoverPage(){
     }
   },
   { 
-    headerName: 'BSE Options Turnover', 
+    headerName: 'BSE Options', 
     field: 'bseOptionsTurnover',
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
@@ -38,7 +38,7 @@ export default function turnoverPage(){
     } 
   },
   { 
-    headerName: "NSE CM Turnover", 
+    headerName: "NSE CM", 
     field: "nseCmTurnover",
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
@@ -46,7 +46,7 @@ export default function turnoverPage(){
     }
   },
   { 
-    headerName: "NSE Futures Turnover", 
+    headerName: "NSE Futures", 
     field: "nseFuturesTurnover",
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
@@ -54,8 +54,16 @@ export default function turnoverPage(){
     }
   },
   { 
-    headerName: "NSE Options Turnover", 
+    headerName: "NSE Options", 
     field: "nseOptionsTurnover",
+    valueFormatter: (params) => {
+      if (params.value == null || isNaN(params.value)) return '0';
+      return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000
+    }
+  },
+  { 
+    headerName: "MCX", 
+    field: "mcxTurnover",
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
       return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000

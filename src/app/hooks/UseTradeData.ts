@@ -197,12 +197,13 @@ export const useTradeData = () => {
   const fetchRecordsByField = async (
   col: string,
   search: string | number,
+  requestType: string | undefined,
   requestName: string | undefined,
   summaryType?: "trader" | "symbol"
 ): Promise<{ firstGrid: TradeRow[]; secondGrid: TradeRow[] }> => {
   try {
     const fetchUrl = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getby`;
-    const body = { col, search, requestName, summaryType };
+    const body = { col, search, requestType, requestName, summaryType };
 
     const res = await fetch(fetchUrl, {
       method: 'POST',

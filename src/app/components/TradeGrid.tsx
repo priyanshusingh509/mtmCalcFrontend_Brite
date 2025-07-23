@@ -319,7 +319,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
         setLastUpdated(lastUpdatedTime);
     };
     loadInitialPage();
-  }, []);
+  }, [requestName]);
   
   useEffect(() => {
     document.body.style.overflow = loading ? 'hidden' : 'unset';
@@ -347,14 +347,14 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
     applyColumnState();
     // ColumnSelector.
     
-  })
+  }, [])
 
   return (
     <div className="pt-1 flex h-full flex-col w-full">
       {/* Pagination Controls */}
-      <div className='bg-gray-200 lg:h-12 w-full grid grid-cols-3 lg:grid-cols-3 justify-around items-center border-1 border-gray-300'>
+      <div className='bg-gray-200 lg:h-12 w-full grid grid-cols-3 lg:grid-cols-5 justify-around items-center border-1 border-gray-300'>
         {/* ✅ Display value directly from state */}
-        <div className='flex justify-center items-center font-semibold col-span-3 lg:col-span-1'>Last Updated: {lastUpdated}</div>
+        <div className='flex justify-center items-center font-semibold col-span-3 lg:col-span-2'>Last Updated: {lastUpdated}</div>
         <div className='flex justify-center items-center '>
           <button
             onClick={handlePrev}
@@ -382,7 +382,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             <img src={"./prev.png"} className='h-6 w-8 rotate-180' alt="Next"/>
           </button>
         </div>
-        <div className='flex justify-center items-center m-1 col-span-2 lg:col-span-1'>
+        <div className='flex justify-center items-center m-1 col-span-2 lg:col-span-2'>
           {setTableUsed ?
             <div>
               <Dropdown 
@@ -401,20 +401,6 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
                 </div>
               })}
               </Dropdown>
-              {/* {openDivDropdown ?
-                <div className='absolute z-50 bg-white border-1 rounded-md'>
-                      {tables.map((table, id) => {
-                        return <div key={id} className={`py-1 px-5 cursor-pointer ${table.value == requestName ? "bg-blue-500 text-white" : ""}`} onClick={()=>{
-                          setTableUsed(table.value);
-                          setOpenDivDropdown(false)
-                        }
-                      }>
-                      {table.field}
-                </div>
-              })}
-              </div>
-              : null
-              }  */}
             </div> 
             : null
           }
@@ -442,21 +428,6 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
                 ))}
 
               </Dropdown>
-                  
-              {/* {openDivDropdown ?
-                <div className='absolute z-50 bg-white border-1 rounded-md'>
-                      {divFactors.map((factor, id) => {
-                        return <div key={id} className={`py-1 px-5 cursor-pointer ${factor.factor == divFactor ? "bg-blue-500 text-white" : ""}`} onClick={()=>{
-                          setDivFactor ? setDivFactor(factor.factor) : null;
-                          setOpenDivDropdown(false)
-                        }
-                      }>
-                      {factor.field}
-                </div>
-              })}
-              </div>
-              : null
-              }  */}
             </div> 
             : null
           }
@@ -466,12 +437,6 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
           >
             Clear Filter
           </button>
-          {/* <button
-            onClick={handleGoToInputPage}
-            className={`hidden md:block mx-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 active:scale-95 transition transform duration-100 ${goBtn}`}
-          >
-            Go
-          </button> */}
           <button
           className={`mx-1 px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100 ${refreshBtn}`}
           onClick={handleRefreshPage}
@@ -518,7 +483,9 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
           field={modalField}
           value={modalValue}
           fileColDef={fileColDef}
-          tableName={requestName}
+          defaultColDef={defaultColDef}
+          requestType={requestType}
+          requestName={requestName}
           gridTheme={gridTheme}
         />}
       </div>

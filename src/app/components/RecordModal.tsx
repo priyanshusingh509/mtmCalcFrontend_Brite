@@ -17,11 +17,13 @@ type Props = {
   field: string;
   value: string | number;
   fileColDef: ColDef[];
-  tableName: string;
+  defaultColDef: ColDef<TradeRow>;
+  requestType: string;
+  requestName: string;
   gridTheme: Theme<ThemeDefaultParams>;
 };
 
-export default function RecordModal({ isOpen, onClose, field, value, fileColDef, tableName, gridTheme }: Props) {
+export default function RecordModal({ isOpen, onClose, field, value, fileColDef, defaultColDef, requestType, requestName, gridTheme }: Props) {
   const [summaryData, setsummaryData] = useState<TradeRow[]>([]);
   const [tradeData, settradeData] = useState<TradeRow[]>([]);
   const {
@@ -46,20 +48,12 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
     { headerName: "Unrealised PnL", field: "unrealisedPnL"},
     { headerName: "Net Position", field: "netPosition"},
     { headerName: "MTM", field: "MTM"},
-
     ];
 
     return columnDefs;
   }
 
   const gridRef = useRef<null>(null);
-  const defaultColDef: ColDef = {
-    sortable: true,
-    filter: true, 
-    resizable: true,
-    minWidth: 120,
-    flex: 1,
-  };
 
   const handleClose = () => {
     onClose();
@@ -69,7 +63,7 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
   const fetchData = async () => {
     try {
       if (isOpen && field && value) {
-        const { firstGrid, secondGrid } = await fetchRecordsByField(field, value, tableName);
+        const { firstGrid, secondGrid } = await fetchRecordsByField(field, value, 'table', requestName);
         setsummaryData(firstGrid);
         settradeData(secondGrid);
       }
