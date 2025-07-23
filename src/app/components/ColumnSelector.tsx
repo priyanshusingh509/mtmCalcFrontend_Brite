@@ -5,6 +5,7 @@ import { AgGridReact } from 'ag-grid-react';
 import { TradeRow } from '../types/TradeRow';
 import { useTradeData } from '../hooks/UseTradeData';
 import { usePathname } from 'next/navigation';
+import { stat } from 'fs';
 
 type Props = {
   gridRef: RefObject<AgGridReact<TradeRow> | null>;
@@ -22,7 +23,8 @@ export default function ColumnSelector({ gridRef }: Props) {
   const { saveColDefs, getColDefs } = useTradeData();
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
-
+  const state = gridRef.current?.api.getColumnState();
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -32,15 +34,16 @@ export default function ColumnSelector({ gridRef }: Props) {
         setOpen(false);
       }
     };
-
+    
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
+  
   const updateColumnMeta = () => {
+    //console.log("updatecolumnmeta ran")
     const columnState = gridRef.current?.api.getColumnState();
     if (!columnState) return;
-
+    
     const updated = columnState.map(col => {
       const colId = col.colId ?? '';
       const colDef = gridRef.current?.api.getColumnDef(colId);
@@ -51,52 +54,52 @@ export default function ColumnSelector({ gridRef }: Props) {
         hidden: col.hide ?? false,
       };
     });
-
+    
     setColumns(updated);
   };
-
+  
   useEffect(() => {
     setTimeout(() => {
       
       if (!gridRef.current?.api) return;
       updateColumnMeta();
     }, 1000);
-    }, []);
-
+  }, []);
+  
   const toggleColumn = (colId: string) => {
     const newState = columns.map(col =>
       col.colId === colId ? { ...col, hidden: !col.hidden } : col
     );
     setColumns(newState);
-
+    
     const isVisible = !newState.find(c => c.colId === colId)?.hidden;
     gridRef.current?.api.setColumnsVisible([colId], isVisible);
   };
-
+  
   const saveState = () => {
-    const state = gridRef.current?.api.getColumnState();
     const currentHref = pathname.split('/').filter(Boolean).pop();
     if (state && currentHref) {
       saveColDefs(state, currentHref);
       alert('Column visibility saved!');
     }
   };
-
+  
   const loadState = async () => {
     const currentHref = pathname.split('/').filter(Boolean).pop();
     if (!currentHref) return;
-
     const state = await getColDefs(currentHref);
     gridRef.current?.api.applyColumnState({
       state,
       applyOrder: true,
     });
-
+    
     updateColumnMeta();
   };
-
+  
   const resetState = () => {
-    gridRef.current?.api.resetColumnState();
+    if(state){
+      gridRef.current?.api.resetColumnState();
+    }
     updateColumnMeta();
   };
 
