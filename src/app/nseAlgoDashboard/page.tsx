@@ -4,7 +4,6 @@ import TradeGrid from '../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
 const columnDefs: ColDef[] = [
-  // { headerName: "CTCL ID", field: "ctcl_id" },
   { headerName: 'Algo Id', field: 'algo_id'},
   { headerName: 'Algo Category', field: 'algo_category'},
   { headerName: 'Segment', field: 'segment'},

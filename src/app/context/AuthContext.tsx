@@ -19,7 +19,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    //console.log("AUTH PROVIDER RAN");
     const verifyTokens = async () => {
       try {
         const accessRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/user/verify-token`, {
@@ -28,7 +27,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
 
         if (accessRes.ok) {
-          // setIsAuthenticated(true);
           isAuthenticated.current = true;
           setLoading(false);
           return;
@@ -44,13 +42,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           isAuthenticated.current = false;
           router.push('/');
-          //console.log("first one")
         }
       } catch (err) {
         console.error('Auth check failed:', err);
         isAuthenticated.current = false;
         router.push('/');
-        //console.log("second one")
       } finally {
         setLoading(false);
       }

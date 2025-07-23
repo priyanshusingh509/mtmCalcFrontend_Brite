@@ -40,7 +40,6 @@ export default function ColumnSelector({ gridRef }: Props) {
   }, []);
   
   const updateColumnMeta = () => {
-    //console.log("updatecolumnmeta ran")
     const columnState = gridRef.current?.api.getColumnState();
     if (!columnState) return;
     

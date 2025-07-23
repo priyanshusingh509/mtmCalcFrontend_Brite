@@ -11,7 +11,6 @@ const columnDefs: ColDef[] = [
     headerName: 'Total Fund', 
     field: 'totalFund',
     valueGetter: (params) => {
-      console.log(params.data)
       const { deposit=0, collateral=0} = params.data;
       return deposit + collateral
     }

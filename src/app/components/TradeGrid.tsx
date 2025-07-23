@@ -128,16 +128,16 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
   });
   
   const columnDefs: ColDef[] = [
-    // {
-    //   headerName: 'Index',
-    //   valueGetter: params => (pageIndex.current * PAGE_SIZE) + (params?.node?.rowIndex ?? 0) + 1,
-    //   sortable: false,
-    //   filter: false,
-    //   width: 100,
-    //   lockPosition:"left",
-    //   headerComponent: () => <div className='font-semibold w-full flex justify-center'>Index</div>,
-    //   cellClass: 'font-bold text-center',
-    // },
+    {
+      headerName: 'Index',
+      valueGetter: params => (pageIndex.current * PAGE_SIZE) + (params?.node?.rowIndex ?? 0) + 1,
+      sortable: false,
+      filter: false,
+      width: 100,
+      lockPosition:"left",
+      headerComponent: () => <div className='font-semibold w-full flex justify-center'>Index</div>,
+      cellClass: 'font-bold text-center',
+    },
     ...fileColDef
   ];
   
@@ -173,7 +173,6 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
     if (cachedPage) {
       const parsed = JSON.parse(cachedPage);
       setRowData(parsed.data || parsed);
-      //console.log("1 set")
       setLastUpdated(parsed.lastUpdatedTime || lastUpdated); // ✅ Use state setter
     } else {
       const { total, lastUpdatedTime } = await fetchPageViaGoto(curr * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
@@ -200,7 +199,6 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
     if (cachedPage) {
       const parsed = JSON.parse(cachedPage);
       setRowData(parsed.data || parsed);
-      //console.log("2 set")
       setLastUpdated(parsed.lastUpdatedTime || lastUpdated); // ✅ Use state setter
     } else {
       const { total, lastUpdatedTime } = await fetchPageViaGoto(curr * PAGE_SIZE, requestType, requestName, pageIndex, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType);
@@ -253,10 +251,8 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
   };
   
   const handleFilter = async () => {
-    // sessionStorage.clear();
     const api = gridRef.current?.api;
     api?.setFilterModel(null);
-    // api?.resetColumnState();
     setCurrentFilterCol(null);
     setCurrentSearch(null);
     setClearSignal(prev => prev + 1);
@@ -318,7 +314,6 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
     if (api) {
       const allColumns = api.getColumns();
       if (allColumns && allColumns.length <= 19) {
-        //console.log("this ran1233");
         api.autoSizeAllColumns(true);
       }
     }
@@ -329,7 +324,6 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
   };
 
   useEffect(() => {
-    console.log("use eff 1")
     sessionStorage.clear(); // ✅ Clear cache on initial mount for browser refresh
 
     const loadInitialPage = async () => {
@@ -344,7 +338,6 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
           currentSearch,
           summaryType
         );
-        // setLastUpdated(lastUpdatedTime);
         setTotalPages(total);
         setLastUpdated(lastUpdatedTime);
     };
@@ -352,7 +345,6 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
   }, [requestName]);
   
   useEffect(() => {
-    // console.log("use eff 3")
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     handleResize();
@@ -374,13 +366,11 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
     if (!autoRefresh) return;
 
     const refreshInterval = setInterval(() => {
-      //console.log("refresh occur");
       handleRefreshPage();
     }, 10000);
 
     // Cleanup: runs when autoRefresh changes or component unmounts
     return () => {
-      //console.log("Auto-refresh stopped");
       clearInterval(refreshInterval);
     };  
   }, [autoRefresh]);
@@ -392,7 +382,7 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
       {/* Pagination Controls */}
       <div className='bg-gray-200 lg:h-12 w-full grid grid-cols-3 lg:grid-cols-5 justify-around items-center border-1 border-gray-300'>
         {/* ✅ Display value directly from state */}
-        <div className='flex justify-center items-center gap-4 font-semibold col-span-3 lg:col-span-1'>
+        <div className='flex justify-center items-center gap-4 font-semibold col-span-3 lg:col-span-2'>
           <label htmlFor="auto-refresh" className="flex items-center gap-2 text-sm font-medium">
            <input
               id="auto-refresh"
@@ -446,7 +436,6 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
                         return <div key={id} className={`py-1 px-5 cursor-pointer ${table.value == requestName ? "bg-blue-500 text-white" : ""}`} onClick={()=>{
                           setTableUsed(table.value);
                           setOpenDivDropdown(null);
-                          console.log(setTableUsed);
                         }
                       }>
                       {table.field}
@@ -489,9 +478,13 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
           >
             Clear Filter
           </button>
+          <div className='w-[25vw] md:w-[20vw] lg:w-[8vw]'>
+            {gridRef.current?.api && (
+              <ColumnSelector gridRef={gridRef}/>  
+            )}
+          </div>
           <button
-            className={refreshBtn}
-            // className={`mx-1 px-4 py-2 w-[25vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer active:scale-95 transition transform duration-100 flex items-center justify-center ${refreshBtn}`}
+            className={`${refreshBtn} mx-2`}
             onClick={handleRefreshPage}
           >
             <img
@@ -500,13 +493,6 @@ const handleSearch = useCallback(async (requestName: string, col: string, search
               className="w-5 h-5 object-contain transition"
             />
           </button>
-
-          
-          <div className='w-[25vw] md:w-[20vw] lg:w-[8vw]'>
-            {gridRef.current?.api && (
-              <ColumnSelector gridRef={gridRef}/>  
-            )}
-          </div>
         </div>
       
       </div>

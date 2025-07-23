@@ -29,9 +29,6 @@ const mobilecolumnDefs: ColDef[] = [
   {
       headerName: 'Quantity',
       field: 'qty',
-      // Use the stable, memoized functions
-      // valueFormatter: quantityValueFormatter,
-      // cellStyle: quantityCellStyle
       cellRenderer: memo(mycomp),
   },
   { headerName: 'Time', field: 'time' },
@@ -48,20 +45,6 @@ const mobilecolumnDefs: ColDef[] = [
 const pageIndex = { current: 0 };
 
 export default function bseCashMarketPage(){
-//   const quantityValueFormatter = useCallback((params) => {
-//     const qty = params.value;
-//     const bsFlag = params.data?.bs_flag?.toUpperCase();
-//     if (qty == null || isNaN(qty)) return '0';
-//     const signedQty = bsFlag === 'S' ? -qty : qty;
-//     return signedQty.toString();
-// }, [])
-
-// const quantityCellStyle = useCallback((params) => {
-//   const bsFlag = params.data?.bs_flag?.toUpperCase();
-//   return {
-//     color: bsFlag === 'S' ? 'red' : 'green'
-//   };
-// }, [])
 
 
  const columnDefs: ColDef[] = [
@@ -73,9 +56,6 @@ export default function bseCashMarketPage(){
   {
       headerName: 'Quantity',
       field: 'qty',
-      // Use the stable, memoized functions
-      // valueFormatter: quantityValueFormatter,
-      // cellStyle: quantityCellStyle
       cellRenderer: memo(mycomp),
   },
   { headerName: 'Trade Status', field: 'trd_status' },

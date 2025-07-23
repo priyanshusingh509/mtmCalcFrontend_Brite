@@ -9,7 +9,6 @@ export default function TradePage() {
   const router = useRouter();
   const [formData, setFormData] = useState({ name: "", username: "", password: "" });
   const [isSignup, setIsSignup] = useState(false);
-  //console.log("authenticated",isAuthenticated);
 
   useEffect(() => {
    if(isAuthenticated.current){
@@ -23,7 +22,6 @@ export default function TradePage() {
       const payload = isSignup
         ? { username: formData.username, name: formData.name, password: formData.password }
         : { username: formData.username, password: formData.password };
-      //console.log("PAYLOAD IS THIS : ",payload);
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,7 +33,6 @@ export default function TradePage() {
         if (isSignup) {
           setIsSignup(false);
         } else {
-          // setIsAuthenticated(true);
           isAuthenticated.current = true;
           router.push('/dashboard');
         }
@@ -47,7 +44,6 @@ export default function TradePage() {
       }
     } catch (error) {
       alert(`Internal Server Error ${error}`);
-      //console.log(error);
     }
   };
 

@@ -18,7 +18,7 @@ export default function turnoverPage(){
     field: 'bseCmTurnover',
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
-      return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000
+      return (params.value / divFactor).toFixed(2); 
     }
   },
   { 
@@ -26,7 +26,7 @@ export default function turnoverPage(){
     field: 'bseFuturesTurnover',
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
-      return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000
+      return (params.value / divFactor).toFixed(2); 
     }
   },
   { 
@@ -34,7 +34,7 @@ export default function turnoverPage(){
     field: 'bseOptionsTurnover',
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
-      return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000
+      return (params.value / divFactor).toFixed(2); 
     } 
   },
   { 
@@ -42,7 +42,7 @@ export default function turnoverPage(){
     field: "nseCmTurnover",
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
-      return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000
+      return (params.value / divFactor).toFixed(2); 
     }
   },
   { 
@@ -50,7 +50,7 @@ export default function turnoverPage(){
     field: "nseFuturesTurnover",
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
-      return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000
+      return (params.value / divFactor).toFixed(2); 
     }
   },
   { 
@@ -58,7 +58,7 @@ export default function turnoverPage(){
     field: "nseOptionsTurnover",
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
-      return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000
+      return (params.value / divFactor).toFixed(2); 
     }
   },
   { 
@@ -66,7 +66,7 @@ export default function turnoverPage(){
     field: "mcxTurnover",
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
-      return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000
+      return (params.value / divFactor).toFixed(2); 
     }
   },
   { 
@@ -74,7 +74,7 @@ export default function turnoverPage(){
     field: "total",
     valueFormatter: (params) => {
       if (params.value == null || isNaN(params.value)) return '0';
-      return (params.value / divFactor).toFixed(2); // 1 Cr = 10,000,000
+      return (params.value / divFactor).toFixed(2); 
     }
   }
 ];

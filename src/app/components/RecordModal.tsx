@@ -68,7 +68,7 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
         settradeData(secondGrid);
       }
     } catch (error) {
-      //console.log("error while fetching : ", error);
+      console.error("error while fetching : ", error);
     }
   };
 

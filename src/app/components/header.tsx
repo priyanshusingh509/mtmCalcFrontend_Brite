@@ -74,7 +74,6 @@ export default function Header() {
         })
         .then((res) => {
             if (res.status === 204) {
-                //console.log('✅ Logged out');
                 isAuthenticated.current = false;
                 router.push('/');
             } else {

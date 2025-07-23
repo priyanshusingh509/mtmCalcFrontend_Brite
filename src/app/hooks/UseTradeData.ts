@@ -1,9 +1,5 @@
 import { useRef, useState } from 'react';
 import oboe from 'oboe';
-// import clarinet from 'clarinet';
-
-// import { patchOboeHeaders } from '../utils/patchOboe';
-// patchOboeHeaders();
 import { TradeRow } from '../types/TradeRow';
 import { PAGE_SIZE } from '../utils/constants';
 
@@ -54,7 +50,6 @@ export const useTradeData = () => {
       search,
       summaryType
     };
-    // //console.log(body)
     console.time("oboe stream for page 1");
     console.time("oboe stream for all the pages includes page 1 as well");
 
@@ -71,9 +66,7 @@ export const useTradeData = () => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
           setRowData(currentChunk);
-          //console.log("changed from oboe")
           console.timeEnd("oboe stream for page 1");
-          //console.log("updated page 1 by setRowData()");
           return oboe.drop;
         }
 
@@ -100,7 +93,6 @@ export const useTradeData = () => {
         resolve();
       })
       .fail((err) => {
-        // console.error('Oboe failed:', err);
         setRowData([]);
         reject(err);
       });
@@ -225,8 +217,6 @@ export const useTradeData = () => {
 
 
  async function fetchTotalRecords(requestType: string, requestName: string | undefined, summaryType?: "trader" | "symbol", col: string | null = null , search: string | null = null) {
-  // //console.log(requestName);
-  // //console.log("fetch total col:",col)
   const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords`;
   const body = {
     requestType,
@@ -235,7 +225,6 @@ export const useTradeData = () => {
     col,
     search
   }
-  // //console.log(body)
   const response = await fetch(fetchURL, {
     method: 'POST',
     body: JSON.stringify(body),
@@ -244,7 +233,6 @@ export const useTradeData = () => {
   },
   });
   const { total, lastUpdatedTime } = await response.json();
-  // //console.log(total, lastUpdatedTime);
   return {
     total: Math.ceil(total / PAGE_SIZE),
     lastUpdatedTime
@@ -260,7 +248,6 @@ async function fetchFilteredData(requestName: string | undefined, search: string
       search,
       col
     }
-    // //console.log(body)
     const res = await fetch(fetchUrl, {
           method: 'POST',
           body: JSON.stringify(body),
@@ -269,10 +256,7 @@ async function fetchFilteredData(requestName: string | undefined, search: string
       },
     });
     const data: TradeRow[] = await res.json();
-    // //console.log(data);
-    // setTimeout(()=>
       setRowData(data)
-    // ,10)
   } catch (err) {
     console.error('Error fetching filtered data:', err);
   }
@@ -280,7 +264,6 @@ async function fetchFilteredData(requestName: string | undefined, search: string
 
 
 async function saveColDefs(state: ColumnState[], currentHref: string | undefined){
-  // //console.log(state, currentHref);
   const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/saveColDefs`;
   const body = {
     state,
@@ -312,7 +295,6 @@ async function getColDefs(currentHref: string | undefined) {
   }
 
   const data = await response.json();
-  // //console.log(data);
   return data;
 }
 
