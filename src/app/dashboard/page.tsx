@@ -1,8 +1,17 @@
 'use client';
+
+// Component imports
 import Header from '../components/header';
 import TradeGrid from '../components/TradeGrid';
+
+// Type imports
 import { ColDef } from 'ag-grid-community';
 
+/**
+ * Column definitions for the dashboard table.
+ * Defines the structure, formatting, and calculations for each column in the data grid.
+ * Includes computed fields for various margin and MTM calculations.
+ */
 const columnDefs: ColDef[] = [
   { headerName: 'Client code', field: 'clientCode' },
   { headerName: 'Branch', field: 'branch' },
@@ -89,15 +98,30 @@ const columnDefs: ColDef[] = [
   { headerName: 'Margin Percentage', field: 'marginPercentage' },
 ];
 
+// Track the current page index for pagination
 const pageIndex = { current: 0 };
 
-export default function bseCashMarketPage(){
-    return(
-      <div className='h-screen flex flex-col'>
-        <Header/>
-        <div className="flex flex-col flex-grow">
-          <TradeGrid mobColDef={columnDefs} fileColDef={columnDefs} requestType={'aggregate'} requestName='dashboard' pageIndex={pageIndex}/>
-        </div>
+/**
+ * Dashboard Page Component
+ * Displays a comprehensive overview of client trading metrics including:
+ * - Fund details
+ * - Margin information (FO, MCX, Combined)
+ * - MTM (Mark-to-Market) calculations
+ * - Peak margin details
+ */
+export default function DashboardPage() {
+  return (
+    <div className='h-screen flex flex-col'>
+      <Header />
+      <div className="flex flex-col flex-grow">
+        <TradeGrid 
+          mobColDef={columnDefs} 
+          fileColDef={columnDefs} 
+          requestType={'aggregate'} 
+          requestName='dashboard' 
+          pageIndex={pageIndex}
+        />
       </div>
-    )
-} 
+    </div>
+  );
+}

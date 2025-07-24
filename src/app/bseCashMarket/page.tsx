@@ -1,35 +1,43 @@
 'use client';
-import { useCallback, useMemo, useRef, memo } from 'react'; 
+
+import { memo } from 'react';
+import { ColDef } from 'ag-grid-community';
 import Header from '../components/header';
-import ProtectedRoute from '../components/ProtectedRoute';
 import TradeGrid from '../components/TradeGrid';
-import { ColDef, colorSchemeDark } from 'ag-grid-community';
 
-const mycomp = ({ value, data }: { value: any; data: any }) => {
+// Interface for the trade data structure
+interface TradeData {
+  bs_flag?: string;
+  [key: string]: any;
+}
 
-  if (value == null || isNaN(value)) return '0';
+/**
+ * Custom cell renderer component for quantity display
+ * Shows negative values in red and positive values in green
+ * Based on the buy/sell flag ('B' or 'S')
+ */
+const QuantityCellRenderer = memo(({ value, data }: { value: any; data: TradeData }) => {
+  // Handle null/undefined or non-numeric values
+  if (value == null || isNaN(Number(value))) return '0';
 
   const bsFlag = data?.bs_flag?.toUpperCase();
-  const signedQty = bsFlag === 'S' ? -value : value;
-
+  // Convert to negative if it's a sell order
+  const signedQty = bsFlag === 'S' ? -Number(value) : Number(value);
   const isNegative = signedQty < 0;
   const colorClass = isNegative ? 'text-red-500' : 'text-green-500';
 
-  return (
-    <div className={colorClass}>
-      {signedQty}
-    </div>
-  );
-};
+  return <div className={colorClass}>{signedQty}</div>;
+});
 
-const mobilecolumnDefs: ColDef[] = [
+// Column definitions for mobile view (simplified)
+const mobileColumnDefs: ColDef[] = [
   { headerName: 'Trader ID', field: 'trdr_id' },
   { headerName: 'Script ID', field: 'scrp_id' },
   { headerName: 'Rate', field: 'rate' },
   {
-      headerName: 'Quantity',
-      field: 'qty',
-      cellRenderer: memo(mycomp),
+    headerName: 'Quantity',
+    field: 'qty',
+    cellRenderer: QuantityCellRenderer,
   },
   { headerName: 'Time', field: 'time' },
   { headerName: 'Client ID', field: 'clnt_id' },
@@ -40,31 +48,23 @@ const mobilecolumnDefs: ColDef[] = [
   { headerName: 'Trade Modified Time', field: 'trd_mod_time' }
 ];
 
-
-
-const pageIndex = { current: 0 };
-
-export default function bseCashMarketPage(){
-
-
- const columnDefs: ColDef[] = [
+// Column definitions for desktop view (detailed)
+const desktopColumnDefs: ColDef[] = [
   { headerName: 'Member ID', field: 'membr_id' },
   { headerName: 'Trader ID', field: 'trdr_id' },
   { headerName: 'Script Code', field: 'scrp_code' },
   { headerName: 'Script ID', field: 'scrp_id' },
   { headerName: 'Rate', field: 'rate' },
   {
-      headerName: 'Quantity',
-      field: 'qty',
-      cellRenderer: memo(mycomp),
+    headerName: 'Quantity',
+    field: 'qty',
+    cellRenderer: QuantityCellRenderer,
   },
   { headerName: 'Trade Status', field: 'trd_status' },
   { headerName: 'CM Code', field: 'cm_code' },
   { headerName: 'Time', field: 'time' },
   { headerName: 'Date', field: 'date' },
-  {
-    headerName: 'Client ID', field: 'clnt_id'
-  },
+  { headerName: 'Client ID', field: 'clnt_id'},
   { headerName: 'Order ID', field: 'ordr_id' },
   { headerName: 'Transaction Type / Order Type', field: 'trns_type' },
   { headerName: 'Buy/Sell', field: 'bs_flag' },
@@ -82,14 +82,28 @@ export default function bseCashMarketPage(){
   { headerName: 'CP Code Confirmation', field: 'cp_code_confrn' },
   { headerName: 'Old Custodian Participant', field: 'old_cust_participant' },
   { headerName: 'Old Custodian Code', field: 'old_cust_code' }
- ];
+];
 
-    return(
-      <div className='h-screen flex flex-col'>
-            <Header/>
-        <div className="flex flex-col flex-grow">
-          <TradeGrid mobColDef={mobilecolumnDefs} fileColDef={columnDefs} requestType={'table'} requestName='EQ_ITR' pageIndex={pageIndex}/>
-        </div>
+// Page index reference for the trade grid
+const pageIndex = { current: 0 };
+
+/**
+ * BSE Cash Market Page Component
+ * Displays a grid of BSE cash market trades with responsive columns
+ */
+export default function BSECashMarketPage() {
+  return (
+    <div className='h-screen flex flex-col'>
+      <Header />
+      <div className="flex flex-col flex-grow">
+        <TradeGrid 
+          mobColDef={mobileColumnDefs} 
+          fileColDef={desktopColumnDefs} 
+          requestType={'table'} 
+          requestName='EQ_ITR' 
+          pageIndex={pageIndex}
+        />
       </div>
-    )
+    </div>
+  );
 }

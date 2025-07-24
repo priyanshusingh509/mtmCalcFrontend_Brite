@@ -1,13 +1,19 @@
-'use client';
+/**
+ * TradeGrid Component
+ * 
+ * A high-performance, feature-rich data grid component for displaying trade data.
+ * Handles large datasets with server-side pagination, sorting, and filtering.
+ * Supports both desktop and mobile views with responsive design.
+ */
 
+// React and core dependencies
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
+
+// AG Grid imports
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, GridApi, themeAlpine } from 'ag-grid-community';
 import { CellDoubleClickedEvent, SortChangedEvent } from 'ag-grid-community';
-import RecordModal from './RecordModal';
-import CustomFilter from './CustomFilter';
-import { usePathname } from 'next/navigation';
-import { useTradeData } from '../hooks/UseTradeData';
 import {
   ModuleRegistry,
   TextFilterModule,
@@ -21,11 +27,19 @@ import {
   RenderApiModule,
   GridStateModule,
 } from 'ag-grid-community';
-import { TradeRow } from '../types/TradeRow';
-import { PAGE_SIZE } from '../utils/constants';
+
+// Custom components
+import RecordModal from './RecordModal';
+import CustomFilter from './CustomFilter';
 import ColumnSelector from './ColumnSelector';
 import Dropdown from './Dropdown';
 
+// Hooks and types
+import { useTradeData } from '../hooks/UseTradeData';
+import { TradeRow } from '../types/TradeRow';
+import { PAGE_SIZE } from '../utils/constants';
+
+// Register AG Grid modules for tree-shaking
 ModuleRegistry.registerModules([
   TextFilterModule,
   NumberFilterModule,
@@ -35,89 +49,171 @@ ModuleRegistry.registerModules([
   ColumnApiModule,
   ScrollApiModule,
   RenderApiModule,
-  GridStateModule 
+  GridStateModule
 ]);
 
+/**
+ * Represents the current page index state
+ */
 export interface IndexType {
   current: number;
 }
 
+/**
+ * Props for the TradeGrid component
+ */
 type TradeGridProps = {
+  /** Column definitions for mobile view */
   mobColDef: ColDef[],
+  /** Column definitions for desktop view */
   fileColDef: ColDef[];
+  /** Type of data request (table or aggregate) */
   requestType: "table" | "aggregate";
+  /** Name of the data source/endpoint */
   requestName: string;
+  /** Current page index state */
   pageIndex: IndexType;
+  /** Optional: Type of summary view (trader or symbol) */
   summaryType?: "trader" | "symbol";
+  /** Current division factor for number formatting */
   divFactor?: number;
-  setDivFactor?: Function;
-  setTableUsed?: Function;
+  /** Callback to update division factor */
+  setDivFactor?: (factor: number) => void;
+  /** Callback to update the active table */
+  setTableUsed?: (table: string) => void;
 };
 
+/**
+ * Division factors for number formatting
+ * Used to display large numbers in a more readable format
+ */
 const divFactors = [
-  { field: "Per Crore", factor: 10000000 },
-  { field: "Per Lakh", factor: 100000 }
+  { field: "Per Crore", factor: 10000000 },  // 1 crore = 10,000,000
+  { field: "Per Lakh", factor: 100000 }      // 1 lakh = 100,000
 ];
 
+/**
+ * Available market data tables
+ * Maps display names to their corresponding API values
+ */
 const tables = [
-  { field: "BSE CM", value: "EQ_ITR"},
-  { field: "BSE FNO", value: "EQD_ITRTM"},
-  { field: "NSE CM", value: "NSE_Cash_Algo"},
-  { field: "NSE FNO", value: "NSE_FNO_Algo"}
-]
+  { field: "BSE CM", value: "EQ_ITR" },         // BSE Cash Market
+  { field: "BSE FNO", value: "EQD_ITRTM" },     // BSE Futures & Options
+  { field: "NSE CM", value: "NSE_Cash_Algo" },  // NSE Cash Market
+  { field: "NSE FNO", value: "NSE_FNO_Algo" }   // NSE Futures & Options
+];
 
 
-const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex, summaryType, divFactor, setDivFactor, setTableUsed }: TradeGridProps) => {
+/*
+ * TradeGrid Component
+ * 
+ * A high-performance data grid for displaying trade information with:
+ * - Server-side pagination and sorting
+ * - Custom filtering and searching
+ * - Responsive design for mobile and desktop
+ * - Real-time data updates
+ * - Column management and customization
+ * 
+ * @param {TradeGridProps} props - Component properties
+ * @returns {JSX.Element} The rendered TradeGrid component
+ */
+const TradeGrid = ({
+  mobColDef,         // Column definitions for mobile view
+  fileColDef,        // Column definitions for desktop view
+  requestType,       // Type of data request (table/aggregate)
+  requestName,       // Name of the data source/endpoint
+  pageIndex,         // Current page index state
+  summaryType,       // Type of summary view (trader/symbol)
+  divFactor,         // Current division factor for number formatting
+  setDivFactor,      // Callback to update division factor
+  setTableUsed       // Callback to update active table
+}: TradeGridProps) => {
+  // Router and navigation
   const pathname = usePathname();
+  
+  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalField, setModalField] = useState('');
   const [modalValue, setModalValue] = useState('');
+  
+  // Pagination state
   const [inputPage, setInputPage] = useState(pageIndex.current + 1);
-  const [clearSortSignal, setClearSortSignal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [clearSignal, setClearSignal] = useState(0);
-  const [windowWidth, setWindowWidth] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const currentSortField = useRef<string>('');
-  const sortOrder = useRef<'asc' | 'desc' | ''>('');
-  const [currentFilterCol, setCurrentFilterCol] = useState<string | null>(null);
-  const [currentSearch, setCurrentSearch] = useState<string | null>(null);
+  
+  // UI state
+  const [loading, setLoading] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(0);
   const [openDivDropdown, setOpenDivDropdown] = useState<string | null>(null);
+  
+  // Button states (for loading/disabled states)
   const [goBtn, setGoBtn] = useState("");
   const [nextBtn, setNextBtn] = useState("");
   const [previousBtn, setPreviousBtn] = useState("");
   const [refreshBtn, setRefreshBtn] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(false);
   
-  // ✅ Changed from useRef to useState to trigger UI updates
+  // Filter and sort state
+  const [clearSortSignal, setClearSortSignal] = useState(0);
+  const [clearSignal, setClearSignal] = useState(0);
+  const currentSortField = useRef<string>('');
+  const sortOrder = useRef<'asc' | 'desc' | ''>('');
+  const [currentFilterCol, setCurrentFilterCol] = useState<string | null>(null);
+  const [currentSearch, setCurrentSearch] = useState<string | null>(null);
+  
+  // Last updated timestamp
   const [lastUpdated, setLastUpdated] = useState('');
   
+  // Refs for AG Grid
   const gridRef = useRef<AgGridReact<TradeRow> | null>(null);
-  
   const gridColumnState = useRef<any[]>([]);
   
+  // Custom hook for data management
   const {
     rowData,
     setRowData,
-    fetchPageViaGoto,
-    fetchConsecutive,
-    keepOnlyThreePages,
-    getColDefs
+    fetchPageViaGoto,    // Fetches a specific page of data
+    fetchConsecutive,    // Fetches consecutive pages for pagination
+    keepOnlyThreePages,  // Optimizes memory usage
+    getColDefs          // Gets column definitions
   } = useTradeData();
   
-const handleSearch = useCallback(async (requestName: string, col: string, search: string) => {
-  setCurrentFilterCol(col);
-  setCurrentSearch(search);
-  try {
-    const { total, lastUpdatedTime } = await fetchPageViaGoto(0, requestType, requestName, { current: 0 }, currentSortField.current, sortOrder.current, col, search, summaryType);
-    setTotalPages(total);
-    setLastUpdated(lastUpdatedTime);
-  } catch {
-    setTotalPages(0);
-  }
-  pageIndex.current = 0;
-  setInputPage(1);
-}, [fetchPageViaGoto, requestType, summaryType]); 
+  /**
+   * Handles search functionality for the data grid
+   * @param {string} requestName - The name of the request/endpoint
+   * @param {string} col - The column to filter on
+   * @param {string} search - The search term
+   */
+  const handleSearch = useCallback(async (requestName: string, col: string, search: string) => {
+    // Update filter state
+    setCurrentFilterCol(col);
+    setCurrentSearch(search);
+    
+    try {
+      // Fetch first page with the applied filter
+      const { total, lastUpdatedTime } = await fetchPageViaGoto(
+        0,                          // Start from first page
+        requestType,               // Table or aggregate request
+        requestName,               // Endpoint name
+        { current: 0 },            // Reset page index
+        currentSortField.current,  // Current sort field
+        sortOrder.current,         // Current sort order
+        col,                       // Column to filter on
+        search,                    // Search term
+        summaryType                // Optional summary type
+      );
+      
+      // Update pagination and last updated time
+      setTotalPages(total);
+      setLastUpdated(lastUpdatedTime);
+    } catch (error) {
+      console.error('Search failed:', error);
+      setTotalPages(0);
+    }
+    
+    // Reset to first page
+    pageIndex.current = 0;
+    setInputPage(1);
+  }, [fetchPageViaGoto, requestType, summaryType]);
   
   const gridTheme = themeAlpine.withParams({
     spacing: 2,
