@@ -1,9 +1,13 @@
-'use client'; 
+'use client';
 import Header from '../components/header';
-import ProtectedRoute from '../components/ProtectedRoute';
 import TradeGrid from '../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
+/**
+ * Column definitions for the MCX (Multi Commodity Exchange) trading data grid
+ * Contains comprehensive trade information including security details, pricing, quantities,
+ * party information, and trade execution details for commodity trading
+ */
 const columnDefs: ColDef[] = [
   { headerName: "RelatedSecurityId", field: "related_security_id" },
   { headerName: "Price", field: "price" },
@@ -61,16 +65,31 @@ const columnDefs: ColDef[] = [
   { headerName: "RootPartyClearingFirm", field: "root_party_clearing_firm" }
 ];
 
-
+// Page index state for pagination
 const pageIndex = { current: 0 };
 
-export default function bseCashMarketPage(){
-    return(
-      <div className='h-screen flex flex-col'>
-            <Header/>
-        <div className="flex flex-col flex-grow">
-          <TradeGrid mobColDef={columnDefs} fileColDef={columnDefs} requestType={'table'} requestName='MCX' pageIndex={pageIndex}/>
-        </div>
+/**
+ * MCX Trades Page Component
+ * Displays commodity trading data from MCX (Multi Commodity Exchange)
+ * Shows detailed trade execution information including party details, pricing, and quantities
+ * Uses the same column definitions for both desktop and mobile views
+ */
+export default function bseCashMarketPage() {
+  return (
+    <div className="h-screen flex flex-col">
+      {/* Page header */}
+      <Header />
+      
+      {/* Main content area with trade grid */}
+      <div className="flex flex-col flex-grow">
+        <TradeGrid
+          mobColDef={columnDefs}
+          fileColDef={columnDefs}
+          requestType="table"
+          requestName="MCX"
+          pageIndex={pageIndex}
+        />
       </div>
-    )
+    </div>
+  );
 }

@@ -1,12 +1,15 @@
-'use client'; 
+'use client';
 import Header from '../components/header';
-import ProtectedRoute from '../components/ProtectedRoute';
 import TradeGrid from '../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
-
+/**
+ * Column definitions for the NSE Cash Market trading data grid
+ * Contains comprehensive trade information including order details, volumes, and algo parameters
+ * Note: Uses same column set for both desktop and mobile views
+ */
 const columnDefs: ColDef[] = [
-  { headerName: "ID", field: "id" },  
+  { headerName: "ID", field: "id" },
   { headerName: "Trade Number", field: "trade_number" },
   { headerName: "Trade Time", field: "tradeTime" },
   { headerName: "Buy/Sell", field: "buy_sell" },
@@ -15,15 +18,20 @@ const columnDefs: ColDef[] = [
   { headerName: "Option Type", field: "opt_type" },
   { headerName: "Expiry", field: "expiry" },
   { headerName: "Strike Price", field: "strike_price" },
-  { headerName: "Trade Quantity", 
+  
+  // Trade quantity with custom formatting and styling
+  {
+    headerName: "Trade Quantity",
     field: "trade_qty",
-    valueFormatter:(params) => {
+    // Format quantity with sign based on buy/sell flag
+    valueFormatter: (params) => {
       const qty = params.value;
       const bsflag = params.data?.buy_sell?.toUpperCase();
       if (qty == null || isNaN(qty)) return '0';
       const signedQty = bsflag === 'BUY' ? qty : -qty;
       return signedQty.toString();
     },
+    // Color code based on buy (green) or sell (red)
     cellStyle: (params) => {
       const bsFlag = params.data?.buy_sell?.toUpperCase();
       return {
@@ -68,16 +76,30 @@ const columnDefs: ColDef[] = [
   { headerName: "NNF", field: "nnf" }
 ];
 
-
+// Page index state for pagination
 const pageIndex = { current: 0 };
 
-export default function nseCashMarketPage(){
-    return(
-      <div className='h-screen flex flex-col'>
-            <Header/>
-        <div className="flex flex-col flex-grow">
-          <TradeGrid mobColDef={columnDefs} fileColDef={columnDefs} requestType={'table'} requestName='NSE_Cash_Algo' pageIndex={pageIndex}/>
-        </div>
+/**
+ * NSE Cash Market Page Component
+ * Displays cash market trading data for NSE (National Stock Exchange)
+ * Uses the same column definitions for both desktop and mobile views
+ */
+export default function nseCashMarketPage() {
+  return (
+    <div className="h-screen flex flex-col">
+      {/* Page header */}
+      <Header />
+      
+      {/* Main content area with trade grid */}
+      <div className="flex flex-col flex-grow">
+        <TradeGrid
+          mobColDef={columnDefs}
+          fileColDef={columnDefs}
+          requestType="table"
+          requestName="NSE_Cash_Algo"
+          pageIndex={pageIndex}
+        />
       </div>
-    )
+    </div>
+  );
 }

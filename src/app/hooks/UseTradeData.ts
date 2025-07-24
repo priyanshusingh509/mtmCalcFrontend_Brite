@@ -5,7 +5,7 @@ import { PAGE_SIZE } from '../utils/constants';
 
 import dotenv from 'dotenv';
 import { IndexType } from '../components/TradeGrid';
-import { ColDef, ColumnState } from 'ag-grid-enterprise';
+import { ColumnState } from 'ag-grid-enterprise';
 dotenv.config();
 
   
