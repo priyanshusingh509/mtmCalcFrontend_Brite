@@ -1,9 +1,16 @@
 'use client';
+
+// Component imports
 import Header from '../components/header';
-import ProtectedRoute from '../components/ProtectedRoute';
 import TradeGrid from '../components/TradeGrid';
+
+// AG Grid types
 import { ColDef } from 'ag-grid-community';
 
+/**
+ * Column definitions for the BSE Equity Derivatives (EQD) trades grid.
+ * Defines the structure and formatting of each column in the data grid.
+ */
 const columnDefs: ColDef[] = [
   { headerName: "Trade Number", field: "TradeNumber" },
   { headerName: "Trade Time", field: "TradeTime" },
@@ -69,6 +76,10 @@ const columnDefs: ColDef[] = [
   { headerName: "Sell Order Active Flag", field: "SellOrderActiveFlag" },
 ];
 
+/**
+ * Mobile-optimized column definitions for the BSE EQD trades grid.
+ * Contains a subset of the most important columns for better mobile display.
+ */
 const mobileColumnDefs: ColDef[] = [
   { headerName: "Trade Number", field: "TradeNumber" },
   { headerName: "Trade Date Time", field: "TradeDateTime" },
@@ -105,15 +116,27 @@ const mobileColumnDefs: ColDef[] = [
   { headerName: "Sell Order Active Flag", field: "SellOrderActiveFlag" },
 ];
 
+// Track the current page index for pagination
 const pageIndex = { current: 0 };
 
-export default function bseEQDPage(){
-    return(
-      <div className='h-screen flex flex-col'>
-        <Header/>
-        <div className="flex-grow flex flex-col">
-          <TradeGrid mobColDef={mobileColumnDefs} fileColDef={columnDefs} requestType={'table'} requestName='EQD_ITRTM' pageIndex={pageIndex}/>
-        </div>
+/**
+ * BSE Equity Derivatives (EQD) Page Component
+ * Displays a grid of BSE EQD trades with responsive design
+ * for both desktop and mobile views.
+ */
+export default function BSEEQDPage() {
+  return (
+    <div className='h-screen flex flex-col'>
+      <Header />
+      <div className="flex-grow flex flex-col">
+        <TradeGrid 
+          mobColDef={mobileColumnDefs} 
+          fileColDef={columnDefs} 
+          requestType={'table'} 
+          requestName='EQD_ITRTM' 
+          pageIndex={pageIndex}
+        />
       </div>
-    )
+    </div>
+  );
 }

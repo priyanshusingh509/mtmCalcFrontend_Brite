@@ -46,7 +46,7 @@ ModuleRegistry.registerModules([
   ColumnApiModule,
   ScrollApiModule,
   RenderApiModule,
-  GridStateModule 
+  GridStateModule
 ]);
 
 // Interface for the page index reference
@@ -69,8 +69,8 @@ type TradeGridProps = {
 
 // Constants for division factors
 const divFactors = [
-  { field: "Per Crore", factor: 10000000 },
-  { field: "Per Lakh", factor: 100000 }
+  { field: "Per Crore", factor: 10000000 },  // 1 crore = 10,000,000
+  { field: "Per Lakh", factor: 100000 }      // 1 lakh = 100,000
 ];
 
 // Constants for table selection
@@ -126,10 +126,10 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
   const {
     rowData,
     setRowData,
-    fetchPageViaGoto,
-    fetchConsecutive,
-    keepOnlyThreePages,
-    getColDefs
+    fetchPageViaGoto,    // Fetches a specific page of data
+    fetchConsecutive,    // Fetches consecutive pages for pagination
+    keepOnlyThreePages,  // Optimizes memory usage
+    getColDefs          // Gets column definitions
   } = useTradeData();
 
   /**
