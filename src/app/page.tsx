@@ -24,7 +24,7 @@ export default function TradePage() {
   // Effect to redirect authenticated users to the dashboard
   useEffect(() => {
     if (isAuthenticated.current) {
-      router.push('/dashboard');
+      router.push('/dashboard/main');
     }
   }, [isAuthenticated.current]);
 
@@ -55,7 +55,7 @@ export default function TradePage() {
         } else {
           // If login is successful, set authentication state and redirect to the dashboard
           isAuthenticated.current = true;
-          router.push('/dashboard');
+          router.push('/dashboard/main');
         }
         // Clear the form data after a successful action
         setFormData({ name: "", username: "", password: "" });
@@ -74,7 +74,7 @@ export default function TradePage() {
     <div className="bg-blue-600 h-[100vh] text-white flex flex-col lg:flex-row justify-evenly items-center">
       {/* Logo and application title */}
       <div className="text-4xl lg:text-8xl font-bold flex flex-col items-center justify-center gap-5">
-        <img src="./logo.png" className="w-[120px] lg:w-[200px]" alt="Algoquant Logo" /> Algoquant
+        <img src="/logo.png" className="w-[120px] lg:w-[200px]" alt="Algoquant Logo" /> Algoquant
       </div>
 
       {/* Vertical separator for larger screens */}

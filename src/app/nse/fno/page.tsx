@@ -1,8 +1,8 @@
 'use client';
 
 // Import necessary components and types
-import Header from '../components/header';
-import TradeGrid from '../components/TradeGrid';
+import Header from '../../components/header';
+import TradeGrid from '../../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
 /**
@@ -137,7 +137,7 @@ export default function nseFnoAlgoPage() {
           mobColDef={mobileColumnDefs}
           fileColDef={columnDefs}
           requestType="table"
-          requestName="NSE_FNO_Algo"
+          requestName="NSE_FNO"
           pageIndex={pageIndex}
         />
       </div>

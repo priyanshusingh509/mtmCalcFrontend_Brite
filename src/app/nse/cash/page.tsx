@@ -1,6 +1,6 @@
 'use client';
-import Header from '../components/header';
-import TradeGrid from '../components/TradeGrid';
+import Header from '../../components/header';
+import TradeGrid from '../../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
 /**
@@ -96,7 +96,7 @@ export default function nseCashMarketPage() {
           mobColDef={columnDefs}
           fileColDef={columnDefs}
           requestType="table"
-          requestName="NSE_Cash_Algo"
+          requestName="NSE_Cash"
           pageIndex={pageIndex}
         />
       </div>

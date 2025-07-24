@@ -161,8 +161,8 @@ const CustomFilter = (props: CustomFilterProps) => {
             title="Filter"
           >
             <div className="flex">
-              <img className={sortClass} src="sort.png" width="16px" alt="Sort" />
-              <img src={`filter${filterClass}.png`} width="16px" className="min-w-4 bg-gray-100" alt="Filter" />
+              <img className={sortClass} src="/sort.png" width="16px" alt="Sort" />
+              <img src={`/filter${filterClass}.png`} width="16px" className="min-w-4 bg-gray-100" alt="Filter" />
             </div>
           </button>
         </>

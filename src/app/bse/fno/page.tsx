@@ -1,14 +1,35 @@
 'use client';
 
-// Component imports
-import Header from '../components/header';
-import TradeGrid from '../components/TradeGrid';
-
-// AG Grid types
+import { memo } from 'react';
+import Header from '../../components/header';
+import TradeGrid from '../../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 
+interface TradeData {
+  BuyPosition?: string;
+  [key: string]: any;
+}
+
 /**
- * Column definitions for the BSE Equity Derivatives (EQD) trades grid.
+ * Custom cell renderer component for quantity display
+ * Shows negative values in red and positive values in green
+ * Based on BuyPosition (0 when buy, empty when sell)
+ */
+const QuantityCellRenderer = memo(({ value, data }: { value: any; data: TradeData }) => {
+  // Handle null/undefined or non-numeric values
+  if (value == null || isNaN(Number(value))) return '0';
+
+  const bsFlag = data?.BuyPosition?.toUpperCase();
+  // Convert to negative if it's a sell order
+  const signedQty = bsFlag === '0' ? Number(value) : -Number(value);
+  const isNegative = signedQty < 0;
+  const colorClass = isNegative ? 'text-red-500' : 'text-green-500';
+
+  return <div className={colorClass}>{signedQty}</div>;
+});
+
+/**
+ * Column definitions for the BSE FNO trades grid.
  * Defines the structure and formatting of each column in the data grid.
  */
 const columnDefs: ColDef[] = [
@@ -29,19 +50,7 @@ const columnDefs: ColDef[] = [
   { headerName: "Trade Price", field: "TradePrice" },
   { headerName: "Trade Quantity", 
     field: "TradeQuantity",
-    valueFormatter: (params) => {
-      const qty = params.value;
-      const bsflag = params.data?.BuyPosition?.toUpperCase();
-      if (qty == null || isNaN(qty)) return '0';
-      const signedQty = bsflag === '0' ? qty : -qty;
-      return signedQty.toString();
-    },
-    cellStyle: (params) => {
-      const bsFlag = params.data?.BuyPosition?.toUpperCase();
-      return {
-        color: bsFlag === '0' ? 'green' : 'red'
-      };
-    }
+    cellRenderer: QuantityCellRenderer,
   },
   { headerName: "Series ID", field: "SeriesID" },
   { headerName: "Trade Buyer Location ID", field: "TradeBuyerLocationID" },
@@ -90,19 +99,7 @@ const mobileColumnDefs: ColDef[] = [
   { headerName: "Trade Price", field: "TradePrice" },
   { headerName: "Trade Quantity", 
     field: "TradeQuantity",
-    valueFormatter: (params) => {
-      const qty = params.value;
-      const bsflag = params.data?.BuyPosition?.toUpperCase();
-      if (qty == null || isNaN(qty)) return '0';
-      const signedQty = bsflag === '0' ? -qty : qty;
-      return signedQty.toString();
-    },
-    cellStyle: (params) => {
-      const bsFlag = params.data?.BuyPosition?.toUpperCase();
-      return {
-        color: bsFlag === '0' ? 'red' : 'green'
-      };
-    }
+    cellRenderer: QuantityCellRenderer,
   },
   { headerName: "Trade Buyer Terminal ID", field: "TradeBuyerTerminalID" },
   { headerName: "Trade Seller Terminal ID", field: "TradeSellerTerminalID" },
@@ -120,11 +117,11 @@ const mobileColumnDefs: ColDef[] = [
 const pageIndex = { current: 0 };
 
 /**
- * BSE Equity Derivatives (EQD) Page Component
- * Displays a grid of BSE EQD trades with responsive design
+ * BSE FNO Page Component
+ * Displays a grid of BSE FNO trades with responsive design
  * for both desktop and mobile views.
  */
-export default function BSEEQDPage() {
+export default function BSEFNOPage() {
   return (
     <div className='h-screen flex flex-col'>
       <Header />
@@ -133,7 +130,7 @@ export default function BSEEQDPage() {
           mobColDef={mobileColumnDefs} 
           fileColDef={columnDefs} 
           requestType={'table'} 
-          requestName='EQD_ITRTM' 
+          requestName='BSE_FNO' 
           pageIndex={pageIndex}
         />
       </div>

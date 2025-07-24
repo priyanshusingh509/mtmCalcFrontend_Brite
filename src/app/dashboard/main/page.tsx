@@ -1,8 +1,8 @@
 'use client';
 
 // Component imports
-import Header from '../components/header';
-import TradeGrid from '../components/TradeGrid';
+import Header from '../../components/header';
+import TradeGrid from '../../components/TradeGrid';
 
 // Type imports
 import { ColDef } from 'ag-grid-community';

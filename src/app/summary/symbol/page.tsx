@@ -1,6 +1,6 @@
 'use client';
-import Header from '../components/header';
-import TradeGrid from '../components/TradeGrid';
+import Header from '../../components/header';
+import TradeGrid from '../../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
 import { useState } from 'react';
 
@@ -27,7 +27,7 @@ const pageIndex = { current: 0 };
  */
 export default function symbolSummaryPage() {
   // State to track which table/data source is currently being used
-  const [tableUsed, setTableUsed] = useState('EQ_ITR');
+  const [tableUsed, setTableUsed] = useState('BSE_Cash');
   
   return (
     <div className="h-screen flex flex-col">

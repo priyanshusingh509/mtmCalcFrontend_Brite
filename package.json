@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack -p 3002 -H 192.168.4.200",
+    "dev": "next dev --turbopack -p 3002 -H 192.168.4.199",
     "build": "next build",
     "start": "next start -p 3001 -H 192.168.4.198",
     "lint": "next lint"

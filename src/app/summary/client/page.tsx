@@ -1,8 +1,8 @@
 'use client';
 
 // Component imports
-import Header from '../components/header';
-import TradeGrid from '../components/TradeGrid';
+import Header from '../../components/header';
+import TradeGrid from '../../components/TradeGrid';
 
 // Type imports
 import { ColDef } from 'ag-grid-community';
@@ -32,7 +32,7 @@ const pageIndex = { current: 0 };
  */
 export default function ClientSummaryPage() {
   // State to track which table view is currently active
-  const [tableUsed, setTableUsed] = useState('EQ_ITR');
+  const [tableUsed, setTableUsed] = useState('BSE_Cash');
   
   return (
     <div className='h-screen flex flex-col'>

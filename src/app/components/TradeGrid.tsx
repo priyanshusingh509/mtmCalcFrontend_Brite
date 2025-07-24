@@ -75,10 +75,10 @@ const divFactors = [
 
 // Constants for table selection
 const tables = [
-  { field: "BSE CM", value: "EQ_ITR"},
-  { field: "BSE FNO", value: "EQD_ITRTM"},
-  { field: "NSE CM", value: "NSE_Cash_Algo"},
-  { field: "NSE FNO", value: "NSE_FNO_Algo"}
+  { field: "BSE CM", value: "BSE_Cash"},
+  { field: "BSE FNO", value: "BSE_FNO"},
+  { field: "NSE CM", value: "NSE_Cash"},
+  { field: "NSE FNO", value: "NSE_FNO"}
 ]
 
 /**
@@ -471,7 +471,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             disabled={pageIndex.current === 0}
             className={`flex justify-center items-center bg-gray-300 w-10 h-10 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${previousBtn}`}
           >
-            <img src={"./prev.png"} className='h-6 w-8' alt="Previous"/>
+            <img src={"/prev.png"} className='h-6 w-8' alt="Previous"/>
           </button>
           <div className='flex px-4 py-2 text-lg font-semibold'>
             <input
@@ -489,7 +489,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             disabled={pageIndex.current >= (totalPages - 1)}
             className={`flex justify-center items-center bg-gray-300 w-10 h-10 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
           >
-            <img src={"./prev.png"} className='h-6 w-8 rotate-180' alt="Next"/>
+            <img src={"/prev.png"} className='h-6 w-8 rotate-180' alt="Next"/>
           </button>
         </div>
 
@@ -559,7 +559,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             onClick={handleRefreshPage}
           >
             <img
-              src={'refresh.png'}
+              src={'/refresh.png'}
               alt="Refresh"
               className="w-5 h-5 object-contain transition"
             />
@@ -574,7 +574,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             <div className="absolute inset-0 bg-white z-10 bg-opacity-70 flex items-center justify-center">
               <div className="flex flex-col items-center">
                 <div className="flex justify-center items-center gap-2 text-black animate-pulse font-bold text-3xl">
-                  <img src={"logo.png"} width={"48px"} alt="Loading..."/>Algoquant
+                  <img src={"/logo.png"} width={"48px"} alt="Loading..."/>Algoquant
                 </div>
               </div>
             </div>

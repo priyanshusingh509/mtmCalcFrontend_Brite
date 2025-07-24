@@ -10,33 +10,33 @@ const groupedHeaderFields = [
   {
     group: 'Dashboard',
     items: [
-      { name: 'Main', href: '/dashboard' },
-      { name: 'NSE Algo', href: '/nseAlgoDashboard' },
+      { name: 'Main', href: '/dashboard/main' },
+      { name: 'NSE Algo', href: '/dashboard/nseAlgo' },
     ],
   },
   {
     group: 'BSE',
     items: [
-      { name: 'BSE CM', href: '/bseCashMarket' },
-      { name: 'BSE FNO', href: '/bseEQD' },
+      { name: 'BSE CM', href: '/bse/cash' },
+      { name: 'BSE FNO', href: '/bse/fno' },
     ],
   },
   {
     group: 'NSE',
     items: [
-      { name: 'NSE CM', href: '/nseCashMarket' },
-      { name: 'NSE FNO', href: '/nseFnoAlgo' },
+      { name: 'NSE CM', href: '/nse/cash' },
+      { name: 'NSE FNO', href: '/nse/fno' },
     ],
   },
   {
     group: 'MCX',
-    href: '/mcxTrades',
+    href: '/mcx',
   },
   {
     group: 'Summary',
     items: [
-      { name: 'Client Summary', href: '/clientSummary' },
-      { name: 'Symbol Summary', href: '/symbolSummary' },
+      { name: 'Client Summary', href: '/summary/client' },
+      { name: 'Symbol Summary', href: '/summary/symbol' },
     ],
   },
   {
