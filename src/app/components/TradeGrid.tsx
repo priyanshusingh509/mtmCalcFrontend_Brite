@@ -22,7 +22,8 @@ import {
   SuppressHeaderKeyboardEventParams, 
   ScrollApiModule, 
   RenderApiModule, 
-  GridStateModule 
+  GridStateModule ,
+  PinnedRowModule 
 } from 'ag-grid-community';
 
 // Custom components and hooks
@@ -46,7 +47,8 @@ ModuleRegistry.registerModules([
   ColumnApiModule,
   ScrollApiModule,
   RenderApiModule,
-  GridStateModule
+  GridStateModule,
+  PinnedRowModule 
 ]);
 
 // Interface for the page index reference
@@ -113,6 +115,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
   const sortOrder = useRef<'asc' | 'desc' | ''>('');
   const [currentFilterCol, setCurrentFilterCol] = useState<string | null>(null);
   const [currentSearch, setCurrentSearch] = useState<string | null>(null);
+  const [pinnedRow, setPinnedRow] = useState([]);
 
   // State for responsive design and dropdowns
   const [windowWidth, setWindowWidth] = useState(0);
@@ -125,6 +128,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
   // Custom hook for data fetching and management
   const {
     rowData,
+    getNetQty,
     setRowData,
     fetchPageViaGoto,    // Fetches a specific page of data
     fetchConsecutive,    // Fetches consecutive pages for pagination
@@ -148,6 +152,12 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
     pageIndex.current = 0;
     setInputPage(1);
   }, [fetchPageViaGoto, requestType, summaryType]);
+
+  const getQty = async () => {
+    const netqty = await getNetQty(requestType, requestName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType); // your async function
+    console.log(netqty);
+    setPinnedRow(netqty);
+  };
 
   // Custom AG-Grid theme configuration
   const gridTheme = themeAlpine.withParams({
@@ -446,6 +456,10 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
     };
   }, [autoRefresh, handleRefreshPage]);
 
+  useEffect(() => {
+    getQty();
+  },[requestName]);
+
   return (
     <div className="pt-1 flex h-full flex-col w-full">
       {/* Top control bar with pagination, filters, and other actions */}
@@ -543,17 +557,17 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
               </Dropdown>
             </div>
           )}
-          <button
-            onClick={handleFilter}
-            className={`mx-1 px-4 py-2 w-[30vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
-          >
-            Clear Filter
-          </button>
           <div className='w-[25vw] md:w-[20vw] lg:w-[8vw]'>
             {gridRef.current?.api && (
               <ColumnSelector gridRef={gridRef}/>
             )}
           </div>
+          <button
+            onClick={handleFilter}
+            className={`${nextBtn} mx-2`}
+          >
+            <img src={"/clear-filter.png"} className='w-5 h-5 object-contain transition'/>
+          </button>
           <button
             className={`${refreshBtn} mx-2`}
             onClick={handleRefreshPage}
@@ -597,7 +611,9 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             onDragStopped={saveState}
             onPaginationChanged={loadState}
             suppressColumnMoveAnimation={true}
+            pinnedBottomRowData={pinnedRow}
           />
+
         </div>
         {requestType === 'table' && requestName && (
           <RecordModal
