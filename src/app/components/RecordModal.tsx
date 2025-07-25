@@ -76,7 +76,7 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
     };
 
     fetchData();
-  }, [isOpen, field, value, fetchRecordsByField, requestName]);
+  }, [isOpen, field, value]);
 
   return (
     <Dialog

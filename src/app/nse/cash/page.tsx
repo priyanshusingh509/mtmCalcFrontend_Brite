@@ -55,7 +55,7 @@ const desktopColumnDefs: ColDef[] = [
   { headerName: "Response Order Number", field: "response_order_number" },
   { headerName: "Settlor", field: "settlor" },
   { headerName: "Old Settlor", field: "old_settlor" },
-  { headerName: "Account Number", field: "account_number" },
+  { headerName: "Account Number", field: "accountNumber" },
   { headerName: "Old Account Number", field: "old_account_number" },
   { headerName: "Original Volume", field: "original_vol" },
   { headerName: "Disclosed Volume", field: "disclosed_vol" },

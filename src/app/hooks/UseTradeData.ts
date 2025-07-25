@@ -336,17 +336,45 @@ export const useTradeData = () => {
     return data;
   }
 
-  /**
-   * Refreshes the authentication token using the refresh token
-   * @returns Promise that resolves when token refresh is complete
-   */
-  async function getAccessToken() {
-    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/user/refresh-token`;
-    return fetch(fetchURL, {
-      method: 'POST', 
-      credentials: 'include' // Include cookies for authentication
-    });
+/**
+ * Refreshes the authentication token using the refresh token
+ * @returns Promise that resolves when token refresh is complete
+ */
+async function getAccessToken() {
+  const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/user/refresh-token`;
+  return fetch(fetchURL, {
+    method: 'POST', 
+    credentials: 'include' // Include cookies for authentication
+  });
+}
+
+async function getNetQty(requestType: string | undefined, requestName: string | undefined, field: string, order: string, col: string | null = null, search: string | null = null, summaryType?: "trader" | "symbol"){
+  const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getNetQty`;
+  const body = {
+    requestType,
+    requestName,
+    field,
+    order,
+    col,
+    search,
+    summaryType
+  } 
+  const response = await fetch(fetchURL, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch net qty');
   }
+
+  const json = await response.json();
+  console.log(json); 
+  return json; // Expecting: [{ last_qty: -150 }]
+}
 
   return {
     // Current page's trade data and setter
@@ -356,6 +384,7 @@ export const useTradeData = () => {
     // Data fetching functions
     fetchPageViaGoto,      // Fetch a specific page with surrounding pages
     fetchConsecutive,      // Load consecutive pages for pagination
+    getNetQty,             // Gets the net quantity of the table
     
     // Data management utilities
     keepOnlyThreePages,    // Optimize session storage usage
