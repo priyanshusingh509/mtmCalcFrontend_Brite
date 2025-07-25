@@ -1,17 +1,9 @@
 'use client';
 
-// Component imports
 import Header from '../../components/header';
 import TradeGrid from '../../components/TradeGrid';
-
-// Type imports
 import { ColDef } from 'ag-grid-community';
 
-/**
- * Column definitions for the dashboard table.
- * Defines the structure, formatting, and calculations for each column in the data grid.
- * Includes computed fields for various margin and MTM calculations.
- */
 const columnDefs: ColDef[] = [
   { headerName: 'Client code', field: 'clientCode' },
   { headerName: 'Branch', field: 'branch' },

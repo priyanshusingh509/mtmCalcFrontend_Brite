@@ -8,12 +8,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTradeData } from '../hooks/UseTradeData';
 import { ModuleRegistry, ColumnAutoSizeModule } from 'ag-grid-community';
 
-// Register the required AG-Grid modules
 ModuleRegistry.registerModules([ColumnAutoSizeModule]);
 
-/**
- * Defines the props for the RecordModal component.
- */
 type Props = {
   isOpen: boolean; // Controls the visibility of the modal
   onClose: () => void; // Function to close the modal
@@ -26,22 +22,13 @@ type Props = {
   gridTheme: Theme;
 };
 
-/**
- * A modal component to display detailed records related to a specific field and value.
- * It contains two grids: a summary grid and a detailed trade grid.
- */
 export default function RecordModal({ isOpen, onClose, field, value, fileColDef, defaultColDef, requestName, gridTheme }: Props) {
-  // State for the data of the two grids
   const [summaryData, setSummaryData] = useState<TradeRow[]>([]);
   const [tradeData, setTradeData] = useState<TradeRow[]>([]);
-  
-  // Custom hook for fetching trade data
   const { fetchRecordsByField } = useTradeData();
 
-  // Ref for the grid API
   const gridRef = useRef<null>(null);
 
-  // Static column definition for the index column
   const indexColDef: ColDef = {
     headerName: 'Index',
     valueGetter: (params) => (params?.node?.rowIndex ?? 0) + 1,
@@ -60,7 +47,6 @@ export default function RecordModal({ isOpen, onClose, field, value, fileColDef,
       ? { headerName: 'Script ID', field: 'scrp_id' }
       : { headerName: 'Client ID', field: 'clnt_id' };
 
-    // The order of columns is preserved here as requested.
     const columnDefs: ColDef[] = [
       indexColDef,
       changeCol,

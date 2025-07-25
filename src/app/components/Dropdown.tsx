@@ -2,9 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 
-/**
- * Defines the props for the Dropdown component.
- */
+
 interface DropdownProps {
   id: string; // Unique identifier for the dropdown
   label: string; // Text to be displayed on the dropdown button
@@ -13,10 +11,6 @@ interface DropdownProps {
   children: React.ReactNode; // The content to be displayed within the dropdown panel
 }
 
-/**
- * A reusable Dropdown component that can be used to display content in a dropdown panel.
- * It handles its own open/close state and closes when a click is detected outside of it.
- */
 export default function Dropdown({
   id,
   label,
@@ -24,23 +18,17 @@ export default function Dropdown({
   setOpenDropdown,
   children,
 }: DropdownProps) {
-  // Ref for the dropdown container to detect outside clicks
   const dropdownRef = useRef<HTMLDivElement>(null);
-  // Determines if the current dropdown instance is the one that should be open
   const isOpen = openDropdown === id;
 
-  // Effect to handle clicks outside the dropdown to close it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // If the click is outside the dropdown, close it
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setOpenDropdown(null);
       }
     };
 
-    // Add event listener when the component mounts
     document.addEventListener('mousedown', handleClickOutside);
-    // Clean up the event listener when the component unmounts
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [setOpenDropdown]);
 

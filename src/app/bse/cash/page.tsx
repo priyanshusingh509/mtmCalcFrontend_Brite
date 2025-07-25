@@ -5,7 +5,6 @@ import { ColDef } from 'ag-grid-community';
 import Header from '../../components/header';
 import TradeGrid from '../../components/TradeGrid';
 
-// Interface for the trade data structure
 interface TradeData {
   bs_flag?: string;
   [key: string]: any;

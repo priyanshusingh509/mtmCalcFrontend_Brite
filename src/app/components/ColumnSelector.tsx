@@ -1,22 +1,20 @@
 'use client';
 
-// Import necessary hooks, components, and types
 import { useState, useEffect, RefObject, useRef } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { TradeRow } from '../types/TradeRow';
 import { useTradeData } from '../hooks/UseTradeData';
 import { usePathname } from 'next/navigation';
 
-// Define the props for the ColumnSelector component
 type Props = {
   gridRef: RefObject<AgGridReact<TradeRow> | null>; // Reference to the Ag-Grid instance
 };
 
-// Define the structure for column metadata
+// Define the structure for column button metadata
 type ColumnMeta = {
-  colId: string; // Unique column identifier
-  displayName: string; // User-friendly name for the column
-  hidden: boolean; // Visibility state of the column
+  colId: string;
+  displayName: string; 
+  hidden: boolean; 
 };
 
 /**
@@ -24,19 +22,13 @@ type ColumnMeta = {
  * It also allows saving, loading, and resetting the column visibility state.
  */
 export default function ColumnSelector({ gridRef }: Props) {
-  // State to hold the metadata of all columns
   const [columns, setColumns] = useState<ColumnMeta[]>([]);
-  // State to control the visibility of the dropdown menu
   const [open, setOpen] = useState(false);
 
-  // Custom hook to handle saving and retrieving column definitions
   const { saveColDefs, getColDefs } = useTradeData();
-  // Hook to get the current URL pathname, used for saving state against a specific page
   const pathname = usePathname();
-  // Ref for the dropdown element to detect outside clicks
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Effect to handle clicks outside the dropdown to close it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -48,9 +40,6 @@ export default function ColumnSelector({ gridRef }: Props) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  /**
-   * Updates the component's state with the current column metadata from the grid.
-   */
   const updateColumnMeta = () => {
     const columnState = gridRef.current?.api.getColumnState();
     if (!columnState) return;

@@ -465,7 +465,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
         </div>
 
         {/* Pagination controls */}
-        <div className='flex justify-center items-center '>
+        <div className='flex justify-center items-center col-span-3 lg:col-span-1'>
           <button
             onClick={handlePrev}
             disabled={pageIndex.current === 0}
@@ -494,7 +494,8 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
         </div>
 
         {/* Action buttons and dropdowns */}
-        <div className='flex justify-center items-center m-1 col-span-2 lg:col-span-2'>
+        <div className='flex justify-center lg:justify-between items-center m-1 col-span-3 lg:col-span-2'>
+          <div className='flex justify-center items-center'>
           {setTableUsed && (
             <div>
               <Dropdown 
@@ -543,27 +544,30 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
               </Dropdown>
             </div>
           )}
-          <button
-            onClick={handleFilter}
-            className={`mx-1 px-4 py-2 w-[30vw] md:w-[20vw] lg:w-[8vw] bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition transform duration-100 ${nextBtn}`}
-          >
-            Clear Filter
-          </button>
-          <div className='w-[25vw] md:w-[20vw] lg:w-[8vw]'>
-            {gridRef.current?.api && (
-              <ColumnSelector gridRef={gridRef}/>
-            )}
+            <div className='w-[25vw] md:w-[20vw] lg:w-[8vw]'>
+              {gridRef.current?.api && (
+                <ColumnSelector gridRef={gridRef}/>
+              )}
+            </div>
           </div>
-          <button
-            className={`${refreshBtn} mx-2`}
-            onClick={handleRefreshPage}
-          >
-            <img
-              src={'/refresh.png'}
-              alt="Refresh"
-              className="w-5 h-5 object-contain transition"
-            />
-          </button>
+          <div className='flex justify-center items-center'>
+            <button
+              onClick={handleFilter}
+              className='mx-2'
+              >
+              <img src={"/clear-filter.png"} className="w-5 h-5 object-contain transition" alt="Clear Filter"/>
+            </button>
+            <button
+              className={`${refreshBtn} mx-2`}
+              onClick={handleRefreshPage}
+              >
+              <img
+                src={'/refresh.png'}
+                alt="Refresh"
+                className="w-5 h-5 object-contain transition"
+                />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -590,8 +594,6 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             onCellDoubleClicked={handleCellDoubleClick}
             onSortChanged={handleSort}
             onFirstDataRendered={onFirstDataRendered}
-            blockLoadDebounceMillis={1000}
-            debounceVerticalScrollbar={true}
             rowBuffer={0}
             enableCellTextSelection={true}
             onDragStopped={saveState}

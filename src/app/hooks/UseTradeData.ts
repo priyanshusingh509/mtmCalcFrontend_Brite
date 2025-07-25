@@ -11,17 +11,12 @@ dotenv.config();
 // Type definitions
 type RequestType = 'table' | 'aggregate';
 type SummaryType = 'trader' | 'symbol' | undefined;
-type DataChunk = {
-  data: TradeRow[];
-  lastUpdatedTime: string;
-};
 
 /**
  * Custom hook for managing trade data fetching and pagination
  * Handles data streaming, caching, and state management for trade data
  */
 export const useTradeData = () => {
-  // State for storing the current page's row data
   const [rowData, setRowData] = useState<TradeRow[]>([]);
 
   /**
@@ -76,9 +71,6 @@ export const useTradeData = () => {
       search,
       summaryType
     };
-    console.time("oboe stream for page 1");
-    console.time("oboe stream for all the pages includes page 1 as well");
-
     const oboePromise = new Promise<void>((resolve, reject) => {
       oboe({
         url: fetchURL,
@@ -92,7 +84,6 @@ export const useTradeData = () => {
         if (JSON.stringify(node) === '"stawp"') {
           stage = 'next';
           setRowData(currentChunk);
-          console.timeEnd("oboe stream for page 1");
           return oboe.drop;
         }
 
@@ -115,7 +106,6 @@ export const useTradeData = () => {
         }
       })
       .done(() => {
-        console.timeEnd("oboe stream for all the pages includes page 1 as well");
         resolve();
       })
       .fail((err: any) => {
@@ -124,12 +114,8 @@ export const useTradeData = () => {
       });
     });
 
-    // Wait for stream to complete
     await oboePromise;
-    // 🔄 Fetch total and lastUpdated AFTER data is collected
     const { total, lastUpdatedTime } = await fetchTotalRecords(requestType, requestName, summaryType, col, search);
-
-    // ✅ Store each window with timestamp
     const curr = pageIndex.current;
     sessionStorage.setItem(`page-${curr}`, JSON.stringify({
       data: currentChunk,
@@ -147,10 +133,7 @@ export const useTradeData = () => {
         lastUpdatedTime
       }));
     }
-
-    // Clean up others
     keepOnlyThreePages(pageIndex);
-
     return {
       total,
       lastUpdatedTime
@@ -206,8 +189,6 @@ export const useTradeData = () => {
     }
 
     const { total, lastUpdatedTime } = await fetchTotalRecords(requestType, requestName, summaryType, col, search);
-
-    // ✅ Now we have both pageData & lastUpdatedTime — safe to store
     sessionStorage.setItem(`page-${page}`, JSON.stringify({
       data: pageData,
       lastUpdatedTime
@@ -247,9 +228,15 @@ export const useTradeData = () => {
     return { firstGrid: [], secondGrid: [] };
   }
 };
-
-
-
+  /**
+   * Fetches the total number of records for a specific request type and name
+   * @param requestType - The type of request (e.g., 'table', 'aggregate')
+   * @param requestName - The name of the request
+   * @param summaryType - The type of summary (e.g., 'trader', 'symbol')
+   * @param col - The column to filter by
+   * @param search - The search term to filter by
+   * @returns Promise containing the total number of records and the last updated time
+   */
  async function fetchTotalRecords(requestType: string, requestName: string | undefined, summaryType?: "trader" | "symbol", col: string | null = null , search: string | null = null) {
   const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/totalrecords`;
   const body = {
@@ -272,85 +259,95 @@ export const useTradeData = () => {
     lastUpdatedTime
   };
   };
-
-async function fetchFilteredData(requestName: string | undefined, search: string, col: string, summaryType?: "trader" | "symbol") {
-  try {
-    const fetchUrl = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getFilteredData`;
-    const body = {
-      requestName,
-      summaryType,
-      search,
-      col
+  /**
+   * Fetches filtered data for a specific request name and search term
+   * @param requestName - The name of the request
+   * @param search - The search term to filter by
+   * @param col - The column to filter by
+   * @param summaryType - The type of summary (e.g., 'trader', 'symbol')
+   * @returns Promise containing the filtered data
+   */
+  async function fetchFilteredData(requestName: string | undefined, search: string, col: string, summaryType?: "trader" | "symbol") {
+    try {
+      const fetchUrl = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getFilteredData`;
+      const body = {
+        requestName,
+        summaryType,
+        search,
+        col
+      }
+      const res = await fetch(fetchUrl, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data: TradeRow[] = await res.json();
+        setRowData(data)
+    } catch (err) {
+      console.error('Error fetching filtered data:', err);
     }
-    const res = await fetch(fetchUrl, {
-          method: 'POST',
-          body: JSON.stringify(body),
-          headers: {
+  };
+
+  /**
+   * Saves the column definitions for the current view to the backend
+   * @param state - The column definitions to save
+   * @param currentHref - The current URL/path to identify the table
+   */
+  async function saveColDefs(state: ColumnState[], currentHref: string | undefined){
+    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/saveColDefs`;
+    const body = {
+      state,
+      currentHref
+    }
+    fetch(fetchURL,{credentials: 'include', method: 'POST',
+      body: JSON.stringify(body),
+      headers: {
+          'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  /**
+   * Retrieves column definitions for the current view from the backend
+   * @param currentHref - The current URL/path to identify the table
+   * @returns Promise containing the column definitions
+   */
+  async function getColDefs(currentHref: string | undefined) {
+    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getColDefs`;
+    const body = { currentHref };
+
+    const response = await fetch(fetchURL, {
+      credentials: 'include',
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: {
         'Content-Type': 'application/json',
       },
     });
-    const data: TradeRow[] = await res.json();
-      setRowData(data)
-  } catch (err) {
-    console.error('Error fetching filtered data:', err);
-  }
-};
+    
+    // If unauthorized, attempt to refresh the access token
+    if (!response.ok) {
+      await getAccessToken();
+    }
 
-
-async function saveColDefs(state: ColumnState[], currentHref: string | undefined){
-  const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/saveColDefs`;
-  const body = {
-    state,
-    currentHref
-  }
-  fetch(fetchURL,{credentials: 'include', method: 'POST',
-    body: JSON.stringify(body),
-    headers: {
-        'Content-Type': 'application/json',
-    },
-  });
-}
-
-/**
- * Retrieves column definitions for the current view from the backend
- * @param currentHref - The current URL/path to identify the view
- * @returns Promise containing the column definitions
- */
-async function getColDefs(currentHref: string | undefined) {
-  const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/trade/getColDefs`;
-  const body = { currentHref };
-
-  const response = await fetch(fetchURL, {
-    credentials: 'include',
-    method: 'POST',
-    body: JSON.stringify(body),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  // If unauthorized, attempt to refresh the access token
-  if (!response.ok) {
-    await getAccessToken();
+    const data = await response.json();
+    return data;
   }
 
-  const data = await response.json();
-  return data;
-}
+  /**
+   * Refreshes the authentication token using the refresh token
+   * @returns Promise that resolves when token refresh is complete
+   */
+  async function getAccessToken() {
+    const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/user/refresh-token`;
+    return fetch(fetchURL, {
+      method: 'POST', 
+      credentials: 'include' // Include cookies for authentication
+    });
+  }
 
-/**
- * Refreshes the authentication token using the refresh token
- * @returns Promise that resolves when token refresh is complete
- */
-async function getAccessToken() {
-  const fetchURL = `${process.env.NEXT_PUBLIC_BACKEND_IP}/user/refresh-token`;
-  return fetch(fetchURL, {
-    method: 'POST', 
-    credentials: 'include' // Include cookies for authentication
-  });
-}
-
-  // Return the public API of the hook
   return {
     // Current page's trade data and setter
     rowData,        // Array of TradeRow objects for the current view

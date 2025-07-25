@@ -1,50 +1,31 @@
 'use client';
 
-// React and Next.js imports
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-// Custom authentication context
 import { useAuth } from "./context/AuthContext";
 
-/**
- * TradePage component serves as the main entry point for user authentication.
- * It provides both login and signup forms.
- */
-export default function TradePage() {
-  // useAuth hook to access authentication state
+export default function LandingPage() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-
-  // State to manage form data for name, username, and password
   const [formData, setFormData] = useState({ name: "", username: "", password: "" });
-  // State to toggle between login and signup forms
   const [isSignup, setIsSignup] = useState(false);
 
-  // Effect to redirect authenticated users to the dashboard
   useEffect(() => {
     if (isAuthenticated.current) {
       router.push('/dashboard/main');
     }
   }, [isAuthenticated.current]);
 
-  /**
-   * Handles form submission for both login and signup.
-   */
   const handleSubmit = async () => {
     try {
-      // Determine the API endpoint based on whether it's a signup or login action
       const endpoint = isSignup ? '/user/createuser' : '/user/login';
-      // Prepare the payload with the appropriate user data
       const payload = isSignup
         ? { username: formData.username, name: formData.name, password: formData.password }
         : { username: formData.username, password: formData.password };
-
-      // Send the request to the backend
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Include cookies in the request
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
 
@@ -57,15 +38,12 @@ export default function TradePage() {
           isAuthenticated.current = true;
           router.push('/dashboard/main');
         }
-        // Clear the form data after a successful action
         setFormData({ name: "", username: "", password: "" });
       } else {
-        // Handle errors from the server
         const err = await response.json();
         alert(err.error || "Invalid Credentials");
       }
     } catch (error) {
-      // Handle network or other unexpected errors
       alert(`Internal Server Error ${error}`);
     }
   };
@@ -85,7 +63,7 @@ export default function TradePage() {
         <form
           className="w-full h-full flex flex-col justify-evenly"
           onSubmit={(e) => {
-            e.preventDefault(); // Prevent default form submission
+            e.preventDefault();
             handleSubmit();
           }}
         >

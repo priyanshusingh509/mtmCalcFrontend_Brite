@@ -1,15 +1,35 @@
 'use client';
 
-// Import necessary components and types
 import Header from '../../components/header';
 import TradeGrid from '../../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
+import { memo } from 'react';
+
+interface TradeData {
+  buy_sell?: string;
+  [key: string]: any;
+}
 
 /**
- * Column definitions for the NSE F&O Algo trading data grid (Desktop view)
- * Contains comprehensive trade information including order details, volumes, and algo parameters
+ * Custom cell renderer component for quantity display
+ * Shows negative values in red and positive values in green
+ * Based on the buy/sell flag ('BUY' or 'SELL')
  */
-const columnDefs: ColDef[] = [
+const QuantityCellRenderer = memo(({ value, data }: { value: any; data: TradeData }) => {
+  // Handle null/undefined or non-numeric values
+  if (value == null || isNaN(Number(value))) return '0';
+
+  const bsFlag = data?.buy_sell?.toUpperCase();
+  // Convert to negative if it's a sell order
+  const signedQty = bsFlag === 'BUY' ? Number(value) : -Number(value);
+  const isNegative = signedQty < 0;
+  const colorClass = isNegative ? 'text-red-500' : 'text-green-500';
+
+  return <div className={colorClass}>{signedQty}</div>;
+});
+
+// Column definitions for desktop view (detailed)
+const desktopColumnDefs: ColDef[] = [
   { headerName: "ID", field: "id" },
   { headerName: "Trade Number", field: "trade_number" },
   { headerName: "Trade Time", field: "tradeTime" },
@@ -21,21 +41,7 @@ const columnDefs: ColDef[] = [
   { headerName: "Strike Price", field: "strike_price" },
   { headerName: "Trade Quantity", 
     field: "trade_qty",
-    // Format quantity with sign based on buy/sell flag
-    valueFormatter: (params) => {
-      const qty = params.value;
-      const bsflag = params.data?.buy_sell?.toUpperCase();
-      if (qty == null || isNaN(qty)) return '0';
-      const signedQty = bsflag === 'BUY' ? qty : -qty;
-      return signedQty.toString();
-    },
-    // Color code based on buy (green) or sell (red)
-    cellStyle: (params) => {
-      const bsFlag = params.data?.buy_sell?.toUpperCase();
-      return {
-        color: bsFlag === 'BUY' ? 'green' : 'red'
-      };
-    }
+    cellRenderer: QuantityCellRenderer,
   },
   { headerName: "Trade Price", field: "trade_price" },
   { headerName: "CTCL ID", field: "ctcl_id" },
@@ -74,6 +80,7 @@ const columnDefs: ColDef[] = [
   { headerName: "NNF", field: "nnf" }
 ];
 
+// Column definitions for mobile view (simplified)
 const mobileColumnDefs: ColDef[] = [
   { headerName: "Trade Number", field: "trade_number" },
   { headerName: "Trade Time", field: "trade_time" },
@@ -82,26 +89,10 @@ const mobileColumnDefs: ColDef[] = [
   { headerName: "Option Type", field: "opt_type" },
   { headerName: "Expiry", field: "expiry" },
   { headerName: "Strike Price", field: "strike_price" },
-  
-  // Trade quantity with formatting (same as desktop)
   {
     headerName: "Trade Quantity",
     field: "trade_qty",
-    // Format quantity with sign based on buy/sell flag
-    valueFormatter: (params) => {
-      const qty = params.value;
-      const bsflag = params.data?.buy_sell?.toUpperCase();
-      if (qty == null || isNaN(qty)) return '0';
-      const signedQty = bsflag === 'BUY' ? qty : -qty;
-      return signedQty.toString();
-    },
-    // Color code based on buy (green) or sell (red)
-    cellStyle: (params) => {
-      const bsFlag = params.data?.buy_sell?.toUpperCase();
-      return {
-        color: bsFlag === 'BUY' ? 'green' : 'red'
-      };
-    }
+    cellRenderer: QuantityCellRenderer,
   },
   { headerName: "Trade Price", field: "trade_price" },
   { headerName: "CTCL ID", field: "ctcl_id" },
@@ -121,21 +112,17 @@ const mobileColumnDefs: ColDef[] = [
 const pageIndex = { current: 0 };
 
 /**
- * NSE F&O Algo Page Component
- * Displays algorithmic trading data for NSE Futures & Options
- * Uses responsive design with different column sets for desktop and mobile
- */
-export default function nseFnoAlgoPage() {
+ * NSE F&O Page Component
+ * Displays trading data for NSE Futures & Options
+*/
+export default function nseFnoPage() {
   return (
     <div className="h-screen flex flex-col">
-      {/* Page header */}
       <Header />
-      
-      {/* Main content area with trade grid */}
       <div className="flex flex-col flex-grow">
         <TradeGrid
           mobColDef={mobileColumnDefs}
-          fileColDef={columnDefs}
+          fileColDef={desktopColumnDefs}
           requestType="table"
           requestName="NSE_FNO"
           pageIndex={pageIndex}

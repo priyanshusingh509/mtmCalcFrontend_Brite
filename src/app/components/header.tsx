@@ -45,27 +45,16 @@ const groupedHeaderFields = [
   },
 ];
 
-/**
- * Header component provides navigation for the application.
- * It includes a responsive design with a desktop menu and a mobile hamburger menu.
- */
 export default function Header() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-
-  // State for managing UI visibility
   const [showMenu, setShowMenu] = useState(false); // For the mobile hamburger menu
   const [openDropdown, setOpenDropdown] = useState<string | null>(null); // For dropdowns in both menus
 
-  // Refs for DOM elements to handle outside clicks
   const desktopDropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const hamburgerRef = useRef<HTMLImageElement>(null);
 
-  /**
-   * Toggles the visibility of a dropdown menu.
-   * @param {string} group - The identifier of the dropdown to toggle.
-   */
   const toggleDropdown = (group: string) => {
     setOpenDropdown((prev) => (prev === group ? null : group));
   };

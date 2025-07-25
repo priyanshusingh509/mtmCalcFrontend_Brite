@@ -28,11 +28,8 @@ const QuantityCellRenderer = memo(({ value, data }: { value: any; data: TradeDat
   return <div className={colorClass}>{signedQty}</div>;
 });
 
-/**
- * Column definitions for the BSE FNO trades grid.
- * Defines the structure and formatting of each column in the data grid.
- */
-const columnDefs: ColDef[] = [
+// Column definitions for desktop view (detailed)
+const desktopColumnDefs: ColDef[] = [
   { headerName: "Trade Number", field: "TradeNumber" },
   { headerName: "Trade Time", field: "TradeTime" },
   { headerName: "Trade Status", field: "TradeStatus" },
@@ -85,10 +82,7 @@ const columnDefs: ColDef[] = [
   { headerName: "Sell Order Active Flag", field: "SellOrderActiveFlag" },
 ];
 
-/**
- * Mobile-optimized column definitions for the BSE EQD trades grid.
- * Contains a subset of the most important columns for better mobile display.
- */
+// Column definitions for mobile view (simplified)
 const mobileColumnDefs: ColDef[] = [
   { headerName: "Trade Number", field: "TradeNumber" },
   { headerName: "Trade Date Time", field: "TradeDateTime" },
@@ -118,9 +112,8 @@ const pageIndex = { current: 0 };
 
 /**
  * BSE FNO Page Component
- * Displays a grid of BSE FNO trades with responsive design
- * for both desktop and mobile views.
- */
+ * Displays a grid of BSE FNO trades
+*/
 export default function BSEFNOPage() {
   return (
     <div className='h-screen flex flex-col'>
@@ -128,7 +121,7 @@ export default function BSEFNOPage() {
       <div className="flex-grow flex flex-col">
         <TradeGrid 
           mobColDef={mobileColumnDefs} 
-          fileColDef={columnDefs} 
+          fileColDef={desktopColumnDefs} 
           requestType={'table'} 
           requestName='BSE_FNO' 
           pageIndex={pageIndex}

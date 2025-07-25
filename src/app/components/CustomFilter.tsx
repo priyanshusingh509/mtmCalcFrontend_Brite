@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
 
-// Define the types for the component props for type safety and clarity.
 interface CustomFilterProps {
   displayName: string;
   column: { colId: string };
@@ -30,26 +29,20 @@ const CustomFilter = (props: CustomFilterProps) => {
     clearSortSignal,
   } = props;
 
-  // Refs for DOM elements
-  const filterBoxRef = useRef<HTMLDivElement>(null); // Ref for the main component div to handle outside clicks.
-  const inputRef = useRef<HTMLInputElement>(null); // Ref for the filter input to manage focus.
+  const filterBoxRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // State for UI visibility
-  const [isInputVisible, setIsInputVisible] = useState(false); // Controls whether the filter input is visible.
-
-  // State for internal component logic
+  const [isInputVisible, setIsInputVisible] = useState(false);
   const [sortClass, setSortClass] = useState('hidden'); // CSS class to show/hide/rotate the sort icon.
   const [filterClass, setFilterClass] = useState(''); // CSS class to indicate if a filter is applied.
   const sortIndexRef = useRef(0); // Tracks the current sort state (0: none, 1: asc, 2: desc).
   const [filterText, setFilterText] = useState(''); // The current text in the filter input.
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null); // Ref to hold the debounce timer.
 
-  // Closes the filter input.
   const closeInput = () => {
     setIsInputVisible(false);
   };
 
-  // Toggles the visibility of the filter input.
   const toggleInput = () => {
     setIsInputVisible((prev) => !prev);
   };
@@ -61,10 +54,6 @@ const CustomFilter = (props: CustomFilterProps) => {
     2: ['desc', 'rotate-180'],
   };
 
-  /**
-   * Handles changes to the filter input with a 500ms debounce to avoid excessive API calls.
-   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
-   */
   const onFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase();
     setFilterText(value);

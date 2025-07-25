@@ -1,14 +1,36 @@
 'use client';
+
 import Header from '../components/header';
 import TradeGrid from '../components/TradeGrid';
 import { ColDef } from 'ag-grid-community';
+import { memo } from 'react';
+
+
+interface TradeData {
+  side?: number;
+  [key: string]: any;
+}
 
 /**
- * Column definitions for the MCX (Multi Commodity Exchange) trading data grid
- * Contains comprehensive trade information including security details, pricing, quantities,
- * party information, and trade execution details for commodity trading
+ * Custom cell renderer component for quantity display
+ * Shows negative values in red and positive values in green
+ * Based on the buy/sell flag ('BUY' or 'SELL')
  */
-const columnDefs: ColDef[] = [
+const QuantityCellRenderer = memo(({ value, data }: { value: any; data: TradeData }) => {
+  // Handle null/undefined or non-numeric values
+  if (value == null || isNaN(Number(value))) return '0';
+
+  const bsFlag = data?.side;
+  // Convert to negative if it's a sell order
+  const signedQty = bsFlag === 1 ? Number(value) : -Number(value);
+  const isNegative = signedQty < 0;
+  const colorClass = isNegative ? 'text-red-500' : 'text-green-500';
+
+  return <div className={colorClass}>{signedQty}</div>;
+});
+
+// Column definitions for desktop view (detailed)
+const desktopColumnDefs: ColDef[] = [
   { headerName: "RelatedSecurityId", field: "related_security_id" },
   { headerName: "Price", field: "price" },
   { headerName: "LastPrice", field: "last_price" },
@@ -21,7 +43,7 @@ const columnDefs: ColDef[] = [
   { headerName: "LastUpdateTime", field: "last_updated_time" },
   { headerName: "StrategyId", field: "strategy_id" },
   { headerName: "StrategySequenceNo", field: "strategy_sequence_no" },
-  { headerName: "LastQty", field: "last_qty" },
+  { headerName: "LastQty", field: "last_qty", cellRenderer: QuantityCellRenderer },
   { headerName: "SideLastQty", field: "side_last_qty" },
   { headerName: "CumQuantity", field: "cum_quantity" },
   { headerName: "LeaveQuantity", field: "leave_quantity" },
@@ -71,20 +93,15 @@ const pageIndex = { current: 0 };
 /**
  * MCX Trades Page Component
  * Displays commodity trading data from MCX (Multi Commodity Exchange)
- * Shows detailed trade execution information including party details, pricing, and quantities
- * Uses the same column definitions for both desktop and mobile views
  */
-export default function bseCashMarketPage() {
+export default function MCXPage() {
   return (
     <div className="h-screen flex flex-col">
-      {/* Page header */}
       <Header />
-      
-      {/* Main content area with trade grid */}
       <div className="flex flex-col flex-grow">
         <TradeGrid
-          mobColDef={columnDefs}
-          fileColDef={columnDefs}
+          mobColDef={desktopColumnDefs}
+          fileColDef={desktopColumnDefs}
           requestType="table"
           requestName="MCX"
           pageIndex={pageIndex}

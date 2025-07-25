@@ -8,6 +8,7 @@ import {
   useRef,
   RefObject,
   ReactNode,
+  JSX,
 } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -18,9 +19,6 @@ import { useRouter } from 'next/navigation';
 interface AuthContextType {
   /**
    * A ref object holding the user's authentication status.
-   * Using a ref avoids re-rendering components that consume the context
-   * every time the value changes. Components should use the `loading`
-   * state to react to authentication status updates.
    */
   isAuthenticated: RefObject<boolean>;
   /**
@@ -42,21 +40,16 @@ const AuthContext = createContext<AuthContextType>({
 /**
  * @component AuthProvider
  * A provider component that wraps the application and manages the authentication state.
- * It verifies the user's tokens on initial load and provides the auth status
- * and loading state to all descendant components.
  *
  * @param {object} props - The component props.
  * @param {ReactNode} props.children - The child components to be rendered within the provider.
  * @returns {JSX.Element}
  */
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // A ref to store the authentication status without causing re-renders on change.
+export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element => {
   const isAuthenticated = useRef<boolean>(false);
-  // State to track the loading status of the authentication check.
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Effect to verify user's authentication status on component mount.
   useEffect(() => {
     const verifyTokens = async () => {
       try {
@@ -98,13 +91,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated.current = false;
         router.push('/');
       } finally {
-        // Ensure loading is set to false after the check is complete.
         setLoading(false);
       }
     };
 
     verifyTokens();
-    // The dependency array is empty to ensure this effect runs only once on mount.
   }, [router]);
 
   return (
@@ -119,4 +110,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
  * A custom hook to easily access the authentication context.
  * @returns {AuthContextType} The authentication context.
  */
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => useContext(AuthContext);
