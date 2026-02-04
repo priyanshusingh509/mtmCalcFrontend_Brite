@@ -6,7 +6,7 @@ import { ColDef } from 'ag-grid-community';
 import { memo } from 'react';
 
 interface TradeData {
-  buy_sell?: string;
+  buy_sell?: number;
   [key: string]: any;
 }
 
@@ -19,93 +19,73 @@ const QuantityCellRenderer = memo(({ value, data }: { value: any; data: TradeDat
   // Handle null/undefined or non-numeric values
   if (value == null || isNaN(Number(value))) return '0';
 
-  const bsFlag = data?.buy_sell?.toUpperCase();
+  const bsFlag = data?.buy_sell;
   // Convert to negative if it's a sell order
-  const signedQty = bsFlag === 'BUY' ? Number(value) : -Number(value);
+  const signedQty = bsFlag === 1 ? Number(value) : -Number(value);
   const isNegative = signedQty < 0;
   const colorClass = isNegative ? 'text-red-500' : 'text-green-500';
 
   return <div className={colorClass}>{signedQty}</div>;
 });
 
+const BuySellCellRenderer = memo(({ value }: { value: any }) => {
+  if (value === 1) {
+    return <div className="text-green-500">BUY</div>;
+  } else if (value === 2) {
+    return <div className="text-red-500">SELL</div>;
+  }
+  return <div>{value}</div>;
+});
+
 // Column definitions for desktop view (detailed)
 const desktopColumnDefs: ColDef[] = [
-  { headerName: "ID", field: "id" },
   { headerName: "Trade Number", field: "trade_number" },
-  { headerName: "Trade Time", field: "tradeTime" },
-  { headerName: "Buy/Sell", field: "buy_sell" },
   { headerName: "Symbol", field: "symbol" },
-  { headerName: "Instrument Type", field: "inst_type" },
-  { headerName: "Option Type", field: "opt_type" },
-  { headerName: "Expiry", field: "expiryTime" },
+  { headerName: "Instrument Type", field: "instrument" },
+  { headerName: "Expiry", field: "expiry" },
   { headerName: "Strike Price", field: "strike_price" },
-  { headerName: "Trade Quantity", 
-    field: "trade_qty",
+  { headerName: "Option Type", field: "option_type" },
+  { headerName: "Script", field: "script" },
+  { headerName: "Member Id", field: "member_id" },
+  { headerName: "Buy/Sell", field: "buy_sell", cellRenderer: BuySellCellRenderer },
+  { headerName: "Quantity", 
+    field: "qty",
     cellRenderer: QuantityCellRenderer,
   },
-  { headerName: "Trade Price", field: "trade_price" },
-  { headerName: "CTCL ID", field: "ctcl_id" },
-  { headerName: "Broker ID", field: "broker_id" },
-  { headerName: "Strategy ID", field: "strategy_id" },
-  { headerName: "Strategy Name", field: "strategy_name" },
-  { headerName: "User ID", field: "user_id" },
-  { headerName: "Token", field: "token" },
-  { headerName: "Exchange", field: "exchange" },
-  { headerName: "Segment", field: "segment" },
-  { headerName: "Response Order Number", field: "response_order_number" },
-  { headerName: "Settlor", field: "settlor" },
-  { headerName: "Old Settlor", field: "old_settlor" },
-  { headerName: "Account Number", field: "account_number" },
-  { headerName: "Old Account Number", field: "old_account_number" },
-  { headerName: "Original Volume", field: "original_vol" },
-  { headerName: "Disclosed Volume", field: "disclosed_vol" },
-  { headerName: "Remaining Volume", field: "remaining_vol" },
-  { headerName: "Disclosed Volume Remaining", field: "disclosed_vol_remaining" },
-  { headerName: "Order Price", field: "order_price" },
-  { headerName: "GTD", field: "gtd" },
-  { headerName: "Volume Filled Today", field: "vol_filled_today" },
-  { headerName: "Activity Type", field: "activity_type" },
-  { headerName: "OP Order Number", field: "op_order_number" },
-  { headerName: "OP Broker ID", field: "op_broker_id" },
-  { headerName: "Open/Close", field: "open_close" },
-  { headerName: "Old Open/Close", field: "old_open_close" },
-  { headerName: "Book Type", field: "book_type" },
-  { headerName: "New Volume", field: "new_volume" },
-  { headerName: "Give Up", field: "give_up" },
-  { headerName: "PAN", field: "pan" },
-  { headerName: "Old PAN", field: "old_pan" },
-  { headerName: "Algo ID", field: "algo_id" },
-  { headerName: "Algo Category", field: "algo_category" },
-  { headerName: "Last Activity Reference", field: "last_activity_reference" },
-  { headerName: "NNF", field: "nnf" }
+  { headerName: "Price", field: "price" },
+  { headerName: "Pro/Client", field: "pro_client" },
+  { headerName: "Client Id", field: "client_id" },
+  { headerName: "Timestamp 1", field: "ts1" },
+  { headerName: "Timestamp 2", field: "ts2" },
+  { headerName: "Timestamp 3", field: "ts3" },
+  { headerName: "CTCL NO", field: "ctcl_no" },
+  { headerName: "Code", field: "code" },
+  
 ];
 
 // Column definitions for mobile view (simplified)
 const mobileColumnDefs: ColDef[] = [
   { headerName: "Trade Number", field: "trade_number" },
-  { headerName: "Trade Time", field: "trade_time" },
   { headerName: "Symbol", field: "symbol" },
-  { headerName: "Instrument Type", field: "inst_type" },
-  { headerName: "Option Type", field: "opt_type" },
+  { headerName: "Instrument Type", field: "instrument" },
   { headerName: "Expiry", field: "expiry" },
   { headerName: "Strike Price", field: "strike_price" },
-  {
-    headerName: "Trade Quantity",
-    field: "trade_qty",
+  { headerName: "Option Type", field: "option_type" },
+  { headerName: "Script", field: "script" },
+  { headerName: "Member Id", field: "member_id" },
+  { headerName: "Buy/Sell", field: "buy_sell", cellRenderer: BuySellCellRenderer },
+  { headerName: "Quantity", 
+    field: "qty",
     cellRenderer: QuantityCellRenderer,
   },
-  { headerName: "Trade Price", field: "trade_price" },
-  { headerName: "CTCL ID", field: "ctcl_id" },
-  { headerName: "Response Order Number", field: "response_order_number" },
-  { headerName: "Settlor", field: "settlor" },
-  { headerName: "Account Number", field: "account_number" },
-  { headerName: "Original Volume", field: "original_vol" },
-  { headerName: "Remaining Volume", field: "remaining_vol" },
-  { headerName: "Order Price", field: "order_price" },
-  { headerName: "Algo ID", field: "algo_id" },
-  { headerName: "Algo Category", field: "algo_category" },
-  { headerName: "Last Activity Reference", field: "last_activity_reference" },
-  { headerName: "NNF", field: "nnf" }
+  { headerName: "Price", field: "price" },
+  { headerName: "Pro/Client", field: "pro_client" },
+  { headerName: "Client Id", field: "client_id" },
+  { headerName: "Timestamp 1", field: "ts1" },
+  { headerName: "Timestamp 2", field: "ts2" },
+  { headerName: "Timestamp 3", field: "ts3" },
+  { headerName: "CTCL NO", field: "ctcl_no" },
+  { headerName: "Code", field: "code" },
 ];
 
 // Page index state for pagination

@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     const verifyTokens = async () => {
       try {
         // Attempt to verify the access token first.
+        console.log("Backend IP:", process.env.NEXT_PUBLIC_BACKEND_IP);
         const accessRes = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_IP}/user/verify-token`,
           {

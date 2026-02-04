@@ -52,7 +52,8 @@ export default function LandingPage() {
     <div className="bg-blue-600 h-[100vh] text-white flex flex-col lg:flex-row justify-evenly items-center">
       {/* Logo and application title */}
       <div className="text-4xl lg:text-8xl font-bold flex flex-col items-center justify-center gap-5">
-        <img src="/logo.png" className="w-[120px] lg:w-[200px]" alt="Algoquant Logo" /> Algoquant
+        {/* <img src="/logo.png" className="w-[120px] lg:w-[200px]" alt="BriteOptions Logo" /> */}
+        BriteOptions
       </div>
 
       {/* Vertical separator for larger screens */}

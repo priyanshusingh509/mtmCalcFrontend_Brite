@@ -155,7 +155,7 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
 
   const getQty = async () => {
     const netqty = await getNetQty(requestType, requestName, currentSortField.current, sortOrder.current, currentFilterCol, currentSearch, summaryType); // your async function
-    console.log(netqty);
+    console.log("NetQty:", netqty);
     setPinnedRow(netqty);
   };
 
@@ -592,7 +592,8 @@ const TradeGrid = ({ mobColDef, fileColDef, requestType, requestName, pageIndex,
             <div className="absolute inset-0 bg-white z-10 bg-opacity-70 flex items-center justify-center">
               <div className="flex flex-col items-center">
                 <div className="flex justify-center items-center gap-2 text-black animate-pulse font-bold text-3xl">
-                  <img src={"/logo.png"} width={"48px"} alt="Loading..."/>Algoquant
+                  {/* <img src={"/logo.png"} width={"48px"} alt="Loading..."/> */}
+                  BriteOptions
                 </div>
               </div>
             </div>

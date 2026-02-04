@@ -1,30 +1,31 @@
 export interface TradeRow {
-  membr_id: number;
-  trdr_id: number;
-  scrp_code: number;
-  scrp_id: string;
-  rate: number;
+  trade_number: number;
+  symbol: string;
+  instrument: string;
+  expiry: string;
+  strike_price: number;
+  option_type: string;
+  script: string;
+  member_id: string;
+  buy_sell: number; // 1 for Buy, 2 for Sell
   qty: number;
-  trd_status: number;
-  cm_code: number;
-  time: string;
-  date: string;
-  clnt_id: string;
-  ordr_id: number;
-  trns_type: string;
-  bs_flag: string;
-  trade_id: number;
-  clnt_type: string;
-  isin: string;
-  scrp_group: string;
-  sett_no: string;
-  ord_time: string;
-  ao_po_flag: boolean;
-  location_id: number;
-  trd_mod_time: string;
-  session_id: number;
-  cp_code: string;
-  cp_code_confrn: string;
-  old_cust_participant: string;
-  old_cust_code: string;
-}
+  price: number;
+  pro_client: string;
+  client_id: string;
+  ts1: string;
+  ts2: string;
+  ts3: string;
+  ctcl_no: string;
+  code: string;
+
+  buy_qty?: number;
+  buy_avg?: number;
+  sell_qty?: number;
+  sell_avg?: number;
+  net_qty?: number;
+  realised_pnl?: number;
+  ltp_fut?: number;
+  tmv?: number;
+  unrealised_pnl?: number;
+  mtm?: number;
+  }

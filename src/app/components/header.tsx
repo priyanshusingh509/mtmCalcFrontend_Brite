@@ -9,39 +9,19 @@ import { useAuth } from '../context/AuthContext';
 const groupedHeaderFields = [
   {
     group: 'Dashboard',
-    items: [
-      { name: 'Main', href: '/dashboard/main' },
-      { name: 'NSE Algo', href: '/dashboard/nseAlgo' },
-    ],
+    href: '/dashboard',
   },
-  {
-    group: 'BSE',
-    items: [
-      { name: 'BSE CM', href: '/bse/cash' },
-      { name: 'BSE FNO', href: '/bse/fno' },
-    ],
-  },
+  // {
+  //   group: 'Dashboard',
+  //   items: [
+  //     { name: 'Main', href: '/dashboard/main' },
+  //   ],
+  // },
   {
     group: 'NSE',
     items: [
-      { name: 'NSE CM', href: '/nse/cash' },
       { name: 'NSE FNO', href: '/nse/fno' },
     ],
-  },
-  {
-    group: 'MCX',
-    href: '/mcx',
-  },
-  {
-    group: 'Summary',
-    items: [
-      { name: 'Client Summary', href: '/summary/client' },
-      { name: 'Symbol Summary', href: '/summary/symbol' },
-    ],
-  },
-  {
-    group: 'Turnover',
-    href: '/turnover',
   },
 ];
 
@@ -137,8 +117,8 @@ export default function Header() {
         {/* Logo and application title */}
         <div className="flex justify-center items-center">
           <Link href={'/dashboard'} className="flex gap-3 items-center font-bold text-2xl mx-8 my-2 justify-center lg:justify-start">
-            <img src={'/logo.png'} width={'36px'} alt="Algoquant Logo" />
-            <h1>Algoquant</h1>
+            {/* <img src={'/logo.png'} width={'36px'} alt="BriteOptions Logo" /> */}
+            <h1>BriteOptions</h1>
           </Link>
         </div>
 
